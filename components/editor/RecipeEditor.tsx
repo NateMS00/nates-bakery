@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, Timer } from "lucide-react";
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/Button";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import { ConvertedLabel, EstimatedMarker, MissingMarker, SuggestedMarker } from "@/components/ui/Marker";
@@ -344,16 +344,8 @@ function IngredientRow({
   // every group: name | amount | status area (reserved, empty when clean) | menu.
   return (
     <li className={cx("py-sm", !first && "border-t border-hairline")}>
-      <div className="grid grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*1.5)_var(--spacing-touch-min)] items-center gap-x-sm gap-y-xs desktop:grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*2)_calc(var(--spacing-3xl)*3.5)_var(--spacing-touch-min)]">
-        <input
-          id={nameFieldId(ingredient.id)}
-          aria-label={`Ingredient ${index}, name`}
-          placeholder="Ingredient"
-          value={ingredient.name}
-          onChange={(e) => set({ name: e.target.value })}
-          autoComplete="off"
-          className="min-h-control-height min-w-0 rounded-md border border-border bg-surface-card px-base type-body-md text-ink placeholder:text-muted hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
-        />
+      <div className="grid grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*1.5)_var(--spacing-touch-min)] items-start gap-x-sm gap-y-xs desktop:grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*2)_calc(var(--spacing-3xl)*3.5)_var(--spacing-touch-min)]">
+        <NameField id={nameFieldId(ingredient.id)} label={`Ingredient ${index}, name`} value={ingredient.name} onChange={(name) => set({ name })} />
         {ingredient.toTaste ? (
           <span className="inline-flex min-h-control-height items-center justify-end type-body-md text-muted">To taste</span>
         ) : (
@@ -371,7 +363,7 @@ function IngredientRow({
               inputMode="decimal"
               autoComplete="off"
               value={ingredient.amount}
-              placeholder="0"
+              placeholder="—"
               onChange={(e) => set({ amount: e.target.value, status: "confirmed" })}
               className="min-w-0 flex-1 scroll-mt-3xl scroll-mb-[calc(var(--spacing-3xl)*2)] self-stretch bg-transparent text-right type-amount outline-none placeholder:text-muted"
             />
@@ -379,7 +371,7 @@ function IngredientRow({
           </div>
         )}
         {hasStatus && (
-          <div className="col-span-3 row-start-2 flex flex-wrap items-center gap-xs desktop:col-span-1 desktop:col-start-3 desktop:row-start-1 desktop:gap-sm">
+          <div className="col-span-3 row-start-2 flex flex-wrap items-center gap-xs desktop:col-span-1 desktop:col-start-3 desktop:row-start-1 desktop:min-h-control-height desktop:justify-between desktop:gap-sm">
             {missing && <MissingMarker />}
             {flagged && ingredient.status === "estimated" && <EstimatedMarker />}
             {flagged && ingredient.status === "converted" && <ConvertedLabel />}
@@ -416,6 +408,39 @@ function IngredientRow({
         </p>
       )}
     </li>
+  );
+}
+
+/**
+ * The ingredient name: grows to wrap onto up to 2 lines instead of truncating, so the
+ * full name is always readable on a phone (BONES 1.3.1). One line of text in a 48px
+ * box; Enter doesn't add a line break.
+ */
+function NameField({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const line = parseFloat(getComputedStyle(el).lineHeight);
+    const chrome = el.offsetHeight - el.clientHeight + parseFloat(getComputedStyle(el).paddingTop) * 2;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight + (el.offsetHeight - el.clientHeight), line * 2 + chrome)}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      id={id}
+      aria-label={label}
+      rows={1}
+      placeholder="Ingredient"
+      value={value}
+      autoComplete="off"
+      onChange={(e) => onChange(e.target.value.replace(/\s*\n\s*/g, " "))}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.preventDefault();
+      }}
+      className="block min-h-control-height min-w-0 resize-none overflow-y-auto rounded-md border border-border bg-surface-card px-base py-[calc((var(--spacing-control-height)-2px-1.55em)/2)] type-body-md text-ink placeholder:text-muted hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
+    />
   );
 }
 

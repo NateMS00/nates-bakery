@@ -79,19 +79,36 @@ test("an ingredient group with Missing, Estimated, and Converted rows", async ({
   await expect(dough.getByText("was ½ cup")).toBeVisible();
   await expect(dough.getByRole("switch", { name: /To taste/ })).toHaveCount(2);
   // Placeholders on empty fields; Missing amounts show "0".
-  await expect(amount(page, "Fine salt")).toHaveAttribute("placeholder", "0");
+  await expect(amount(page, "Fine salt")).toHaveAttribute("placeholder", "—");
   const boxes = await dough.locator("li").evaluateAll((rows) =>
     rows.map((li) => {
       const amountBox = li.querySelector("input[inputmode=decimal]")?.parentElement ?? li.querySelector("span.justify-end");
-      const nameBox = li.querySelector("input")!;
+      const nameBox = li.querySelector("textarea")!;
       return { x: Math.round(amountBox!.getBoundingClientRect().right), rowHeight: Math.round(nameBox.getBoundingClientRect().height), li: Math.round(li.getBoundingClientRect().height) };
     }),
   );
   // The grams line up down the whole group.
   expect(new Set(boxes.map((b) => b.x)).size).toBe(1);
   // Clean rows take one line (name, amount, menu); only rows with something to check get a second.
-  const clean = boxes.filter((_, i) => [0, 3, 4].includes(i)); // flour, yeast, eggs
+  // (Yeast and eggs: short names. "Strong white bread flour" wraps inside its field on mobile.)
+  const clean = boxes.filter((_, i) => [3, 4].includes(i));
   for (const b of clean) expect(b.li).toBeLessThan(80);
+  // Desktop: Confirm and To taste sit at the right edge of the status area, lined up.
+  if (!mobile()) {
+    const rights = await dough.locator("li").evaluateAll((rows) =>
+      rows
+        .map((li) => li.querySelector<HTMLElement>("button[role=switch], button.border-primary:not([aria-haspopup])"))
+        .filter(Boolean)
+        .map((b) => Math.round(b!.getBoundingClientRect().right)),
+    );
+    expect(rights.length).toBe(4);
+    expect(new Set(rights).size).toBe(1);
+  }
+  // Long names wrap onto up to 2 lines instead of truncating ("Strong white bread flour" takes 2 on a phone).
+  const flour = page.getByRole("textbox", { name: "Ingredient 1, name" });
+  const fit = await flour.evaluate((el) => ({ h: el.getBoundingClientRect().height, hidden: el.scrollHeight - el.clientHeight }));
+  expect(fit.hidden).toBeLessThanOrEqual(1);
+  if (mobile()) expect(fit.h).toBeGreaterThan(60);
   await dough.scrollIntoViewIfNeeded();
   // The fixed Save bar would sit over the group's last rows in an element capture.
   await dough.screenshot({ path: `screenshots/import-detail/${test.info().project.name}--04-ingredient-group.png`, style: "[data-action-bar]{visibility:hidden}" });
@@ -227,7 +244,7 @@ test("row menu: move, move to group, delete with Undo", async ({ page }) => {
   await expect(page.getByText("Deleted Eggs")).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("textbox", { name: /name$/ }).filter({ hasText: "" })).not.toHaveCount(0);
-  await expect(page.locator("input[value='Eggs']")).toHaveCount(1);
+  expect(await page.getByRole("textbox", { name: /name$/ }).evaluateAll((els) => els.filter((e) => (e as HTMLTextAreaElement).value === "Eggs").length)).toBe(1);
 });
 
 test("group picker adds a group; steps detect times", async ({ page }) => {

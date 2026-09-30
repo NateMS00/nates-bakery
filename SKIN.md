@@ -1151,7 +1151,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 ## Components
 
-**`button-primary`** — Cobalt fill (`{colors.primary}`) with `{colors.on-primary}` text in `{typography.button}`, `{rounded.md}` corners, at least `{sizing.touch-min}` tall with `{spacing.lg}` side padding. One per screen: Start baking, Import from a reel, Save recipe, Log a bake, Next step. In sticky bars it is full width. States: hover and active darken to `{colors.primary-active}` (active also nudges 1px down); focus adds a 3px `{colors.focus-ring}` outline at 3px offset; disabled turns to `{colors.surface-disabled}` with `{colors.disabled}` text and a hairline edge.
+**`button-primary`** — Cobalt fill (`{colors.primary}`) with `{colors.on-primary}` text in `{typography.button}`, `{rounded.md}` corners, at least `{sizing.touch-min}` tall with `{spacing.lg}` side padding. One per screen: Start baking, Import from a reel, Save recipe, Log a bake, Next step. The one exception: the same action may appear twice when one copy scrolls out of view, such as Save recipe in the page header and again at the end of the sticky left column on Review Import. Two different primary actions on one screen, never. In sticky bars it is full width. States: hover and active darken to `{colors.primary-active}` (active also nudges 1px down); focus adds a 3px `{colors.focus-ring}` outline at 3px offset; disabled turns to `{colors.surface-disabled}` with `{colors.disabled}` text and a hairline edge.
 
 **`button-secondary`** — Glazed card fill with a 1.5px cobalt border and cobalt text; same size and radius as primary. For every other action: Mark as baked, Previous, Try another link, Import again, Keep reviewing. States: hover fills `{colors.primary-wash}`; active keeps the wash with a `{colors.primary-active}` border and 1px press; focus 3px ring at 3px offset; disabled goes grey glaze with a hairline border.
 
@@ -1300,7 +1300,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 | Separate cards with 1px `{colors.hairline}` and flat glaze | Add drop shadows to cards or list items; shadows are for floating layers only |
 | Edge controls with `{colors.border}` so they meet 3:1 | Use `{colors.hairline}` as the only edge of an input, checkbox, or empty star |
 | Use `{spacing.*}` tokens for every gap and padding | Invent in-between values like 10px or 20px |
-| Keep one `button-primary` per screen; everything else is secondary, text, or icon | Put two cobalt-filled buttons side by side |
+| Keep one primary action per screen (the same action may repeat when one copy scrolls away); everything else is secondary, text, or icon | Put two different cobalt-filled actions on one screen, or two copies side by side |
 | Show markers as text plus glyph ("~ Estimated") | Signal Estimated, Converted, or Missing by colour alone |
 | Use the azulejo motif as a frame (header band, sheet edge), a section stamp (`tile-mark` before H2s), or an empty-state panel | Put text on top of the pattern, use it as a page background, or stamp more than section titles |
 | Set the "g" after an amount in the reading face, muted, 3px away | Let the monospaced face set the unit, leaving a wide gap |

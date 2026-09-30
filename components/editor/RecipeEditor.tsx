@@ -337,9 +337,14 @@ function IngredientRow({
   const errorId = `${amountFieldId(ingredient.id)}-error`;
   const flagged = !ingredient.toTaste && !missing && ingredient.status !== "confirmed";
 
+  const hasStatus = missing || flagged || ingredient.toTaste;
+
+  // Mobile and tablet: name, amount, menu on one line; a second line only when there's
+  // something to act on. Desktop (1280 up): fixed columns so the grams line up down
+  // every group: name | amount | status area (reserved, empty when clean) | menu.
   return (
     <li className={cx("py-sm", !first && "border-t border-hairline")}>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-sm gap-y-sm tablet:grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*2)_auto_auto]">
+      <div className="grid grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*1.5)_var(--spacing-touch-min)] items-center gap-x-sm gap-y-xs desktop:grid-cols-[minmax(0,1fr)_calc(var(--spacing-3xl)*2)_calc(var(--spacing-3xl)*3.5)_var(--spacing-touch-min)]">
         <input
           id={nameFieldId(ingredient.id)}
           aria-label={`Ingredient ${index}, name`}
@@ -349,52 +354,46 @@ function IngredientRow({
           autoComplete="off"
           className="min-h-control-height min-w-0 rounded-md border border-border bg-surface-card px-base type-body-md text-ink placeholder:text-muted hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
         />
-        {/* Amount, marker, and Confirm: the second line on mobile, columns from tablet up */}
-        <div className="col-span-2 row-start-2 flex flex-wrap items-center gap-sm tablet:contents">
-          {ingredient.toTaste ? (
-            <span className="inline-flex min-h-control-height w-[calc(var(--spacing-3xl)*1.5)] items-center type-body-md text-muted tablet:col-start-2 tablet:row-start-1 tablet:w-[calc(var(--spacing-3xl)*2)]">To taste</span>
-          ) : (
-            <div
-              className={cx(
-                "flex min-h-control-height w-[calc(var(--spacing-3xl)*1.5)] items-center rounded-md border tablet:w-[calc(var(--spacing-3xl)*2)] border-border bg-surface-card px-md text-ink hover:border-ink focus-within:border-primary focus-within:outline-3 focus-within:outline-offset-1 focus-within:outline-focus-ring tablet:col-start-2 tablet:row-start-1",
-                error && "border-2 border-error bg-error-wash hover:border-error",
-              )}
-            >
-              <input
-                id={amountFieldId(ingredient.id)}
-                aria-label={`${name}, grams`}
-                aria-invalid={error || undefined}
-                aria-describedby={error ? errorId : undefined}
-                inputMode="decimal"
-                autoComplete="off"
-                value={ingredient.amount}
-                placeholder="—"
-                onChange={(e) => set({ amount: e.target.value, status: "confirmed" })}
-                className="min-w-0 flex-1 scroll-mt-3xl scroll-mb-[calc(var(--spacing-3xl)*2)] self-stretch bg-transparent text-right type-amount outline-none placeholder:text-muted"
-              />
-              <span className="ml-[3px] type-body-md text-muted">g</span>
-            </div>
-          )}
-          <div className="flex flex-wrap items-center gap-xs tablet:col-start-3 tablet:row-start-1 tablet:gap-sm">
+        {ingredient.toTaste ? (
+          <span className="inline-flex min-h-control-height items-center justify-end type-body-md text-muted">To taste</span>
+        ) : (
+          <div
+            className={cx(
+              "flex min-h-control-height items-center rounded-md border border-border bg-surface-card px-md text-ink hover:border-ink focus-within:border-primary focus-within:outline-3 focus-within:outline-offset-1 focus-within:outline-focus-ring",
+              error && "border-2 border-error bg-error-wash hover:border-error",
+            )}
+          >
+            <input
+              id={amountFieldId(ingredient.id)}
+              aria-label={`${name}, grams`}
+              aria-invalid={error || undefined}
+              aria-describedby={error ? errorId : undefined}
+              inputMode="decimal"
+              autoComplete="off"
+              value={ingredient.amount}
+              placeholder="0"
+              onChange={(e) => set({ amount: e.target.value, status: "confirmed" })}
+              className="min-w-0 flex-1 scroll-mt-3xl scroll-mb-[calc(var(--spacing-3xl)*2)] self-stretch bg-transparent text-right type-amount outline-none placeholder:text-muted"
+            />
+            <span className="ml-[3px] type-body-md text-muted">g</span>
+          </div>
+        )}
+        {hasStatus && (
+          <div className="col-span-3 row-start-2 flex flex-wrap items-center gap-xs desktop:col-span-1 desktop:col-start-3 desktop:row-start-1 desktop:gap-sm">
             {missing && <MissingMarker />}
             {flagged && ingredient.status === "estimated" && <EstimatedMarker />}
             {flagged && ingredient.status === "converted" && <ConvertedLabel />}
             {flagged && (
-              <Button variant="secondary" onClick={() => set({ status: "confirmed" })} className="px-md tablet:px-base">
+              <Button variant="secondary" onClick={() => set({ status: "confirmed" })} className="px-md desktop:px-base">
                 Confirm<span className="sr-only"> {name}</span>
               </Button>
             )}
             {(missing || ingredient.toTaste) && (
-              <Toggle
-                label="To taste"
-                spoken={`To taste, ${name}`}
-                checked={ingredient.toTaste}
-                onChange={(toTaste) => set({ toTaste, amount: toTaste ? "" : ingredient.amount })}
-              />
+              <Toggle label="To taste" spoken={`To taste, ${name}`} checked={ingredient.toTaste} onChange={(toTaste) => set({ toTaste, amount: toTaste ? "" : ingredient.amount })} />
             )}
           </div>
-        </div>
-        <div className="col-start-2 row-start-1 tablet:col-start-4">
+        )}
+        <div className="col-start-3 row-start-1 desktop:col-start-4">
           <ActionMenu
             label={`More actions, ${name}`}
             title={name}

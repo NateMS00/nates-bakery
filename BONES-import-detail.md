@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.2.0 · **Updated**: 2026-09-29
+> **Version**: 1.3.0 · **Updated**: 2026-09-30
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -49,7 +49,7 @@ MAIN
 
 ### Page header (added; see Assumptions)
 - **Layout**: desktop full width: title and draft status 8 cols, Discard and Save recipe 4 cols right-aligned; mobile title on the left, Discard on the right of the same row, draft status under the title
-- **Content**: "Review import"; draft status "Draft saved" or "Saving…"; Discard (secondary, destructive wording) opens the Discard confirmation; on desktop, Save recipe is here as the most prominent action
+- **Content**: "Review import"; draft status "Draft saved" or "Saving…"; Discard as a text button (`button-text`), not a bordered one, because it's an escape hatch and shouldn't compete with the title or Save; it opens the Discard confirmation; on desktop, Save recipe is here as the most prominent action, and repeated at the end of the sticky left column (see Needs Your Check)
 - **Behavior**: draft status updates as edits autosave
 
 ```text
@@ -103,7 +103,7 @@ MOBILE
 ```
 
 ### Needs Your Check (SKELETON section 2)
-- **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a to-do list next to the form; mobile full width under Source
+- **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a to-do list next to the form, and ends with Save recipe (`button-primary`, full column width) so saving stays in view however long the form is; mobile full width under Source, with no Save here (mobile has the Save bar)
 - **Content**: a summary line "2 missing · 3 estimated · 1 converted"; then items in this order: Missing (must be fixed to save), Estimated (should be confirmed), Converted (check the conversion); each item shows the ingredient name, its current value ("— g", "120 g", "125 g from 1 cup"), and its type; each item jumps to that field in the editor and moves focus into it; at most 5 items on mobile, then "Show all (n)" expands in place; desktop shows all
 - **Behavior**: items leave the list as soon as they are resolved (amount entered, Confirm pressed) and the summary updates; the change is announced to screen readers
 
@@ -117,6 +117,7 @@ DESKTOP (left column, sticky)
 | ~ SUGAR         120 g         |
 | ~ CREAM         200 g         |
 | = FLOUR  125 g from 1 cup     |
+| [        SAVE RECIPE        ] |
 +-------------------------------+
 ```
 
@@ -164,7 +165,8 @@ MOBILE
 ```
 
 #### Ingredients
-- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end; desktop one row per ingredient inside the editor column: name 4 of 8 cols, amount in grams 2, marker and Confirm 1, row menu 1; mobile two lines per ingredient: name and row menu on the first, amount, marker, and Confirm on the second
+- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), a status area of fixed width reserved for the marker plus Confirm or the To taste toggle (left empty when the row has nothing to check), row menu; every row uses the same columns whether or not it has a marker. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); a second line only when the ingredient needs it (marker with Confirm, or marker with To taste), so clean ingredients take one line
+- **Empty rows**: a new or empty row shows placeholders, "Ingredient" in the name and "0" in the amount, so it doesn't read as two blank boxes; each field keeps its precise screen-reader name ("Caster sugar, grams") instead of a visible label per row
 - **Content**: name (text); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); marker Missing, Estimated, or Converted; Confirm (for Estimated and Converted, removes the marker without changing the value); for Converted, the original stated amount ("was 1 cup") on a line under the row, always visible here; row menu: Move up, Move down, Move to group, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
 - **Behavior**: reordering uses the row menu (and drag on desktop as a shortcut); a deleted row offers Undo; no limit on rows or groups
 
@@ -173,9 +175,10 @@ DESKTOP (editor column)
 +---------------------------------------+
 | INGREDIENTS                           |
 | +- CRUST ---------------------- [...] |
-| | [NAME            ][ 000 g] ~ OK [:] |
-| | [NAME            ][ 000 g] = OK [:] |
+| | [NAME       ][000 g] ~EST [OK]  [:] |
+| | [NAME       ][000 g] =CNV [OK]  [:] |
 | |   was 1 cup                         |
+| | [NAME       ][000 g]            [:] |
 | | + ADD INGREDIENT                    |
 | +-------------------------------------+
 | + ADD INGREDIENT GROUP                |
@@ -187,10 +190,11 @@ MOBILE
 +--------------------------------------+
 | INGREDIENTS                          |
 | +- CRUST --------------------- [...] |
-| | [NAME                        ] [:] |
-| | [ 000 g ]  ESTIMATED  [CONFIRM]    |
-| | [NAME                        ] [:] |
-| | [  — g  ]  MISSING  [TO TASTE]     |
+| | [NAME              ][000 g]  [:]   |
+| | [NAME              ][000 g]  [:]   |
+| |   ~ ESTIMATED  [CONFIRM]           |
+| | [NAME              ][ — g ]  [:]   |
+| |   ! MISSING  [TO TASTE]            |
 | | + ADD INGREDIENT                   |
 | +------------------------------------+
 | + ADD INGREDIENT GROUP               |
@@ -233,13 +237,13 @@ MOBILE
 
 ### Save bar (primary action, mobile only)
 - **Layout**: mobile only; pinned to the bottom edge above the home indicator area; hidden while the on-screen keyboard is open, so it never covers the field being typed in; the page reserves space at its end. On desktop, Save recipe lives in the Page header
-- **Content**: a status line above the button ("2 amounts missing" or "Ready to save"); "Save recipe"
+- **Content**: a status line above the button that counts everything blocking the save, using the same number and wording as the error summary ("3 things to fix", or "Ready to save" when nothing blocks it); "Save recipe"
 - **Behavior**: see Save blocked in States
 
 ```text
 MOBILE
 +--------------------------------------+
-| 2 amounts missing                    |
+| 3 things to fix                      |
 |          [ SAVE RECIPE ]             |
 +--------------------------------------+
 ```
@@ -252,11 +256,11 @@ MOBILE
 |---|---|---|
 | Loading | Draft not yet loaded | Placeholders in final proportions: source row, 3 check items, the Details fields, 6 ingredient rows, 4 steps |
 | Nothing flagged | No Missing, Estimated, or Converted items | Needs Your Check reduces to one line "Everything checked" |
-| Save blocked | Save recipe pressed with any Missing amount, or an empty title | Save stays enabled (a disabled button hides the reason). Pressing it shows an error summary at the top of Needs Your Check listing each problem as a link, moves focus to that summary, and marks each field in error. On mobile, the page scrolls to the summary |
+| Save blocked | Save recipe pressed with any Missing amount, an empty title, or no category | Save stays enabled (a disabled button hides the reason). Pressing it shows an error summary at the top of Needs Your Check listing each problem as a link, moves focus to that summary, and marks each field in error. On mobile, the page scrolls to the summary |
 | Saving | Save recipe pressed with no blockers | Save shows a busy state and ignores repeat presses; on success → `/recipes/:recipeId` |
 | Save failed | Network or server error on save | A one-line error with Retry above the Save bar (mobile) or under the Page header (desktop); every edit stays in the draft |
 | Not found | Unknown or already-saved `:draftId` | System not-found page (SKELETON) |
-| Discard confirmation | Discard in Page header | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. Order: "Discard this import?", "The draft and its extracted recipe will be deleted.", Discard (destructive), Keep reviewing. Discard → `/recipes`. Dismissed by Keep reviewing, Esc, backdrop tap, or swipe down. Focus starts on Keep reviewing and returns to Discard on close |
+| Discard confirmation | Discard in Page header | Follows the Destructive confirmations rule in BONES-shell. Mobile: bottom sheet sized to its content; desktop: centered modal, 4 cols wide. Order: header row with "Discard this import?" and a close X; "The draft and its extracted recipe will be deleted."; Discard (`button-destructive`, full width); Keep reviewing (`button-secondary`, full width, last, at the bottom where the thumb rests). Discard → `/recipes`. Dismissed by Keep reviewing, the close X, Esc, backdrop tap, or swipe down. Focus starts on Keep reviewing and returns to Discard on close |
 | Row menu | Row menu button on an ingredient or step | Mobile: bottom sheet listing Move up, Move down, Move to group, Delete; desktop: a small menu anchored to the button. Move to group opens a second list of existing groups. Dismissed by choosing, Esc, or tapping outside |
 | Ingredients used picker | Edit on a step's "Uses:" line | Mobile: bottom sheet, about three quarters of the viewport; desktop: a panel anchored under the Edit control, 4 cols wide. Order: "Ingredients for step n"; every ingredient in the recipe as a checkbox, under its group heading, with the step's own group listed first; Done. Changes apply as boxes are checked; Done, Esc, backdrop tap, or swipe down close it. Focus returns to Edit |
 | Group picker | Add ingredient group or Add step group | Mobile: bottom sheet, about half the viewport, with a name field on top and SKELETON's suggested group names below, grouped by bake type; desktop: a combobox under the button with the same suggestions. Choosing a suggestion or entering a new name adds the group at the end |
@@ -276,6 +280,7 @@ MOBILE
 - **Assumed**: Undo after deleting a row or step.
 - **Assumed**: Detected times shown as chips under each step, so wrong detections are visible before Bake Mode.
 - **Assumed**: The mobile Save bar hides while the keyboard is open.
+- **Assumed**: The browser's Back button isn't caught by the leave check. Review Import autosaves, so nothing is lost there; on New and Edit it can lose work, so it's on the backlog.
 - **Assumed**: Ingredient links on each step are proposed by the importer and not flagged in Needs Your Check; a wrong link only affects Bake Mode's "For this step" and is easy to fix, so it doesn't block saving.
 - **Assumed**: The transcript shows the caption and the spoken audio as two labeled parts, because reels put recipes in either place. It is kept with the draft only and not shown on the saved Recipe page.
 - **Assumed**: Collapsed to 3 lines so it doesn't push Needs Your Check out of the first mobile viewport.
@@ -285,6 +290,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-09-30): After the first build review: fixed ingredient columns on desktop so grams align; one-line ingredient rows on mobile unless there's something to check; placeholders on empty rows; Save repeated at the end of the sticky left column on desktop; Discard as a text button; Save bar status matches the error summary; Discard confirmation follows the new destructive-confirmation rule.
 - 1.2.0 (2026-09-29): Added "Uses:" ingredient links on each step and the Ingredients used picker (SKELETON 1.3.0).
 - 1.1.0 (2026-09-29): Added the collapsible transcript (caption and spoken audio) to Source (SKELETON 1.2.1).
 - 1.0.0 (2026-09-29): Initial wireframe, including the shared Recipe Editor section.

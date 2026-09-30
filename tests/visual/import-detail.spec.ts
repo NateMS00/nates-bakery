@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
+import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
 
 // /import/:draftId (Review Import), /recipes/new, and /recipes/:recipeId/edit: the
 // shared Recipe Editor, BONES-import-detail.md. Each test gets its own copy of the
@@ -11,6 +11,8 @@ const mobile = () => Boolean(test.info().project.use.isMobile);
 const check = (page: Page) => page.locator("#check-heading").locator("xpath=..");
 const amount = (page: Page, name: string) => page.getByRole("textbox", { name: `${name}, grams` });
 // The save-blocked summary (Next's route announcer is also role="alert").
+// Desktop has two Save recipe buttons (header and left column); this is the first visible one.
+const save = (page: Page) => page.getByRole("button", { name: "Save recipe" }).filter({ visible: true }).first();
 const blocked = (page: Page) => page.locator("[role=alert][aria-labelledby=save-blocked-heading]");
 
 test.beforeEach(async ({ context }, info) => {
@@ -40,7 +42,10 @@ test("first viewport, full page, and page checks", async ({ page }) => {
   await expect(check(page).getByRole("link", { name: /Whole milk/ })).toContainText("120 g from ½ cup");
   // Draft status, the mobile Save bar's status line, and the Suggested category.
   await expect(page.getByText("Draft saved")).toBeVisible();
-  if (mobile()) await expect(page.getByText("2 amounts missing")).toBeVisible();
+  // The Save bar counts everything blocking the save, like the error summary.
+  if (mobile()) await expect(page.getByText("2 things to fix", { exact: true })).toBeVisible();
+  // Desktop: Save recipe is repeated at the end of the sticky left column.
+  if (!mobile()) await expect(page.getByRole("button", { name: "Save recipe" })).toHaveCount(2);
   await expect(page.getByText("Suggested")).toBeVisible();
 });
 
@@ -73,8 +78,23 @@ test("an ingredient group with Missing, Estimated, and Converted rows", async ({
   await expect(dough.getByText("= Converted")).toHaveCount(1);
   await expect(dough.getByText("was ½ cup")).toBeVisible();
   await expect(dough.getByRole("switch", { name: /To taste/ })).toHaveCount(2);
+  // Placeholders on empty fields; Missing amounts show "0".
+  await expect(amount(page, "Fine salt")).toHaveAttribute("placeholder", "0");
+  const boxes = await dough.locator("li").evaluateAll((rows) =>
+    rows.map((li) => {
+      const amountBox = li.querySelector("input[inputmode=decimal]")?.parentElement ?? li.querySelector("span.justify-end");
+      const nameBox = li.querySelector("input")!;
+      return { x: Math.round(amountBox!.getBoundingClientRect().right), rowHeight: Math.round(nameBox.getBoundingClientRect().height), li: Math.round(li.getBoundingClientRect().height) };
+    }),
+  );
+  // The grams line up down the whole group.
+  expect(new Set(boxes.map((b) => b.x)).size).toBe(1);
+  // Clean rows take one line (name, amount, menu); only rows with something to check get a second.
+  const clean = boxes.filter((_, i) => [0, 3, 4].includes(i)); // flour, yeast, eggs
+  for (const b of clean) expect(b.li).toBeLessThan(80);
   await dough.scrollIntoViewIfNeeded();
-  await dough.screenshot({ path: `screenshots/import-detail/${test.info().project.name}--04-ingredient-group.png` });
+  // The fixed Save bar would sit over the group's last rows in an element capture.
+  await dough.screenshot({ path: `screenshots/import-detail/${test.info().project.name}--04-ingredient-group.png`, style: "[data-action-bar]{visibility:hidden}" });
 });
 
 test("check items jump to their field and leave when resolved", async ({ page }) => {
@@ -98,7 +118,7 @@ test("check items jump to their field and leave when resolved", async ({ page })
 test("Save blocked, then saved as a recipe", async ({ page }) => {
   await ready(page, BABKA);
   await page.getByRole("textbox", { name: "Title" }).fill("");
-  await page.getByRole("button", { name: "Save recipe" }).click();
+  await save(page).click();
   const summary = blocked(page);
   await expect(summary).toContainText("3 things to fix before saving");
   await expect(summary).toBeFocused();
@@ -114,7 +134,8 @@ test("Save blocked, then saved as a recipe", async ({ page }) => {
   await amount(page, "Fine salt").fill("8");
   await expect(summary).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Save recipe" }).click();
+  // On desktop, save with the button repeated at the end of the left column.
+  await (mobile() ? save(page) : page.getByRole("button", { name: "Save recipe" }).last()).click();
   await page.waitForURL(/\/recipes\/chocolate-tahini-babka-/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Chocolate tahini babka");
   await expect(page.getByText("Makes 2 loaves")).toBeVisible();
@@ -128,7 +149,7 @@ test("Save blocked, then saved as a recipe", async ({ page }) => {
 test("Save failed keeps the edits and offers Retry", async ({ page, context }) => {
   await context.addCookies([{ name: "backery_stub_fail_saves", value: "1", url: "http://localhost:3100" }]);
   await ready(page, "/import/d-canele");
-  await page.getByRole("button", { name: "Save recipe" }).click();
+  await save(page).click();
   const failed = page.getByText("Couldn’t save the recipe. Your edits are kept in the draft.").filter({ visible: true });
   await expect(failed).toBeVisible();
   await expect(page.getByRole("button", { name: "Retry" }).filter({ visible: true })).toBeVisible();
@@ -175,7 +196,7 @@ test("Discard confirmation", async ({ page }) => {
   await discard.click();
   const dialog = page.getByRole("dialog", { name: "Discard this import?" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Keep reviewing" })).toBeFocused();
+  await expectDestructiveConfirmation(page, "Discard this import?", "Discard", "Keep reviewing");
   await page.waitForTimeout(350);
   await expectFitsContent(page, "Discard this import?");
   await shot(page, "07-discard");
@@ -272,7 +293,7 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
   await page.getByRole("link", { name: "Pastéis de nata" }).click();
   const leave = page.getByRole("dialog", { name: "Leave without saving?" });
   await expect(leave).toBeVisible();
-  await expect(leave.getByRole("button", { name: "Keep editing" })).toBeFocused();
+  await expectDestructiveConfirmation(page, "Leave without saving?", "Leave", "Keep editing");
   await leave.getByRole("button", { name: "Keep editing" }).click();
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -282,6 +303,9 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
 
   await ready(page, "/recipes/pasteis-de-nata/edit");
   await page.getByRole("button", { name: "Delete recipe" }).click();
+  await expectDestructiveConfirmation(page, "Delete this recipe?", "Delete recipe", "Keep recipe");
+  await page.waitForTimeout(350);
+  await shot(page, "12-delete-recipe");
   await page.getByRole("dialog", { name: "Delete this recipe?" }).getByRole("button", { name: "Delete recipe" }).click();
   await page.waitForURL(/\/recipes$/);
   await expect(page.locator("#recipes-heading ~ p[aria-live]")).toHaveText("33 recipes");

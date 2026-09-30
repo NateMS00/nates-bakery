@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.3.0 · **Updated**: 2026-09-30
+> **Version**: 1.4.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -111,6 +111,10 @@ MOBILE
 
 Viewport shares given in page BONES files ("about a third", "about half") are **maximum heights**, not fixed sizes: every sheet and modal fits its content and never leaves empty space below its last element, up to 90% of the viewport, after which its body scrolls. Every sheet and modal has a header row with its title and a close X (icon button) at the end; there is no separate Close button at the bottom. Exceptions that keep their stated height: overlays that are full-screen forms (Bake Log's entry form on mobile) and sheets with a scrolling list and a footer pinned to the bottom (Library's Filters sheet, the Ingredients used picker).
 
+### Destructive confirmations (all pages)
+
+Every confirmation for an action that deletes or discards something (Discard import, Delete recipe, Delete bake, Revoke link, Leave without saving, Stop timers and leave) uses the same layout: a header row with the question and a close X; one sentence saying what will be lost; the destructive action (`button-destructive`, full width on mobile); then the safe action (`button-secondary`, full width on mobile) last, at the bottom, where the thumb rests without aiming. On desktop both sit side by side at the end of the modal, safe action on the right. Focus always starts on the safe action. The safe action is a real button, never a text link, so it reads as an equal choice.
+
 ---
 
 ## Focus variant
@@ -130,6 +134,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.4.0 (2026-09-30): Added the Destructive confirmations rule for every page.
 - 1.3.0 (2026-09-30): Added the Overlay sizing rule (fit to content, close X in the header) for every page; Timer alerts sheet follows it.
 - 1.2.0 (2026-09-29): Added the Share variant for shared recipe pages.
 - 1.1.0 (2026-09-29): Added Timer alerts to the account menu and the shared Timer alerts sheet (SKELETON 1.3.0).

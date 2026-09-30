@@ -5,12 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorSummary } from "@/components/import/NeedsYourCheck";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
 import { createRecipe, deleteRecipe, updateRecipe } from "@/lib/data/actions";
-import { blockers, checkItems, type EditorState } from "@/lib/data/editor";
+import { blockers, saveStatus, type EditorState } from "@/lib/data/editor";
 import { RecipeEditor } from "./RecipeEditor";
 
 // /recipes/new and /recipes/:recipeId/edit: the Recipe editor template (SKELETON).
@@ -45,8 +45,7 @@ export function RecipeFormPage({
   const dirty = JSON.stringify(state) !== initialJson;
   const problems = useMemo(() => blockers(state), [state]);
   const errors = useMemo(() => new Set(attempted ? problems.map((p) => p.fieldId) : []), [attempted, problems]);
-  const missing = checkItems(state).filter((c) => c.kind === "missing").length;
-  const barStatus = missing ? `${missing} ${missing === 1 ? "amount" : "amounts"} missing` : problems.length ? problems[0].message : "Ready to save";
+  const barStatus = saveStatus(problems.length);
   const backHref = mode === "edit" ? `/recipes/${recipeId}` : "/recipes";
 
   // SKELETON: unsaved changes on leave → confirmation. Covers in-app links and
@@ -175,50 +174,5 @@ export function RecipeFormPage({
         }}
       />
     </>
-  );
-}
-
-/** A destructive confirmation: focus starts on the safe choice. */
-function ConfirmDialog({
-  open,
-  onClose,
-  returnFocus,
-  title,
-  body,
-  confirm,
-  cancel,
-  onConfirm,
-}: {
-  open: boolean;
-  onClose: () => void;
-  returnFocus?: React.RefObject<HTMLElement | null>;
-  title: string;
-  body: string;
-  confirm: string;
-  cancel: string;
-  onConfirm: () => Promise<void>;
-}) {
-  const [busy, setBusy] = useState(false);
-  return (
-    <Dialog open={open} onClose={onClose} title={title} modalColumns={4} returnFocus={returnFocus}>
-      <p className="type-body-md text-body">{body}</p>
-      <div className="mt-lg flex flex-col-reverse gap-sm tablet:flex-row tablet:items-center">
-        <Button
-          variant="destructive"
-          aria-busy={busy || undefined}
-          onClick={async () => {
-            if (busy) return;
-            setBusy(true);
-            await onConfirm();
-            setBusy(false);
-          }}
-        >
-          {confirm}
-        </Button>
-        <Button variant="text" onClick={onClose} data-autofocus>
-          {cancel}
-        </Button>
-      </div>
-    </Dialog>
   );
 }

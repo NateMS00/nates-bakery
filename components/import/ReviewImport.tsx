@@ -8,7 +8,7 @@ import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
 import { discardDraft, saveDraftContent, saveImport } from "@/lib/data/actions";
-import { blockers, checkItems, type EditorState } from "@/lib/data/editor";
+import { blockers, saveStatus, type EditorState } from "@/lib/data/editor";
 import type { Draft } from "@/lib/data/types";
 import { DiscardDialog } from "./DiscardDialog";
 import { NeedsYourCheck } from "./NeedsYourCheck";
@@ -51,12 +51,7 @@ export function ReviewImport({ draft }: { draft: Draft }) {
 
   const problems = useMemo(() => blockers(state), [state]);
   const errors = useMemo(() => new Set(attempted ? problems.map((p) => p.fieldId) : []), [attempted, problems]);
-  const missing = checkItems(state).filter((c) => c.kind === "missing").length;
-  const barStatus = missing
-    ? `${missing} ${missing === 1 ? "amount" : "amounts"} missing`
-    : problems.length
-      ? problems[0].message
-      : "Ready to save";
+  const barStatus = saveStatus(problems.length);
 
   async function save() {
     if (saving) return;
@@ -98,7 +93,7 @@ export function ReviewImport({ draft }: { draft: Draft }) {
           </p>
         </div>
         <div className="flex items-center gap-sm">
-          <Button ref={discardButton} variant="secondary" aria-haspopup="dialog" onClick={() => setDiscardOpen(true)}>
+          <Button ref={discardButton} variant="text" aria-haspopup="dialog" onClick={() => setDiscardOpen(true)}>
             Discard
           </Button>
           {/* Save bar: the sticky action-bar on mobile (hidden while the keyboard is open), in the header from tablet up */}
@@ -126,6 +121,10 @@ export function ReviewImport({ draft }: { draft: Draft }) {
         <div className={cx("flex flex-col gap-lg tablet:col-span-3 desktop:col-span-4 desktop:gap-xl", !transcriptOpen && "tablet:sticky tablet:top-base")}>
           <SourcePanel draft={draft} expanded={transcriptOpen} onExpandedChange={setTranscriptOpen} />
           <NeedsYourCheck state={state} problems={attempted ? problems : null} summaryRef={summaryRef} />
+          {/* BONES 1.3.0: Save repeated at the end of the sticky left column, so it stays in view (not on mobile, which has the Save bar) */}
+          <Button variant="primary" onClick={save} aria-busy={saving || undefined} className="w-full max-tablet:hidden">
+            {saving ? "Saving…" : "Save recipe"}
+          </Button>
         </div>
         <div className="mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8">
           <RecipeEditor state={state} setState={setState} errors={errors} />

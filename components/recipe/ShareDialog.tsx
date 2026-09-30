@@ -3,13 +3,15 @@
 import { Copy } from "lucide-react";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActions } from "@/components/ui/ConfirmDialog";
 import { Dialog } from "@/components/ui/Dialog";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import type { ShareLink } from "@/lib/data/types";
 
-// BONES Share dialog: mobile bottom sheet, desktop modal 5 cols, both sized to
-// their content with a close X in the header row. Title, read-only link with Copy, the privacy note, Revoke link (confirmed
-// inside the dialog). With no link yet, "Create link" replaces the field.
+// BONES Share dialog: mobile bottom sheet, desktop modal 5 cols, both sized to their
+// content with a close X in the header row. Read-only link with Copy, the privacy
+// note, and Revoke link (confirmed inside the dialog). With no link yet, "Create link"
+// replaces the field.
 
 export function ShareDialog({
   open,
@@ -126,29 +128,24 @@ export function ShareDialog({
             <p id="revoke-question" className="type-body-sm text-ink">
               Revoke this link? Anyone who opens it will see that it no longer works. Sharing again creates a new link.
             </p>
-            <div className="mt-md flex flex-wrap items-center gap-sm">
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  pendingFocus.current = "create";
-                  onRevoke();
-                  setConfirmRevoke(false);
-                  setCopied(false);
-                }}
-              >
-                Revoke link
-              </Button>
-              <Button
-                ref={keepButton}
-                variant="text"
-                onClick={() => {
-                  pendingFocus.current = "revoke";
-                  setConfirmRevoke(false);
-                }}
-              >
-                Keep link
-              </Button>
-            </div>
+            {/* BONES-shell Destructive confirmations: destructive first, the safe action last as a real button */}
+            <ConfirmActions
+              className="mt-md"
+              confirm="Revoke link"
+              cancel="Keep link"
+              autoFocusCancel={false}
+              cancelRef={keepButton}
+              onConfirm={() => {
+                pendingFocus.current = "create";
+                onRevoke();
+                setConfirmRevoke(false);
+                setCopied(false);
+              }}
+              onCancel={() => {
+                pendingFocus.current = "revoke";
+                setConfirmRevoke(false);
+              }}
+            />
           </div>
         )}
       </div>

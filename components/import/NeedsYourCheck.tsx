@@ -6,7 +6,7 @@ import { EstimatedMarker, ConvertedLabel, MissingMarker } from "@/components/ui/
 import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { cx } from "@/components/ui/cx";
-import { amountFieldId, checkItems, type CheckItem, type EditorState, type Problem } from "@/lib/data/editor";
+import { amountFieldId, checkItems, saveStatus, type CheckItem, type EditorState, type Problem } from "@/lib/data/editor";
 import { formatGrams } from "@/lib/format";
 
 // BONES Needs Your Check: a summary ("2 missing · 3 estimated · 1 converted"), then
@@ -99,7 +99,7 @@ export const ErrorSummary = forwardRef<HTMLDivElement, { problems: Problem[] }>(
   return (
     <div ref={ref} tabIndex={-1} role="alert" aria-labelledby="save-blocked-heading" className="mt-sm scroll-mt-lg rounded-md border-l-4 border-error bg-error-wash px-base py-md text-ink focus-visible:outline-offset-2">
       <p id="save-blocked-heading" className="type-body-md font-bold">
-        {problems.length === 1 ? "1 thing to fix before saving" : `${problems.length} things to fix before saving`}
+        {saveStatus(problems.length)} before saving
       </p>
       <ul role="list" className="mt-xs">
         {problems.map((p) => (

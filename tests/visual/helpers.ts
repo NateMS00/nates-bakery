@@ -99,3 +99,26 @@ export async function expectPageTop(page: Page) {
   });
   expect(gap).toBe(page.viewportSize()!.width < 768 ? 24 : 32);
 }
+
+/**
+ * BONES-shell Destructive confirmations: the destructive action, then the safe action
+ * last as a secondary button; focus starts on the safe action; on mobile both are full
+ * width, on desktop side by side with the safe action on the right.
+ */
+export async function expectDestructiveConfirmation(page: Page, title: string, destructive: string, safe: string) {
+  const dialog = page.getByRole("dialog", { name: title });
+  const safeButton = dialog.getByRole("button", { name: safe, exact: true });
+  await expect(safeButton).toBeFocused();
+  await expect(safeButton).toHaveClass(/border-primary/); // button-secondary, not a text link
+  const [d, s, panel] = await Promise.all([
+    dialog.getByRole("button", { name: destructive, exact: true }).boundingBox(),
+    safeButton.boundingBox(),
+    dialog.boundingBox(),
+  ]);
+  if (page.viewportSize()!.width < 768) {
+    expect(s!.y).toBeGreaterThan(d!.y); // safe action last, at the bottom
+    expect(s!.width).toBeGreaterThan(panel!.width - 2 * 32 - 2); // full width
+  } else {
+    expect(s!.x).toBeGreaterThan(d!.x); // safe action on the right
+  }
+}

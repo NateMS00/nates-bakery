@@ -110,6 +110,12 @@ export function blockers(state: EditorState): Problem[] {
   return problems;
 }
 
+/** The Save bar's status line: the same count and wording as the error summary. */
+export function saveStatus(problemCount: number): string {
+  if (problemCount === 0) return "Ready to save";
+  return `${problemCount} ${problemCount === 1 ? "thing" : "things"} to fix`;
+}
+
 export const amountFieldId = (ingredientId: string) => `ing-${ingredientId}-amount`;
 export const nameFieldId = (ingredientId: string) => `ing-${ingredientId}-name`;
 

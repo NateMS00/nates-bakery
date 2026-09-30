@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* Tile-mark and tile-band use the SKIN.md azulejo SVG, exactly as given, as a mask
+   so the stroke takes the component's patternColor (currentColor). */
+@theme {
+  --tile-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.5'%3E%3Cpath d='M0 6A6 6 0 0 0 6 0M18 0a6 6 0 0 0 6 6M24 18a6 6 0 0 0-6 6M6 24a6 6 0 0 0-6-6'/%3E%3Cpath d='M12 4.5 19.5 12 12 19.5 4.5 12Z'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E");
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-text);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* One focus treatment everywhere: SKIN's 3px focus-ring with an offset.
+     Components override the offset where SKIN gives a different one. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility tile-mask {
+  background-color: currentColor;
+  -webkit-mask: var(--tile-svg) center / 100% 100% no-repeat;
+  mask: var(--tile-svg) center / 100% 100% no-repeat;
+}
+
+@utility tile-band-mask {
+  background-color: currentColor;
+  -webkit-mask: var(--tile-svg) 0 0 / var(--spacing-tile-band) var(--spacing-tile-band) repeat-x;
+  mask: var(--tile-svg) 0 0 / var(--spacing-tile-band) var(--spacing-tile-band) repeat-x;
+}
+
+@utility tile-panel-mask {
+  background-color: currentColor;
+  -webkit-mask: var(--tile-svg) 0 0 / var(--spacing-tile-repeat) var(--spacing-tile-repeat) repeat;
+  mask: var(--tile-svg) 0 0 / var(--spacing-tile-repeat) var(--spacing-tile-repeat) repeat;
+}
+
+@keyframes skeleton-shimmer {
+  0%, 100% { background-color: var(--color-surface-sunken); }
+  50% { background-color: var(--color-hairline); }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Shell grid from SKIN.md Layout: gutters and column counts per breakpoint.
+   --col is one column's width, so overlays can be sized in columns as BONES asks. */
+:root {
+  --gutter: var(--spacing-base);
+  --cols: 4;
+  --col: calc((min(100vw - 2 * var(--gutter), var(--spacing-content-max)) - (var(--cols) - 1) * var(--gutter)) / var(--cols));
+}
+@media (min-width: 768px) {
+  :root {
+    --gutter: var(--spacing-lg);
+    --cols: 8;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --gutter: var(--spacing-xl);
+    --cols: 12;
+  }
+}
+
+/* BONES: on mobile the page reserves space at its end for a sticky action-bar,
+   so the bar never covers the last content (footer included). */
+@media (max-width: 767.98px) {
+  body:has([data-action-bar]) {
+    padding-bottom: calc(var(--spacing-touch-min) + 2 * var(--spacing-md) + env(safe-area-inset-bottom));
+  }
+}

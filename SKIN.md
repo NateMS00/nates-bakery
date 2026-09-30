@@ -207,6 +207,7 @@ elevation:
   float: "0 8px 24px rgba(19, 26, 51, 0.14), 0 1px 0 {colors.hairline}"
   bar: "0 -1px 0 {colors.hairline}, 0 -6px 16px rgba(19, 26, 51, 0.08)"
   float-dark: "0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px {colors.hairline}"
+  bar-dark: "0 -1px 0 {colors.hairline}, 0 -6px 16px rgba(0, 0, 0, 0.4)"
 
 motion:
   fast: 120ms
@@ -332,6 +333,27 @@ components:
   text-link-disabled:
     textColor: "{colors.disabled}"
     textDecoration: "none"
+    cursor: "not-allowed"
+  back-link:
+    textColor: "{colors.primary}"
+    typography: "{typography.button}"
+    iconSize: "{sizing.icon-sm}"
+    gap: "{spacing.xs}"
+    minHeight: "{sizing.touch-min}"
+    textDecoration: "none"
+  back-link-hover:
+    textDecoration: "underline"
+    textUnderlineOffset: "3px"
+  back-link-active:
+    textColor: "{colors.primary-active}"
+    textDecoration: "underline"
+  back-link-focus:
+    textDecoration: "underline"
+    outline: "3px solid {colors.focus-ring}"
+    outlineOffset: "2px"
+    rounded: "{rounded.sm}"
+  back-link-disabled:
+    textColor: "{colors.disabled}"
     cursor: "not-allowed"
   nav-link:
     textColor: "{colors.body}"
@@ -863,6 +885,13 @@ components:
     minHeight: "64px"
     padding: "0 {spacing.base}"
     bottomEdge: "{components.tile-band}"
+  app-footer:
+    backgroundColor: "{colors.canvas}"
+    borderTop: "1px solid {colors.hairline}"
+    padding: "{spacing.lg} {spacing.base}"
+    marginTop: "{spacing.2xl}"
+    linkColor: "{colors.muted}"
+    typography: "{typography.caption}"
   wordmark:
     textColor: "{colors.primary}"
     typography: "{typography.wordmark}"
@@ -953,11 +982,16 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 
 ### Font Import
 
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Atkinson+Hyperlegible+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-```
+The fonts are self-hosted, not loaded from Google Fonts: this guarantees Fraunces's `SOFT` axis (the look depends on it), keeps the app working offline as a Home Screen web app, and sends no request to a third party. The source files are the variable TTFs in `design-reference/fonts/` (SIL Open Font License, included). Convert them to woff2 and subset to Latin (Basic Latin, Latin-1 Supplement, Latin Extended-A, plus the ½ ¼ ¾ fractions, °, ×, and typographic punctuation) before shipping.
+
+| Family name | File | Axes kept |
+|---|---|---|
+| Fraunces | `Fraunces.woff2` | wght 300–700, opsz 9–144, SOFT 0–100 |
+| Fraunces (italic) | `Fraunces-Italic.woff2` | same |
+| Atkinson Hyperlegible Next | `AtkinsonHyperlegibleNext.woff2` | wght 400–700 |
+| Atkinson Hyperlegible Mono | `AtkinsonHyperlegibleMono.woff2` | wght 400–700 |
+
+Declare each with `font-display: swap`, and preload the two used in the first viewport (Fraunces upright and Atkinson Hyperlegible Next). In Next.js, `next/font/local` does all of this.
 
 ### Type Scale
 
@@ -981,6 +1015,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 
 ### Principles
 - The body size is 17px, one step above the usual 16, and nothing a baker reads mid-bake is under 15px: phones sit on the counter, not in the hand.
+- Fraunces's `WONK` axis stays at the font file's default (on). Its leaning n, m, h and k are part of the hand-made feel, visible in the wordmark; don't set `WONK` to 0.
 - Serif is for naming things (recipes, sections, groups); sans is for doing things (steps, buttons, notes). Never set a step or a button in Fraunces, and never set a recipe title in Atkinson.
 - Every number that is weighed or timed uses a mono token (`amount`, `amount-lg`, `timer`, `step-number`), so figures never shift width as a timer counts down or a scale changes. The unit after it ("g") is set in the reading face in `{colors.muted}`, 3px from the number, because a monospaced space leaves an awkward gap ("250  g").
 - Times inside step text ("15 min") are not set in mono; they use `time-mark` in the reading face, so the sentence keeps its rhythm.
@@ -989,7 +1024,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 - Uppercase appears only in `label`, always tracked +0.9px, and only for short tags (one to three words).
 
 ### Font Substitutes
-All three faces are free on Google Fonts. Fallbacks, in order: Fraunces → Iowan Old Style → Georgia; Atkinson Hyperlegible Next → Avenir Next → system-ui; Atkinson Hyperlegible Mono → SF Mono → ui-monospace. Fallbacks must keep tabular figures for amounts (`font-variant-numeric: tabular-nums`).
+All three faces are free (SIL Open Font License) and self-hosted. Fallbacks, in order: Fraunces → Iowan Old Style → Georgia; Atkinson Hyperlegible Next → Avenir Next → system-ui; Atkinson Hyperlegible Mono → SF Mono → ui-monospace. Fallbacks must keep tabular figures for amounts (`font-variant-numeric: tabular-nums`).
 
 ---
 
@@ -1040,6 +1075,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 - `{elevation.float}`: `0 8px 24px rgba(19, 26, 51, 0.14), 0 1px 0 {colors.hairline}`: menus, sheets, modals, `timer-alert`.
 - `{elevation.bar}`: `0 -1px 0 {colors.hairline}, 0 -6px 16px rgba(19, 26, 51, 0.08)`: the sticky `action-bar`, whose shadow points up because it sits at the bottom.
 - `{elevation.float-dark}`: `0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px {colors.hairline}`: dark mode replaces `float`, adding a hairline ring because shadows barely show on dark surfaces.
+- `{elevation.bar-dark}`: `0 -1px 0 {colors.hairline}, 0 -6px 16px rgba(0, 0, 0, 0.4)`: dark mode replaces `bar` on the sticky `action-bar`, with a stronger shadow so the bar still separates from night-cobalt content.
 
 ### Motion
 - `{motion.fast}` (120ms): hover and press feedback, chip removal, star fill.
@@ -1061,7 +1097,9 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`icon-button`** — A `{sizing.touch-min}` square with a `{sizing.icon}` icon in `{colors.ink}`; always has an accessible name. Used for Share, Edit, row menus, account, Exit, Pause, Clear timer. States: hover fills `{colors.surface-sunken}`; active fills `{colors.primary-wash}` and turns the icon cobalt; focus 3px ring; disabled `{colors.disabled}` icon.
 
-**`text-link`** — Cobalt, underlined at 1px with a 3px offset, in the surrounding text's size. Used inside sentences and for navigation-like links: Watch reel, See all bakes, Library back link, Add notes. States: hover thickens the underline to 2px; active `{colors.primary-active}`; focus 3px ring; disabled grey, no underline.
+**`text-link`** — Cobalt, underlined at 1px with a 3px offset, in the surrounding text's size. Used inside sentences and for navigation-like links: Watch reel, See all bakes, Add notes. Back links use `back-link` instead. States: hover thickens the underline to 2px; active `{colors.primary-active}`; focus 3px ring; disabled grey, no underline.
+
+**`back-link`** — The "‹ Library" / "‹ Recipe title" link at the top of a page: bold cobalt `{typography.button}` with an `{sizing.icon-sm}` chevron, no underline at rest, because the chevron and position already make it unmistakably navigation (WCAG only requires the underline for links inside running text). Its hit area is the full `{sizing.touch-min}` height. States: hover underlines at 3px offset; active `{colors.primary-active}` and underlined; focus underlined plus the 3px ring; disabled grey.
 
 **`nav-link`** — The shell's Library and Import links: `{colors.body}` `{typography.button}` with a 3px bottom bar. States: hover darkens to ink and shows a hairline bar; active (current page) turns cobalt with a cobalt bar, and also carries `aria-current="page"`; focus 3px ring; disabled grey.
 
@@ -1109,11 +1147,11 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`draft-row`** — Like a recipe item but with a dashed `{colors.border}` edge, the visual idea of a tile not yet fired, plus a status caption ("Importing…", "Ready to review"). While importing it is non-interactive and shown in its disabled look (grout fill, muted text) with a live status. States: hover solid cobalt border; active cobalt wash; focus 3px ring; disabled as described.
 
-**`ingredient-row`** — Name in ink `body-md` on the left, grams in ink `amount` on a shared right edge (the "g" unit in muted `body-md`, 3px after the number), a hairline below each row, and markers or the "was 1 cup" original in muted caption under the name.
+**`ingredient-row`** — Name in ink `body-md` on the left, grams in ink `amount` on a shared right edge (the "g" unit in muted `body-md`, 3px after the number), a hairline below each row, and markers or the "was 1 cup" original in muted caption under the name. A "to taste" ingredient shows the words "to taste" in muted `body-md` where the amount would be, with no marker: markers are only for amounts that need attention.
 
 **`timer-row`** — A card with the step label in muted caption and the time in `{typography.timer}`; Pause and Clear are `icon-button`s. When the timer finishes, `timer-row-done` fills it with `{colors.warning-wash}` and turns the time and border `{colors.warning}` until dismissed.
 
-**`menu`** + **`menu-item`** — Anchored dropdowns (account menu, row menus on desktop): a glazed card with `{elevation.float}`; items are 48px rows of ink `body-md`. `menu-item-destructive` (Delete) uses `{colors.error}` text. Item states: hover grout fill; active cobalt wash and text; focus 3px inset ring; disabled grey. On mobile the same items render inside a `sheet`.
+**`menu`** + **`menu-item`** — Anchored dropdowns (account menu, row menus on desktop): a glazed card with `{elevation.float}`; items are 48px rows of ink `body-md`. `menu-item-destructive` (Delete) uses `{colors.error}` text. Item states: hover grout fill; active cobalt wash and text; focus 3px inset ring; disabled grey. On mobile, row menus (editor rows, bake log entries) render their items inside a `sheet`; the account menu stays an anchored dropdown on every device, because three items don't justify a sheet.
 
 **`notice-info`**, **`notice-warning`**, **`notice-error`** — One-line banners inside the page (has-estimates, timer alerts card, save failed, import failed): a wash background with a 4px left accent in the semantic colour, ink `body-sm` text, and an optional `button-text` action at the end. Warning is for estimates; info for timer alerts and "Everything checked"; error for failures and the save-blocked summary.
 
@@ -1133,6 +1171,8 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`app-header`** — The shell header: canvas fill, 64px tall, wordmark on the left, with a `tile-band` as its bottom edge on every page of the App and Share variants. In Bake Mode (Focus variant) the band is dropped to keep attention on the step.
 
+**`app-footer`** — The shell footer: canvas fill with a hairline top rule, `{spacing.2xl}` above it, and its links (Privacy) in muted `caption`, underlined as `text-link`s. Quiet on purpose: it only has to be findable.
+
 **`wordmark`** — "Backery" in Fraunces italic `wordmark` style, cobalt. Links to the Library in the App variant; plain text in the Share variant.
 
 **`tile-band`** — A 24px strip of the azulejo motif in cobalt on canvas, between two 1px cobalt rules, like the painted border (barra) that frames a tile panel. Used under `app-header` and along the top of `sheet`. Decorative and hidden from assistive technology.
@@ -1147,9 +1187,9 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 | Breakpoint | Width | Key Changes |
 |---|---|---|
-| Mobile | < 768px | 4 columns, `{spacing.base}` gutters. Page H1s use `display-md`. Primary actions move into the sticky `action-bar`. Filters live in a `sheet`. Menus render as sheets. `step-text` at 24px |
+| Mobile | < 768px | 4 columns, `{spacing.base}` gutters. Page H1s use `display-md`. Primary actions move into the sticky `action-bar`. Filters live in a `sheet`. Row menus render as sheets; the account menu stays a dropdown. `step-text` at 24px |
 | Tablet | 768–1279px | 8 columns, `{spacing.lg}` gutters. Two-column recipe layout (ingredients 3, steps 5). `step-text` at 28px. Sheets become `modal`s. Primary actions return to page headers except in Bake Mode |
-| Desktop | ≥ 1280px | 12 columns, `{spacing.xl}` gutters. Page H1s use `display-lg`. Filters in one row. Menus as anchored `menu`s |
+| Desktop | ≥ 1280px | 12 columns, `{spacing.xl}` gutters. Page H1s use `display-lg`. Filters in one row. All menus as anchored `menu`s |
 | Wide | > 1264px content | Content caps at `{sizing.content-max}` (1200px) and centers; the `tile-band` still runs the full window width |
 
 ### Touch Targets
@@ -1167,7 +1207,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 ### Dark Mode
 - Follows the device setting (`prefers-color-scheme`) by default. Every colour token has a `colors-dark` value; components don't change.
 - Cobalt flips from a deep fill to a light glaze-blue (`#9DB6FF`), and `on-primary` flips to the night canvas, so primary buttons stay the brightest thing on the page.
-- `elevation.float` becomes `elevation.float-dark`.
+- `elevation.float` becomes `elevation.float-dark`, and `elevation.bar` becomes `elevation.bar-dark`.
 - The azulejo motif keeps using `{colors.primary}`, so it glows light blue on night-cobalt, like tiles under a streetlight.
 
 ---
@@ -1206,7 +1246,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 1. Read this SKIN.md, then SKELETON.md and the route's BONES files, before writing any UI.
 2. Generate the theme once from `colors` and `colors-dark` as CSS custom properties with identical names (`--color-primary`), switched by `prefers-color-scheme`; components never branch on the theme.
-3. Load the three fonts from the Font Import URL; apply `font-variant-numeric: tabular-nums` wherever a mono token is used.
+3. Self-host the three fonts as described in Font Import (woff2, Latin subset, `font-display: swap`); apply `font-variant-numeric: tabular-nums` wherever a mono token is used.
 4. `{colors.primary}` appears on one `button-primary` per screen, selected states, links, the wordmark, and the tile motif, nowhere else. `{colors.crust}` appears only in stars and `timer-alert`.
 5. Every number the user weighs or times uses `amount`, `amount-lg`, `timer`, or `step-number`, right-aligned in lists; its unit uses the reading face in `{colors.muted}`; times inside step text use `time-mark`.
 6. Cards and rows are border-only; use `{elevation.float}` only for `menu`, `sheet`, `modal`, and `timer-alert`, and `{elevation.bar}` only for `action-bar`.

@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.3.0 · **Updated**: 2026-09-29
+> **Version**: 1.3.1 · **Updated**: 2026-09-29
 
 ---
 
@@ -331,6 +331,10 @@ Default access: public.
 - **Assumed**: The rating filter means "this many stars or more"; unrated recipes only appear when no rating filter is set.
 - **Assumed**: Timer alerts on a locked iPhone use web notifications, which iOS only allows for web apps opened from the Home Screen. Because the page is paused when the phone locks, the server schedules each alert from the timer's end time; timers are therefore saved on the server, not only on the device.
 - **Assumed**: Each step links to the ingredients it uses; the importer proposes the links and the owner can change them in the editor.
+- **Assumed**: Ingredient groups and step groups are separate lists that often share names ("Crust" in both; "Baking" only in steps). Each ingredient and each step belongs to at most one group of its own list; "Add step group" offers the recipe's ingredient group names first, then Assembly, Baking, and Finishing.
+- **Assumed**: Yield is stored as a quantity plus a unit in singular and plural ("1 loaf", "2 loaves"). When scaled, counts round to whole numbers and read "about" when rounding changed the value ("about 16 tarts" at 1.3×).
+- **Assumed**: A step can contain several detected times ("bake 25 minutes, then rest 10 minutes"); each becomes its own timer in Bake Mode.
+- **Assumed**: "To taste" is an amount state, not a marker; it never blocks saving and is never flagged in Needs Your Check.
 - **Assumed**: Component groups use a suggested list covering breads, cakes, pies and tarts, and creams, but accept any name.
 - **Assumed**: Every imported recipe keeps the creator handle and reel link, including on shared pages.
 - **Open**: Scale by pan size or servings, not just a multiplier? This would change the Scale section.
@@ -344,6 +348,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.3.1 (2026-09-29): Recorded data decisions from the build kickoff: separate ingredient and step groups, structured yield with rounding, several timers per step, "to taste" as an amount state.
 - 1.3.0 (2026-09-29): Added FLOW-05 Turn on timer alerts (Home Screen web app + notifications), Timer alerts in the account menu, and ingredients linked to each step.
 - 1.2.1 (2026-09-29): Review Import's Source now includes the reel transcript.
 - 1.2.0 (2026-09-29): Added recipe categories and the Library category filter.

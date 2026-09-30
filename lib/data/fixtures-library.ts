@@ -2,6 +2,7 @@
 // filter has something to find. Their ingredients and steps are brief on purpose.
 // "Other" has no recipes, so the Category filter must leave it out.
 
+import type { EditorIngredient, EditorState } from "./editor";
 import type { Category, Draft, Ingredient, Recipe, Step } from "./types";
 
 type Simple = {
@@ -97,9 +98,148 @@ export const LIBRARY_RECIPES: Recipe[] = [
   simple({ id: "tiramisu", title: "Tiramisu", category: "dessert", created: "2026-08-28", makes: [8, "serving", "servings"], minutes: 360 }),
 ];
 
+// Drafts for the Library and Review Import. The babka is the main review case: groups,
+// 2 Missing, 3 Estimated, 1 Converted, a caption and a spoken transcript. The canelés
+// have nothing flagged. The madeleines have no caption and no groups.
+
+const ing = (id: string, groupId: string | null, name: string, amount: string, status: EditorIngredient["status"] = "confirmed", original?: string): EditorIngredient => ({
+  id, groupId, name, amount, toTaste: false, status, original,
+});
+
+const babka: EditorState = {
+  title: "Chocolate tahini babka with a sesame crunch topping and a sticky syrup glaze",
+  category: "viennoiserie",
+  categorySuggested: true,
+  yieldQuantity: "2",
+  yieldUnit: "loaves",
+  hours: "14",
+  minutes: "30",
+  sourceUrl: "https://www.instagram.com/reel/Cbabka22/",
+  creatorHandle: "braided.bea",
+  ingredientGroups: [
+    { id: "bg-dough", name: "Dough" },
+    { id: "bg-filling", name: "Filling" },
+    { id: "bg-syrup", name: "Syrup" },
+  ],
+  stepGroups: [
+    { id: "bs-dough", name: "Dough" },
+    { id: "bs-filling", name: "Filling" },
+    { id: "bs-assembly", name: "Assembly" },
+    { id: "bs-baking", name: "Baking" },
+  ],
+  ingredients: [
+    ing("b-flour", "bg-dough", "Strong white bread flour", "500"),
+    ing("b-milk", "bg-dough", "Whole milk, lukewarm", "120", "converted", "½ cup"),
+    ing("b-sugar", "bg-dough", "Caster sugar", "100", "estimated"),
+    ing("b-yeast", "bg-dough", "Instant yeast", "7"),
+    ing("b-eggs", "bg-dough", "Eggs", "150"),
+    ing("b-butter", "bg-dough", "Unsalted butter, soft", ""),
+    ing("b-salt", "bg-dough", "Fine salt", ""),
+    ing("b-choc", "bg-filling", "Dark chocolate, 70%", "150"),
+    ing("b-tahini", "bg-filling", "Tahini", "120", "converted", "½ cup"),
+    ing("b-cocoa", "bg-filling", "Cocoa powder", "30", "estimated"),
+    ing("b-sesame", "bg-filling", "Toasted sesame seeds", "20"),
+    ing("b-syrup-sugar", "bg-syrup", "Granulated sugar", "100"),
+    ing("b-water", "bg-syrup", "Water", "80", "estimated"),
+  ],
+  steps: [
+    { id: "bst-1", groupId: "bs-dough", text: "Mix the flour, sugar, yeast, milk and eggs for 5 minutes, then add the salt and knead in the butter a little at a time.", ingredientIds: ["b-flour", "b-sugar", "b-yeast", "b-milk", "b-eggs", "b-salt", "b-butter"] },
+    { id: "bst-2", groupId: "bs-dough", text: "Cover and refrigerate overnight, at least 12 hours.", ingredientIds: [] },
+    { id: "bst-3", groupId: "bs-filling", text: "Melt the chocolate and stir in the tahini, cocoa and half the sesame seeds.", ingredientIds: ["b-choc", "b-tahini", "b-cocoa", "b-sesame"] },
+    { id: "bst-4", groupId: "bs-assembly", text: "Roll each half of the dough into a rectangle, spread with filling, roll up, halve lengthways and twist. Proof for 1 to 2 hours.", ingredientIds: [] },
+    { id: "bst-5", groupId: "bs-baking", text: "Bake at 180 °C for 35 minutes. Boil the sugar and water for 2 min and brush over the hot loaves.", ingredientIds: ["b-syrup-sugar", "b-water", "b-sesame"] },
+  ],
+};
+
+const canele: EditorState = {
+  title: "Canelés de Bordeaux",
+  category: "pastry",
+  categorySuggested: true,
+  yieldQuantity: "12",
+  yieldUnit: "canelés",
+  hours: "49",
+  minutes: "",
+  sourceUrl: "https://www.instagram.com/reel/Ccanele7/",
+  creatorHandle: "bordeaux.bakes",
+  ingredientGroups: [],
+  stepGroups: [],
+  ingredients: [
+    ing("c-milk", null, "Whole milk", "500"),
+    ing("c-butter", null, "Unsalted butter", "50"),
+    ing("c-flour", null, "Plain flour", "100"),
+    ing("c-sugar", null, "Caster sugar", "200"),
+    ing("c-yolks", null, "Egg yolks", "80"),
+    ing("c-rum", null, "Dark rum", "50"),
+    { id: "c-vanilla", groupId: null, name: "Vanilla pod", amount: "", toTaste: true, status: "confirmed" },
+  ],
+  steps: [
+    { id: "cst-1", groupId: null, text: "Heat the milk with the butter and vanilla, then cool.", ingredientIds: ["c-milk", "c-butter", "c-vanilla"] },
+    { id: "cst-2", groupId: null, text: "Whisk in the flour, sugar, yolks and rum. Rest in the fridge for 48 hours.", ingredientIds: ["c-flour", "c-sugar", "c-yolks", "c-rum"] },
+    { id: "cst-3", groupId: null, text: "Bake at 230 °C for 15 minutes, then at 180 °C for 45 minutes.", ingredientIds: [] },
+  ],
+};
+
+const madeleines: EditorState = {
+  title: "Brown butter madeleines",
+  category: "cake",
+  categorySuggested: true,
+  yieldQuantity: "24",
+  yieldUnit: "madeleines",
+  hours: "",
+  minutes: "90",
+  sourceUrl: "https://www.instagram.com/reel/Cmadel3/",
+  creatorHandle: "coquille.co",
+  ingredientGroups: [],
+  stepGroups: [],
+  ingredients: [
+    ing("m-butter", null, "Unsalted butter", "125"),
+    ing("m-eggs", null, "Eggs", "100"),
+    ing("m-sugar", null, "Caster sugar", "100"),
+    ing("m-flour", null, "Plain flour", "120", "converted", "1 cup"),
+    ing("m-honey", null, "Honey", "20", "estimated"),
+  ],
+  steps: [
+    { id: "mst-1", groupId: null, text: "Brown the butter and let it cool.", ingredientIds: ["m-butter"] },
+    { id: "mst-2", groupId: null, text: "Whisk the eggs, sugar and honey, fold in the flour and butter, and chill for 1 hour.", ingredientIds: ["m-eggs", "m-sugar", "m-honey", "m-flour"] },
+    { id: "mst-3", groupId: null, text: "Bake at 200 °C for 9 minutes.", ingredientIds: [] },
+  ],
+};
+
 export const DRAFTS: Draft[] = [
   { id: "d-importing", status: "importing", title: null, creatorHandle: "kouign.kate", reelUrl: "https://www.instagram.com/reel/Ckouign01/", createdAt: "2026-09-30T08:10:00Z" },
-  { id: "d-babka", status: "ready", title: "Chocolate tahini babka with a sesame crunch topping and a sticky syrup glaze", creatorHandle: "braided.bea", reelUrl: "https://www.instagram.com/reel/Cbabka22/", createdAt: "2026-09-29T19:40:00Z" },
-  { id: "d-canele", status: "ready", title: "Canelés de Bordeaux", creatorHandle: "bordeaux.bakes", reelUrl: "https://www.instagram.com/reel/Ccanele7/", createdAt: "2026-09-28T21:05:00Z" },
-  { id: "d-madeleines", status: "ready", title: "Brown butter madeleines", creatorHandle: "coquille.co", reelUrl: "https://www.instagram.com/reel/Cmadel3/", createdAt: "2026-09-21T10:00:00Z" },
+  {
+    id: "d-babka",
+    status: "ready",
+    title: babka.title,
+    creatorHandle: "braided.bea",
+    reelUrl: babka.sourceUrl,
+    createdAt: "2026-09-29T19:40:00Z",
+    transcript: {
+      caption:
+        "The babka that broke my feed 🍫 Tahini + dark chocolate + a crunchy sesame top. Recipe below! 500g bread flour, 1/2 cup warm milk, sugar, 7g yeast, 3 eggs, soft butter, salt. Filling: 150g dark chocolate, 1/2 cup tahini, a few spoons of cocoa, sesame. Syrup: 100g sugar + a splash of water. Save this for the weekend!",
+      spoken:
+        "Okay so start with your dough, flour, a little sugar, the yeast, warm milk and three eggs. Mix it for about five minutes, then the salt and the butter, bit by bit, it takes a while but that's what makes it so soft. Into the fridge overnight. Next day, melt the chocolate, tahini, cocoa, half the sesame. Roll, spread, roll it up, cut it in half and twist. Let it rise one to two hours, bake at one-eighty for thirty-five minutes, and brush the syrup on while it's hot.",
+    },
+    content: babka,
+  },
+  {
+    id: "d-canele",
+    status: "ready",
+    title: canele.title,
+    creatorHandle: "bordeaux.bakes",
+    reelUrl: canele.sourceUrl,
+    createdAt: "2026-09-28T21:05:00Z",
+    transcript: { caption: "Canelés, the real Bordeaux way. Two days of patience for that crust.", spoken: "Rest the batter forty-eight hours. Don't skip it." },
+    content: canele,
+  },
+  {
+    id: "d-madeleines",
+    status: "ready",
+    title: madeleines.title,
+    creatorHandle: "coquille.co",
+    reelUrl: madeleines.sourceUrl,
+    createdAt: "2026-09-21T10:00:00Z",
+    transcript: { spoken: "Brown butter, honey, and a cold batter. That's the hump." },
+    content: madeleines,
+  },
 ];

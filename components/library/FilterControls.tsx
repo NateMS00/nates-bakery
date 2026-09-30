@@ -33,7 +33,7 @@ export function FilterRow({
 }) {
   const ratingOptions = filters.rating && !RATING_OPTIONS.some((o) => o.value === filters.rating) ? [ratingLabel(filters.rating), ...RATING_OPTIONS] : RATING_OPTIONS;
   return (
-    <div className="flex flex-wrap items-end gap-x-lg gap-y-base">
+    <div role="group" aria-label="Filters" className="flex flex-wrap items-end gap-x-lg gap-y-base">
       <Select
         id="filter-category"
         label="Category"

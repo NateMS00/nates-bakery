@@ -19,6 +19,8 @@ export async function capture(page: Page, dir: string, name: string, fullPage = 
 export async function ready(page: Page, path: string) {
   await page.goto(path);
   await page.getByRole("heading", { level: 1 }).waitFor();
+  // Loading states have an H1 too; wait until the page has replaced them.
+  await expect(page.getByRole("status").filter({ hasText: /^Loading / })).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
 }
 

@@ -140,9 +140,14 @@ export function RecipeView({ initial }: { initial: Recipe }) {
               </p>
             )}
             <p className="mt-xs type-body-sm text-body">
-              {formatYield(recipe.yield, scale)} <span aria-hidden="true">·</span>{" "}
-              <span className="sr-only">, total time </span>
-              {formatDuration(recipe.totalTimeMinutes)}
+              {formatYield(recipe.yield, scale)}
+              {recipe.totalTimeMinutes > 0 && (
+                <>
+                  {" "}
+                  <span aria-hidden="true">·</span> <span className="sr-only">, total time </span>
+                  {formatDuration(recipe.totalTimeMinutes)}
+                </>
+              )}
             </p>
           </div>
         </div>

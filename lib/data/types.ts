@@ -97,7 +97,7 @@ export interface Recipe {
   createdAt: string;
 }
 
-/** An unsaved import. Minimal until Review Import is built (PROMPTS.md step 3). */
+/** An unsaved import (SKELETON FLOW-01). */
 export interface Draft {
   id: string;
   status: "importing" | "ready";
@@ -106,4 +106,8 @@ export interface Draft {
   creatorHandle: string;
   reelUrl: string;
   createdAt: string;
+  /** What the reel says, in two parts; each is absent when the reel has none. */
+  transcript?: { caption?: string; spoken?: string };
+  /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */
+  content?: import("./editor").EditorState;
 }

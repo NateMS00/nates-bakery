@@ -4,7 +4,7 @@
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.0 · **Updated**: 2026-09-30
+> **Version**: 1.1.1 · **Updated**: 2026-09-30
 
 ---
 
@@ -125,7 +125,7 @@ MOBILE
 ```
 
 ### Recipes (SKELETON section 4)
-- **Layout**: desktop full width, one row per recipe: title 5 cols, category 2, rating 2, last baked 2, favorite mark 1; mobile one card per recipe, full width: category label on the first line, title on the second, rating, favorite mark, and last-baked status on the third
+- **Layout**: desktop (1280px and up) full width, one row per recipe: title 5 cols, category 2, rating 2, last baked 2, favorite mark 1; mobile and tablet (under 1280px) one card per recipe, full width: category label on the first line, title on the second, rating, favorite mark, and last-baked status on the third
 - **Content**: a result count above the list ("24 recipes", or "3 of 24 recipes" when searching or filtering); each item links to `/recipes/:recipeId`; title wraps to at most 2 lines, then truncates; rating as small stars or "Not rated"; favorite as a mark only (not a toggle here); "Baked 12 Sep" or "Not baked yet"; order is most recently baked or added first; 30 items, then "Show more" loads the next 30 below
 - **Behavior**: the whole row or card is one link; nothing inside it is separately interactive
 
@@ -198,6 +198,7 @@ MOBILE
 - **Assumed**: 30 recipes, then Show more, instead of infinite scroll, so the footer stays reachable and position survives going back.
 - **Assumed**: The favorite mark in the list is read-only, so scrolling with a thumb can't toggle it by accident; favoriting happens on the Recipe page.
 - **Assumed**: The desktop list is rows, not a card grid, because there are no photos yet and text rows scan faster.
+- **Assumed**: Tablet (768–1279px) uses the mobile cards, not the rows: at 768px the row squeezed "Baked Sat 12 Sep" onto two lines. Rows start at 1280px. Tablet uses the desktop filter row, which wraps to two lines.
 - **Open**: Recipe photos (SKELETON open question). If added, mobile cards gain a small thumbnail on the left and the desktop list could become a grid; the current layout leaves room for a thumbnail column.
 - **Open**: A sort control (for example, by rating or A–Z). SKELETON fixes the order to most recently baked or added; a sort control would add a query param and a control in Filters.
 
@@ -205,5 +206,6 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.1 (2026-09-30): Recorded tablet behavior from the build: recipe cards under 1280px, rows from 1280px; desktop filter row wraps on tablet.
 - 1.1.0 (2026-09-30): After the first build review: 2 drafts on mobile, Filters sheet with wrapping chips and a close X, "Search" label, no-results count in words.
 - 1.0.0 (2026-09-29): Initial wireframe.

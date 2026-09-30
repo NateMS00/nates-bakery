@@ -152,7 +152,7 @@ test("tablet: the filter row wraps to two lines at 768px instead of overflowing"
   test.skip(test.info().project.name !== "desktop-light", "runs once, at 768");
   await page.setViewportSize({ width: 768, height: 1024 });
   await ready(page, "/recipes?category=cake&favorite=1");
-  const row = page.getByLabel("Category").locator("xpath=ancestor::div[contains(@class,'flex-wrap')][1]");
+  const row = page.getByRole("group", { name: "Filters" });
   const box = await row.evaluate((el) => ({ h: el.getBoundingClientRect().height, overflow: el.scrollWidth - el.clientWidth }));
   expect(box.overflow).toBeLessThanOrEqual(0);
   expect(box.h).toBeGreaterThan(100); // two lines (one line is about 72px)

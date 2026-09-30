@@ -7,11 +7,14 @@ import { cx } from "./cx";
 
 export function Toggle({
   label,
+  spoken,
   checked,
   onChange,
   className,
 }: {
   label: string;
+  /** A fuller accessible name that starts with the visible label ("To taste, Fine salt"). */
+  spoken?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   className?: string;
@@ -21,6 +24,7 @@ export function Toggle({
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={spoken}
       onClick={() => onChange(!checked)}
       className={cx(
         "group inline-flex min-h-touch-min items-center gap-md rounded-md type-body-md text-ink focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:text-disabled",

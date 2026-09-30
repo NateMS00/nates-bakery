@@ -4,10 +4,11 @@ import { useMemo, useSyncExternalStore } from "react";
 import type { BakeLogEntry, Draft, Recipe } from "./types";
 
 // In-memory client store for owner edits (favorite, rating, bake log, share link)
-// until there is a backend. Seeded per recipe from the server-rendered fixture;
-// changes last until the page is reloaded.
+// until there is a backend. Kept as patches over the server's recipe, so content
+// saved on the server (an edit) always shows; patches last until a reload.
 
-const recipes = new Map<string, Recipe>();
+type Patch = Partial<Pick<Recipe, "favorite" | "rating" | "bakeLog" | "shareLink">>;
+const patches = new Map<string, Patch>();
 const drafts = new Map<string, Draft>();
 const listeners = new Set<() => void>();
 let version = 0;
@@ -29,7 +30,7 @@ const getServerVersion = () => 0;
 export function useRecipes(initial: Recipe[]): Recipe[] {
   const v = useSyncExternalStore(subscribe, getVersion, getServerVersion);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- v marks store changes
-  return useMemo(() => initial.map((r) => recipes.get(r.id) ?? r), [initial, v]);
+  return useMemo(() => initial.map(patched), [initial, v]);
 }
 
 /** Drafts with this session's changes applied. */
@@ -58,35 +59,43 @@ export function simulateImports(initial: Draft[]) {
 export function useRecipe(initial: Recipe): Recipe {
   return useSyncExternalStore(
     subscribe,
-    () => recipes.get(initial.id) ?? initial,
+    () => patched(initial),
     () => initial,
   );
 }
 
-function update(initial: Recipe, change: (r: Recipe) => Recipe) {
-  const current = recipes.get(initial.id) ?? initial;
-  recipes.set(initial.id, change(current));
+// Patched objects are cached per server object, so snapshots stay stable.
+const cache = new WeakMap<Recipe, { patch: Patch; value: Recipe }>();
+function patched(r: Recipe): Recipe {
+  const patch = patches.get(r.id);
+  if (!patch) return r;
+  const hit = cache.get(r);
+  if (hit && hit.patch === patch) return hit.value;
+  const value = { ...r, ...patch };
+  cache.set(r, { patch, value });
+  return value;
+}
+
+function update(initial: Recipe, change: (r: Recipe) => Patch) {
+  patches.set(initial.id, { ...patches.get(initial.id), ...change(patched(initial)) });
   emit();
 }
 
 export function recipeActions(initial: Recipe) {
   return {
-    setFavorite: (favorite: boolean) => update(initial, (r) => ({ ...r, favorite })),
-    setRating: (rating: number | null) => update(initial, (r) => ({ ...r, rating })),
+    setFavorite: (favorite: boolean) => update(initial, () => ({ favorite })),
+    setRating: (rating: number | null) => update(initial, () => ({ rating })),
     /** Adds a log entry and returns it (with its new id), so it can be undone. */
     addBake: (fields: Omit<BakeLogEntry, "id">): BakeLogEntry => {
       const entry = { id: crypto.randomUUID(), ...fields };
-      update(initial, (r) => ({ ...r, bakeLog: [entry, ...r.bakeLog] }));
+      update(initial, (r) => ({ bakeLog: [entry, ...r.bakeLog] }));
       return entry;
     },
     removeBake: (entryId: string) =>
-      update(initial, (r) => ({ ...r, bakeLog: r.bakeLog.filter((e) => e.id !== entryId) })),
+      update(initial, (r) => ({ bakeLog: r.bakeLog.filter((e) => e.id !== entryId) })),
     createShareLink: () =>
-      update(initial, (r) => ({
-        ...r,
-        shareLink: { token: randomToken(), createdAt: new Date().toISOString() },
-      })),
-    revokeShareLink: () => update(initial, (r) => ({ ...r, shareLink: null })),
+      update(initial, () => ({ shareLink: { token: randomToken(), createdAt: new Date().toISOString() } })),
+    revokeShareLink: () => update(initial, () => ({ shareLink: null })),
   };
 }
 

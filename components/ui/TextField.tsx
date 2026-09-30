@@ -28,7 +28,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           "flex min-h-control-height items-center rounded-md border border-border bg-surface-card text-ink transition-colors duration-(--motion-fast) ease-skin",
           "hover:border-ink focus-within:border-primary focus-within:outline-3 focus-within:outline-offset-1 focus-within:outline-focus-ring",
           amount ? "px-md" : "px-base",
-          error && "border-2 border-error hover:border-error",
+          error && "border-2 border-error! hover:border-error",
           error && amount && "bg-error-wash",
           props.disabled && "border-hairline bg-surface-disabled text-disabled",
         )}

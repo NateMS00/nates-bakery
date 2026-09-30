@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
-import { DRAFTS, LIBRARY_RECIPES } from "./fixtures-library";
+import { DRAFTS, LIBRARY_RECIPES, importedContent } from "./fixtures-library";
+import { IMPORT_MS } from "./import";
 import { RECIPES } from "./fixtures";
 import type { Draft, Recipe } from "./types";
 
@@ -36,7 +37,23 @@ export async function db(): Promise<Db> {
     found = seed();
     store.__backeryDb!.set(ns, found);
   }
+  completeImports(found);
   return found;
+}
+
+/** STUB import service: a started import is ready IMPORT_MS after it began. */
+function completeImports(data: Db) {
+  for (const d of data.drafts) {
+    if (d.status === "importing" && d.startedAt && Date.now() - d.startedAt >= IMPORT_MS) {
+      d.status = "ready";
+      d.content = importedContent(d.reelUrl);
+      d.title = d.content.title;
+      d.transcript = {
+        caption: "Kouign-amann, the butteriest pastry in Brittany. Laminated dough, lots of sugar, caramelised edges.",
+        spoken: "Laminate the dough with the butter, sprinkle sugar on every fold, roll it up, and bake until the sugar turns to caramel, about twenty-five minutes.",
+      };
+    }
+  }
 }
 
 async function simulatedLatency() {

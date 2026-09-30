@@ -106,6 +106,8 @@ export interface Draft {
   creatorHandle: string;
   reelUrl: string;
   createdAt: string;
+  /** When a stubbed import started (ms); it becomes ready IMPORT_MS later. */
+  startedAt?: number;
   /** What the reel says, in two parts; each is absent when the reel has none. */
   transcript?: { caption?: string; spoken?: string };
   /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */

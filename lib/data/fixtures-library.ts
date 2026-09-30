@@ -243,3 +243,32 @@ export const DRAFTS: Draft[] = [
     content: madeleines,
   },
 ];
+
+/** STUB extraction result for a newly imported reel: a kouign-amann with things to check. */
+export function importedContent(reelUrl: string): EditorState {
+  return {
+    title: "Kouign-amann",
+    category: "viennoiserie",
+    categorySuggested: true,
+    yieldQuantity: "12",
+    yieldUnit: "pastries",
+    hours: "4",
+    minutes: "",
+    sourceUrl: reelUrl,
+    creatorHandle: "kouign.kate",
+    ingredientGroups: [],
+    stepGroups: [],
+    ingredients: [
+      ing("k-flour", null, "Strong white bread flour", "300"),
+      ing("k-water", null, "Water", "200", "converted", "¾ cup + 2 tbsp"),
+      ing("k-yeast", null, "Instant yeast", "5"),
+      ing("k-butter", null, "Salted butter, cold", ""),
+      ing("k-sugar", null, "Caster sugar", "200", "estimated"),
+    ],
+    steps: [
+      { id: "kst-1", groupId: null, text: "Mix the flour, water and yeast and rest for 1 hour.", ingredientIds: ["k-flour", "k-water", "k-yeast"] },
+      { id: "kst-2", groupId: null, text: "Laminate with the butter, sprinkling sugar on every fold.", ingredientIds: ["k-butter", "k-sugar"] },
+      { id: "kst-3", groupId: null, text: "Shape into 12 tins and bake at 200 °C for 25 minutes.", ingredientIds: [] },
+    ],
+  };
+}

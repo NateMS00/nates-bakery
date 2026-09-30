@@ -352,7 +352,7 @@ function IngredientRow({
           <div
             className={cx(
               "flex min-h-control-height items-center rounded-md border border-border bg-surface-card px-md text-ink hover:border-ink focus-within:border-primary focus-within:outline-3 focus-within:outline-offset-1 focus-within:outline-focus-ring",
-              error && "border-2 border-error bg-error-wash hover:border-error",
+              error && "border-2 border-error! bg-error-wash hover:border-error",
             )}
           >
             <input

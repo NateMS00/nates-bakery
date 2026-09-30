@@ -1,7 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { blockers, toRecipeContent, type EditorState } from "./editor";
+import { blockers, newId, toRecipeContent, type EditorState } from "./editor";
+import { normalizeReelUrl, type FailReason, type StartResult } from "./import";
 import { db } from "./recipes";
 import type { Recipe } from "./types";
 
@@ -97,4 +98,39 @@ export async function updateRecipe(recipeId: string, content: EditorState): Prom
 export async function deleteRecipe(recipeId: string) {
   const data = await db();
   data.recipes = data.recipes.filter((r) => r.id !== recipeId);
+}
+
+// ── Import (SKELETON FLOW-01). STUB: stands in for the import service. ──
+// Reel ids starting with Cprivate, Cdeleted, or Cnorecipe fail with that reason; any
+// other valid link becomes a draft that finishes importing on the server after
+// IMPORT_MS (see completeImports in recipes.ts), even if the owner leaves the page.
+
+const STUB_FAILURES: [RegExp, FailReason][] = [
+  [/\/Cprivate/i, "private"],
+  [/\/Cdeleted/i, "deleted"],
+  [/\/Cnorecipe/i, "no-recipe"],
+];
+
+/** Import: validate the link, catch reels already saved, then start the import. */
+export async function startImport(link: string, options: { again?: boolean } = {}): Promise<StartResult> {
+  const url = normalizeReelUrl(link);
+  if (!url) return { status: "invalid" };
+  const data = await db();
+  if (!options.again) {
+    const saved = data.recipes.find((r) => r.source && normalizeReelUrl(r.source.reelUrl) === url);
+    if (saved) return { status: "already", recipeId: saved.id, title: saved.title };
+  }
+  const failure = STUB_FAILURES.find(([re]) => re.test(url));
+  if (failure) return { status: "failed", reason: failure[1] };
+  const draftId = newId("d");
+  data.drafts.unshift({
+    id: draftId,
+    status: "importing",
+    title: null,
+    creatorHandle: "kouign.kate",
+    reelUrl: url,
+    createdAt: new Date().toISOString(),
+    startedAt: Date.now(),
+  });
+  return { status: "started", draftId };
 }

@@ -19,7 +19,7 @@ export function TileBand({ className }: { className?: string }) {
 /** tile-panel: 3:2 field of the motif for empty states. */
 export function TilePanel({ className }: { className?: string }) {
   return (
-    <div aria-hidden="true" className={cx("aspect-[3/2] max-w-full rounded-lg border border-primary bg-primary-wash text-primary", className)}>
+    <div aria-hidden="true" className={cx("aspect-[3/2] rounded-lg border border-primary bg-primary-wash text-primary", className)}>
       <div className="size-full rounded-lg tile-panel-mask" />
     </div>
   );

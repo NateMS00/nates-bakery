@@ -39,7 +39,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
           className={cx(
-            "min-w-0 flex-1 bg-transparent py-sm outline-none placeholder:text-muted disabled:cursor-not-allowed",
+            "min-w-0 flex-1 self-stretch bg-transparent outline-none placeholder:text-muted disabled:cursor-not-allowed",
             amount ? "type-amount text-right" : "type-body-md",
             className,
           )}

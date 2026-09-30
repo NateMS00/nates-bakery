@@ -96,3 +96,14 @@ export interface Recipe {
   shareLink: ShareLink | null;
   createdAt: string;
 }
+
+/** An unsaved import. Minimal until Review Import is built (PROMPTS.md step 3). */
+export interface Draft {
+  id: string;
+  status: "importing" | "ready";
+  /** Null until the extraction has found one; shown as "@creator's reel". */
+  title: string | null;
+  creatorHandle: string;
+  reelUrl: string;
+  createdAt: string;
+}

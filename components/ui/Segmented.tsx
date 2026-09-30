@@ -33,7 +33,7 @@ export function Segmented({
           aria-pressed={option.value === value}
           aria-label={option.ariaLabel}
           onClick={() => onChange(option.value)}
-          className="relative min-h-10 flex-1 rounded-sm px-md type-button text-body transition-colors duration-(--motion-fast) ease-skin after:absolute after:inset-x-0 after:-inset-y-xs after:content-[''] hover:bg-surface-card hover:text-ink focus-visible:outline-offset-1 aria-pressed:bg-primary aria-pressed:text-on-primary disabled:cursor-not-allowed disabled:text-disabled"
+          className="relative min-h-10 flex-1 rounded-sm px-md whitespace-nowrap type-button text-body transition-colors duration-(--motion-fast) ease-skin after:absolute after:inset-x-0 after:-inset-y-xs after:content-[''] hover:bg-surface-card hover:text-ink focus-visible:outline-offset-1 aria-pressed:bg-primary aria-pressed:text-on-primary disabled:cursor-not-allowed disabled:text-disabled"
         >
           {option.label}
         </button>

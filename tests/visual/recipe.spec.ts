@@ -1,79 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
+import { capture, expectFitsContent, expectPageBasics, expectTouchTargets, ready } from "./helpers";
 
 // /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md, plus the
 // Definition of Done checks from CLAUDE.md. Screenshots land in screenshots/recipe/.
 
 const NATA = "/recipes/pasteis-de-nata";
-async function shot(page: Page, name: string, fullPage = false) {
-  const path = `screenshots/recipe/${test.info().project.name}--${name}.png`;
-  if (!fullPage) return page.screenshot({ path });
-  // Full-page captures: draw the sticky action-bar once at the end of the page (in the
-  // space the page reserves for it), not pinned mid-capture.
-  const style = await page.addStyleTag({
-    content: "body{position:relative} [data-action-bar]{position:absolute!important;bottom:0!important}",
-  });
-  await page.screenshot({ path, fullPage: true });
-  await style.evaluate((el) => (el as Element).remove());
-}
-
-/** BONES-shell Overlay sizing: close X in the header, no bottom Close, no empty space below the content. */
-async function expectFitsContent(page: Page, name: string) {
-  const dialog = page.getByRole("dialog", { name });
-  await expect(dialog.getByRole("button", { name: "Close" })).toHaveCount(1);
-  const gap = await dialog.evaluate((d) => {
-    const body = d.lastElementChild as HTMLElement;
-    const last = body.lastElementChild as HTMLElement;
-    return d.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom;
-  });
-  // Only the body's bottom padding (24px, 32px on desktop) plus the safe area.
-  expect(gap).toBeLessThanOrEqual(33);
-  const ratio = await dialog.evaluate((d) => d.getBoundingClientRect().height / window.innerHeight);
-  expect(ratio).toBeLessThanOrEqual(0.9);
-}
-
-async function ready(page: Page, path: string) {
-  await page.goto(path);
-  await page.getByRole("heading", { level: 1 }).waitFor();
-  await page.evaluate(() => document.fonts.ready);
-}
+const shot = (page: Page, name: string, fullPage = false) => capture(page, "recipe", name, fullPage);
 
 test("default: pastel de nata (Has estimates)", async ({ page }) => {
   await ready(page, NATA);
   await shot(page, "01-first-viewport");
   await shot(page, "02-full", true);
 
-  // One h1 and the landmarks.
-  await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.locator("header")).toHaveCount(1);
-  await expect(page.locator("nav")).toHaveCount(1);
-  await expect(page.locator("main")).toHaveCount(1);
-  await expect(page.locator("footer")).toHaveCount(1);
+  await expectPageBasics(page);
 
   // Has estimates notice between Header and Scale.
   await expect(page.getByText("1 amount is an estimate.")).toBeVisible();
 
-  // No horizontal scroll.
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
-
-  // Touch targets: every visible interactive element is at least 48×48 (hit area included).
-  const small = await page.evaluate(() => {
-    const out: string[] = [];
-    for (const el of document.querySelectorAll<HTMLElement>("a, button, input, [role=radio]")) {
-      const r = el.getBoundingClientRect();
-      if (!r.width || getComputedStyle(el).visibility === "hidden") continue;
-      if (el.classList.contains("sr-only")) continue;
-      // Hit areas extended with ::before/::after count.
-      const pseudo = ["::before", "::after"].map((p) => getComputedStyle(el, p)).find((s) => s.content !== "none" && s.position === "absolute");
-      const extra = pseudo ? Math.max(0, -parseFloat(pseudo.top) || 0) + Math.max(0, -parseFloat(pseudo.bottom) || 0) : 0;
-      const h = r.height + extra;
-      // Inline text links inside a sentence are exempt (WCAG 2.5.8 inline exception).
-      const inline = el.tagName === "A" && getComputedStyle(el).display === "inline";
-      if (!inline && (h < 47.5 || r.width < 24)) out.push(`${el.tagName} "${el.textContent?.trim() || el.getAttribute("aria-label")}" ${Math.round(r.width)}×${Math.round(h)}`);
-    }
-    return out;
-  });
-  expect(small).toEqual([]);
+  await expectTouchTargets(page);
 });
 
 test("focus ring is a visible 3px outline", async ({ page, isMobile }) => {
@@ -128,8 +72,10 @@ test("custom scale rounds the yield with 'about'", async ({ page }) => {
 });
 
 test("invalid scale renders 1× and corrects the URL", async ({ page }) => {
-  await ready(page, `${NATA}?scale=banana`);
+  // The redirect runs in the browser, because the route has already streamed its Loading state.
+  await page.goto(`${NATA}?scale=banana`);
   await expect(page).toHaveURL(new RegExp(`${NATA}$`));
+  await page.getByRole("heading", { level: 1 }).waitFor();
   await expect(page.getByRole("button", { name: "1×" })).toHaveAttribute("aria-pressed", "true");
 });
 

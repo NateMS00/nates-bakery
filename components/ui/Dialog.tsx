@@ -9,8 +9,10 @@ import { cx } from "./cx";
 // SKIN sheet (mobile) and modal (tablet and up), on a native <dialog>:
 // showModal() makes the page inert (focus stays inside) and Esc closes it.
 // BONES-shell Overlay sizing: fits its content up to 90% of the viewport, then the
-// body scrolls; a header row holds the title and a close X. Also closes on backdrop
-// tap and, on mobile, a swipe down. Focus returns to whatever opened it.
+// body scrolls; a header row holds the title and a close X. The exceptions in
+// BONES-shell (a scrolling list with a pinned footer) pass `sheetHeight` and `footer`.
+// Also closes on backdrop tap and, on mobile, a swipe down. Focus returns to
+// whatever opened it.
 
 const widths = {
   4: "tablet:w-[calc(var(--col)*4+var(--gutter)*3)]",
@@ -22,6 +24,8 @@ export function Dialog({
   onClose,
   title,
   modalColumns,
+  sheetHeight,
+  footer,
   initialFocus,
   returnFocus,
   children,
@@ -30,6 +34,10 @@ export function Dialog({
   onClose: () => void;
   title: ReactNode;
   modalColumns: keyof typeof widths;
+  /** Fixed mobile height, only for BONES-shell's exceptions (e.g. "about three quarters"). */
+  sheetHeight?: "three-quarters";
+  /** Pinned to the bottom of the sheet, outside the scrolling body. */
+  footer?: ReactNode;
   initialFocus?: RefObject<HTMLElement | null>;
   /** Where focus goes on close; defaults to the element focused when it opened. */
   returnFocus?: RefObject<HTMLElement | null>;
@@ -96,6 +104,7 @@ export function Dialog({
         "animate-[sheet-up_var(--motion-sheet)_var(--ease-skin)] backdrop:animate-[fade-in_var(--motion-sheet)_var(--ease-skin)]",
         "tablet:inset-0 tablet:m-auto tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
         widths[modalColumns],
+        sheetHeight === "three-quarters" && "max-tablet:h-[75vh]",
       )}
     >
       {open && (
@@ -118,9 +127,19 @@ export function Dialog({
               <X aria-hidden="true" strokeWidth={1.8} />
             </IconButton>
           </div>
-          <div className="min-h-0 overflow-y-auto px-base pb-[calc(var(--spacing-lg)+env(safe-area-inset-bottom))] tablet:px-xl tablet:pb-xl">
+          <div
+            className={cx(
+              "min-h-0 flex-1 overflow-y-auto px-base tablet:px-xl",
+              footer ? "pb-base" : "pb-[calc(var(--spacing-lg)+env(safe-area-inset-bottom))] tablet:pb-xl",
+            )}
+          >
             {children}
           </div>
+          {footer && (
+            <div className="shrink-0 border-t border-hairline px-base pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] tablet:px-xl tablet:pb-lg">
+              {footer}
+            </div>
+          )}
         </>
       )}
     </dialog>

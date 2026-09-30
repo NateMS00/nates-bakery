@@ -43,7 +43,7 @@ colors:
   focus-ring: "#2A5BD7"
   disabled: "#8E8A7D"
   surface-disabled: "#E8E3D7"
-  scrim: "rgba(19, 26, 51, 0.48)"
+  scrim: "rgba(19, 26, 51, 0.36)"
 
 colors-dark:
   primary: "#9DB6FF"
@@ -589,6 +589,7 @@ components:
   # ── Rating & favorite ─────────────────────────────────
   star-rating:
     starSize: "22px"
+    starSizePrompt: "40px"
     hitArea: "{sizing.touch-min}"
     gap: "0"
     filledColor: "{colors.crust}"
@@ -864,6 +865,9 @@ components:
     roundedTop: "{rounded.lg}"
     shadow: "{elevation.float}"
     padding: "{spacing.lg} {spacing.base}"
+    height: "fit-content"
+    maxHeight: "90vh"
+    headerCloseButton: "{components.icon-button}"
     handleColor: "{colors.border}"
     scrimColor: "{colors.scrim}"
     topEdge: "{components.tile-band}"
@@ -873,6 +877,9 @@ components:
     rounded: "{rounded.lg}"
     shadow: "{elevation.float}"
     padding: "{spacing.xl}"
+    height: "fit-content"
+    maxHeight: "90vh"
+    headerCloseButton: "{components.icon-button}"
     scrimColor: "{colors.scrim}"
     titleTypography: "{typography.heading}"
   action-bar:
@@ -968,7 +975,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 ### States
 - **Focus ring** (`{colors.focus-ring}` — #2A5BD7; dark #8FB0FF): the keyboard focus outline on every interactive component, always 3px with an offset so it sits on the background, not on the component. 5.3:1 against canvas and 5.8:1 against cards. Brighter than cobalt so a focused cobalt button still shows a distinct ring.
 - **Disabled** (`{colors.disabled}` — #8E8A7D; dark #6A7090) on **Disabled surface** (`{colors.surface-disabled}` — #E8E3D7; dark #1B2340): controls that can't be used. They lose their cobalt entirely and turn to grey glaze, so "unavailable" reads by shape and colour, not by opacity. Use sparingly: BONES prefers explaining over disabling (Save recipe stays enabled).
-- **Scrim** (`{colors.scrim}`): the dimmed layer behind sheets and modals.
+- **Scrim** (`{colors.scrim}`): the dimmed layer behind sheets and modals: cobalt-ink at 36% in light mode, so the warm canvas dims without turning grey, and near-black at 64% in dark mode.
 
 ---
 
@@ -1119,7 +1126,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`chip-filter`** — An active-filter chip: cobalt wash pill, cobalt bold caption text, and a remove "×" whose hit area covers the whole chip (48px tall); wraps to new lines, never scrolls. Accessible name reads "Remove filter: Cake". States: hover and active invert to cobalt fill with light text; focus 3px ring; disabled grey.
 
-**`star-rating`** — Five 22px stars, drawn small so the rating supports the title instead of competing with it, each its own 48px target and radio option ("Rate 4 out of 5"); filled stars in amarelo `{colors.crust}`, empty stars as `{colors.border}` outlines so an unrated recipe still shows its controls clearly. Pressing the current rating clears it. States: hover previews the fill up to the pointer at 55% strength; active pops the chosen star to 1.08 scale for `{motion.fast}`; focus 3px ring around the focused star; disabled grey.
+**`star-rating`** — Five 22px stars, drawn small so the rating supports the title instead of competing with it, each its own 48px target and radio option ("Rate 4 out of 5"); filled stars in amarelo `{colors.crust}`, empty stars as `{colors.border}` outlines so an unrated recipe still shows its controls clearly. Pressing the current rating clears it. In a prompt where rating is the only task (the Rating prompt after Mark as baked or a new bake log entry), stars are drawn at `starSizePrompt` (40px), centered, with the Skip action directly below them. States: hover previews the fill up to the pointer at 55% strength; active pops the chosen star to 1.08 scale for `{motion.fast}`; focus 3px ring around the focused star; disabled grey.
 
 **`star-display`** — The read-only rating in lists and shared pages: 16px stars in amarelo with outline empties, labeled "Rated 4 out of 5"; when unrated, the text "Not rated" in `{colors.muted}` `{typography.caption}` replaces the stars.
 
@@ -1163,9 +1170,9 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`skeleton`** — Loading placeholders in `{colors.surface-sunken}` blocks with `{rounded.sm}`, sized to the final content; a slow shimmer toward `{colors.hairline}`, removed under reduced motion.
 
-**`sheet`** — The mobile bottom sheet: glazed card with top corners at `{rounded.lg}`, a grab handle in `{colors.border}`, a thin `tile-band` along its top edge as the brand touch, over `{colors.scrim}`. Heights come from BONES.
+**`sheet`** — The mobile bottom sheet: glazed card with top corners at `{rounded.lg}`, a grab handle in `{colors.border}`, a thin `tile-band` along its top edge as the brand touch, over `{colors.scrim}`. Its height fits its content (never empty space below the last element), up to 90% of the viewport, after which the body scrolls; BONES-shell lists the few exceptions with pinned footers or full-screen forms. A header row holds the title and a close X (`icon-button`) at its end; there is no Close button at the bottom.
 
-**`modal`** — The desktop dialog: glazed card, `{rounded.lg}`, `{spacing.xl}` padding, title in `heading`, over the scrim, with `{elevation.float}`.
+**`modal`** — The desktop dialog: glazed card, `{rounded.lg}`, `{spacing.xl}` padding, over the scrim, with `{elevation.float}`. Sized to its content up to 90% of the viewport. A header row holds the title in `heading` and a close X (`icon-button`) at its end; actions sit directly under the content, never pushed to a far corner.
 
 **`action-bar`** — The sticky bottom bar on mobile (Start baking, Import from a reel, Save recipe, Log a bake, Bake Mode's step nav): canvas fill, `{elevation.bar}`, `{spacing.md}` padding plus the device's bottom safe area.
 

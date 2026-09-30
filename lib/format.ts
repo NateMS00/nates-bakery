@@ -25,9 +25,9 @@ function formatNumber(n: number): string {
   return String(Math.round(n * 100) / 100);
 }
 
-/** Grams: whole numbers, one decimal under 10 g (BONES). */
+/** Grams: whole numbers; under 10 g one decimal, only when it isn't zero ("3.5", "8"). */
 export function formatGrams(grams: number): string {
-  if (grams < 10) return (Math.round(grams * 10) / 10).toFixed(1);
+  if (grams < 10) return String(Math.round(grams * 10) / 10);
   return String(Math.round(grams));
 }
 

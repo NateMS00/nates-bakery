@@ -1,19 +1,16 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode, type RefObject, type PointerEvent } from "react";
+import { IconButton } from "./IconButton";
 import { TileBand } from "./Tile";
 import { cx } from "./cx";
 
 // SKIN sheet (mobile) and modal (tablet and up), on a native <dialog>:
 // showModal() makes the page inert (focus stays inside) and Esc closes it.
-// Also closes on backdrop tap and, on mobile, a swipe down. Focus returns to
-// whatever opened it.
-
-const heights = {
-  third: "min-h-[33dvh]",
-  half: "min-h-[50dvh]",
-  "two-thirds": "min-h-[66dvh]",
-};
+// BONES-shell Overlay sizing: fits its content up to 90% of the viewport, then the
+// body scrolls; a header row holds the title and a close X. Also closes on backdrop
+// tap and, on mobile, a swipe down. Focus returns to whatever opened it.
 
 const widths = {
   4: "tablet:w-[calc(var(--col)*4+var(--gutter)*3)]",
@@ -24,8 +21,6 @@ export function Dialog({
   open,
   onClose,
   title,
-  titleClassName,
-  sheetHeight,
   modalColumns,
   initialFocus,
   returnFocus,
@@ -34,8 +29,6 @@ export function Dialog({
   open: boolean;
   onClose: () => void;
   title: ReactNode;
-  titleClassName?: string;
-  sheetHeight: keyof typeof heights;
   modalColumns: keyof typeof widths;
   initialFocus?: RefObject<HTMLElement | null>;
   /** Where focus goes on close; defaults to the element focused when it opened. */
@@ -99,17 +92,16 @@ export function Dialog({
         if (e.target === ref.current) onClose();
       }}
       className={cx(
-        "fixed inset-x-0 top-auto bottom-0 m-0 max-h-[90dvh] w-full max-w-full overflow-y-auto rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim",
+        "fixed inset-x-0 top-auto bottom-0 m-0 h-fit max-h-[90vh] w-full max-w-full overflow-hidden rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim open:flex open:flex-col",
         "animate-[sheet-up_var(--motion-sheet)_var(--ease-skin)] backdrop:animate-[fade-in_var(--motion-sheet)_var(--ease-skin)]",
-        "tablet:inset-0 tablet:m-auto tablet:h-fit tablet:min-h-0 tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
-        heights[sheetHeight],
+        "tablet:inset-0 tablet:m-auto tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
         widths[modalColumns],
       )}
     >
       {open && (
-        <div className="flex min-h-[inherit] flex-col">
+        <>
           <div
-            className="touch-none tablet:hidden"
+            className="shrink-0 touch-none tablet:hidden"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -118,13 +110,18 @@ export function Dialog({
             <TileBand />
             <div aria-hidden="true" className="mx-auto mt-sm h-xs w-2xl rounded-full bg-border" />
           </div>
-          <div className="flex flex-1 flex-col px-base pt-base pb-[calc(var(--spacing-lg)+env(safe-area-inset-bottom))] tablet:p-xl">
-            <h2 id={titleId} className={cx("type-heading text-ink", titleClassName)}>
+          <div className="flex shrink-0 items-start gap-sm pt-sm pr-sm pl-base tablet:pt-lg tablet:pr-lg tablet:pl-xl">
+            <h2 id={titleId} className="flex-1 pt-sm type-heading text-ink">
               {title}
             </h2>
+            <IconButton label="Close" onClick={onClose}>
+              <X aria-hidden="true" strokeWidth={1.8} />
+            </IconButton>
+          </div>
+          <div className="min-h-0 overflow-y-auto px-base pb-[calc(var(--spacing-lg)+env(safe-area-inset-bottom))] tablet:px-xl tablet:pb-xl">
             {children}
           </div>
-        </div>
+        </>
       )}
     </dialog>
   );

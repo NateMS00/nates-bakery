@@ -4,8 +4,32 @@ import { expect, test, type Page } from "@playwright/test";
 // Definition of Done checks from CLAUDE.md. Screenshots land in screenshots/recipe/.
 
 const NATA = "/recipes/pasteis-de-nata";
-const shot = (page: Page, name: string, fullPage = false) =>
-  page.screenshot({ path: `screenshots/recipe/${test.info().project.name}--${name}.png`, fullPage });
+async function shot(page: Page, name: string, fullPage = false) {
+  const path = `screenshots/recipe/${test.info().project.name}--${name}.png`;
+  if (!fullPage) return page.screenshot({ path });
+  // Full-page captures: draw the sticky action-bar once at the end of the page (in the
+  // space the page reserves for it), not pinned mid-capture.
+  const style = await page.addStyleTag({
+    content: "body{position:relative} [data-action-bar]{position:absolute!important;bottom:0!important}",
+  });
+  await page.screenshot({ path, fullPage: true });
+  await style.evaluate((el) => (el as Element).remove());
+}
+
+/** BONES-shell Overlay sizing: close X in the header, no bottom Close, no empty space below the content. */
+async function expectFitsContent(page: Page, name: string) {
+  const dialog = page.getByRole("dialog", { name });
+  await expect(dialog.getByRole("button", { name: "Close" })).toHaveCount(1);
+  const gap = await dialog.evaluate((d) => {
+    const body = d.lastElementChild as HTMLElement;
+    const last = body.lastElementChild as HTMLElement;
+    return d.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom;
+  });
+  // Only the body's bottom padding (24px, 32px on desktop) plus the safe area.
+  expect(gap).toBeLessThanOrEqual(33);
+  const ratio = await dialog.evaluate((d) => d.getBoundingClientRect().height / window.innerHeight);
+  expect(ratio).toBeLessThanOrEqual(0.9);
+}
 
 async function ready(page: Page, path: string) {
   await page.goto(path);
@@ -83,6 +107,11 @@ test("scale 1.5× updates amounts, yield, and Start baking", async ({ page }) =>
   await expect(page.getByRole("link", { name: /Start baking · 1\.5×/ })).toHaveAttribute("href", `${NATA}/bake?scale=1.5`);
   await expect(page.locator("li", { hasText: "Plain flour" }).first()).toContainText("375");
   await expect(page.locator("li", { hasText: "Fine salt" })).toContainText("5.3");
+  // Under 10 g, no trailing ".0": salt 3.5 g × 2 = 7 g.
+  await page.getByRole("button", { name: "2×" }).click();
+  await expect(page.locator("li", { hasText: "Fine salt" })).toHaveText("Fine salt7g");
+  await expect(page.locator("li", { hasText: "Fine salt" })).not.toContainText("7.0");
+  await page.getByRole("button", { name: "1.5×" }).click();
   await shot(page, "05-scale-1.5");
 });
 
@@ -124,6 +153,7 @@ test("share dialog: copy, revoke, create", async ({ page, context, isMobile }) =
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("Share link")).toHaveValue(/\/r\/nata-k7p2qw$/);
   await page.waitForTimeout(350);
+  await expectFitsContent(page, "Share recipe");
   await shot(page, "08-share-dialog");
   await dialog.getByRole("button", { name: "Copy" }).click();
   await expect(dialog.getByText("Link copied")).toBeVisible();
@@ -140,6 +170,10 @@ test("share dialog: copy, revoke, create", async ({ page, context, isMobile }) =
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   if (!isMobile) await expect(share).toBeFocused();
+  // The close X also dismisses it.
+  await share.click();
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("never baked + unrated: mark as baked, rating prompt, undo", async ({ page }) => {
@@ -157,6 +191,13 @@ test("never baked + unrated: mark as baked, rating prompt, undo", async ({ page 
   await expect(prompt).toBeVisible();
   await expect(prompt.getByRole("radio", { name: "Rate 1 out of 5" })).toBeFocused();
   await page.waitForTimeout(350);
+  await expectFitsContent(page, "How was it?");
+  // Stars at starSizePrompt (40px), centered, Skip directly below.
+  const star = prompt.getByRole("radio", { name: "Rate 3 out of 5" });
+  expect((await star.locator("svg").boundingBox())?.width).toBe(40);
+  const [dialogBox, starBox, skipBox] = await Promise.all([prompt.boundingBox(), star.boundingBox(), prompt.getByRole("button", { name: "Skip" }).boundingBox()]);
+  expect(Math.abs(starBox!.x + starBox!.width / 2 - (dialogBox!.x + dialogBox!.width / 2))).toBeLessThan(2);
+  expect(Math.abs(skipBox!.x + skipBox!.width / 2 - (dialogBox!.x + dialogBox!.width / 2))).toBeLessThan(2);
   await shot(page, "13-rating-prompt");
   await prompt.getByRole("button", { name: "Skip" }).click();
   await expect(prompt).toBeHidden();
@@ -227,6 +268,7 @@ for (const [state, permission, title] of [
     await page.getByRole("menuitem", { name: "Timer alerts" }).click();
     await expect(page.getByRole("dialog", { name: title })).toBeVisible();
     await page.waitForTimeout(350);
+    await expectFitsContent(page, title);
     await shot(page, `19-timer-alerts-${state}`);
   });
 }

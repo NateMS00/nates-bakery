@@ -43,8 +43,8 @@ export function TimerAlertsSheet({
   const title = state === "alerts-on" ? "Timer alerts are on" : state === "denied" ? "Alerts are blocked" : TITLE;
 
   return (
-    <Dialog open={open} onClose={onClose} title={title} sheetHeight="two-thirds" modalColumns={5} returnFocus={returnFocus}>
-      <div className="mt-sm flex flex-1 flex-col type-body-md text-body">
+    <Dialog open={open} onClose={onClose} title={title} modalColumns={5} returnFocus={returnFocus}>
+      <div className="mt-sm type-body-md text-body">
         {state === "not-home-screen" && (
           <>
             <p>iPhone only sends alerts to apps on your Home Screen.</p>
@@ -66,21 +66,11 @@ export function TimerAlertsSheet({
             Timers still alert while Bake Mode is on screen.
           </p>
         )}
-        <div className="mt-auto flex flex-col gap-sm pt-lg tablet:flex-row tablet:items-center tablet:justify-between">
-          {state === "alerts-off" && (
-            <Button variant="primary" onClick={turnOn} data-autofocus>
-              Turn on alerts
-            </Button>
-          )}
-          <Button
-            variant={state === "alerts-off" ? "text" : "secondary"}
-            onClick={onClose}
-            data-autofocus={state === "alerts-off" ? undefined : true}
-            className={state === "alerts-off" ? "tablet:ml-auto" : "w-full tablet:ml-auto tablet:w-auto"}
-          >
-            Close
+        {state === "alerts-off" && (
+          <Button variant="primary" onClick={turnOn} data-autofocus className="mt-lg w-full tablet:w-auto">
+            Turn on alerts
           </Button>
-        </div>
+        )}
       </div>
     </Dialog>
   );

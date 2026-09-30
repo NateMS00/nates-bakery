@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.2.1 · **Updated**: 2026-09-29
+> **Version**: 1.3.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -95,7 +95,7 @@ MOBILE
 ### Ingredients (SKELETON section 3)
 - **Layout**: desktop left column (4 cols), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width
 - **Content**: one row per ingredient: name on the left (wraps to at most 2 lines, then truncates), scaled amount in grams on the right (aligned on a shared right edge so numbers line up); an Estimated or Converted marker under the name; tapping a Converted marker reveals the original stated amount ("was 1 cup") on the line under it. When the recipe has component groups (Crust, Filling, Frosting…), each group gets a heading and a medium gap before it, in the recipe's order. No limit on rows or groups: everything shows
-- **Behavior**: amounts under 10 g show one decimal; "to taste" ingredients show that text instead of an amount
+- **Behavior**: amounts under 10 g show one decimal only when it isn't zero ("3.5 g", but "8 g", never "8.0 g"); "to taste" ingredients show that text instead of an amount
 
 ```text
 DESKTOP (left column)
@@ -202,10 +202,10 @@ MOBILE
 | Has estimates | Any ingredient is still Estimated | A one-line notice between Header and Scale: "3 amounts are estimates. Confirm them" → `/recipes/:recipeId/edit`; full width on both devices |
 | Never baked | Bake log is empty | Latest Bake reduces to one line "Not baked yet" and Mark as baked; See all bakes is hidden |
 | Just marked | Mark as baked succeeded | Confirmation line with Undo at the top of Latest Bake; Undo deletes the entry and restores the previous state |
-| Rating prompt | After Mark as baked, only when the recipe is unrated | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. Order: "How was it?", 5 stars, Skip. Choosing a star saves and closes; Skip closes. Dismissed also by Esc, backdrop tap, or swipe down on mobile. Focus starts on the first star and returns to Mark as baked on close |
+| Rating prompt | After Mark as baked, only when the recipe is unrated | Mobile: bottom sheet sized to its content; desktop: centered modal, 4 cols wide, sized to its content. Order: a header row with "How was it?" and a close X; 5 large stars (the prompt size from SKIN.md), centered; Skip directly below the stars, centered. Choosing a star saves and closes; Skip closes. Dismissed also by the close X, Esc, backdrop tap, or swipe down on mobile. Focus starts on the first star and returns to Mark as baked on close |
 | Invalid scale | `?scale=` missing, not a number, or outside 0.25–10 | Page renders at 1× and the URL is corrected; no error shown |
 | Not found | Unknown `:recipeId` | System not-found page (SKELETON) |
-| Share dialog | Share in Header | Mobile: bottom sheet, about half the viewport; desktop: centered modal, 5 cols wide. Order: title "Share recipe"; link field (read-only) with Copy; note "Friends can read and scale it. Your bake log stays private."; Revoke link. With no link yet, a "Create link" action replaces the field. Revoke asks for confirmation inside the sheet before acting. After Copy, a short "Link copied" confirmation appears inside the dialog. Dismissed by Close, Esc, tapping the backdrop, or swiping down on mobile. Focus is trapped inside and returns to Share on close |
+| Share dialog | Share in Header | Mobile: bottom sheet sized to its content (up to 90% of the viewport); desktop: centered modal, 5 cols wide, sized to its content. Order: a header row with the title "Share recipe" and a close X (icon button) at its end; link field (read-only) with Copy; note "Friends can read and scale it. Your bake log stays private."; Revoke link. With no link yet, a "Create link" action replaces the field. Revoke asks for confirmation inside the sheet before acting. After Copy, a short "Link copied" confirmation appears inside the dialog. No empty space below the last element. Dismissed by the close X, Esc, tapping the backdrop, or swiping down on mobile. Focus is trapped inside and returns to Share on close |
 
 ---
 
@@ -219,7 +219,7 @@ MOBILE
 - **Assumed**: An Undo confirmation for Mark as baked (not in SKELETON), because a one-tap action that changes Baked status needs a way back.
 - **Assumed**: Each star is its own touch target at least SKIN.md's minimum size, so a rating can be set accurately on a phone.
 - **Assumed**: Scale presets ½×, 1×, 1.5×, 2× plus Custom, limited to 0.25× to 10×.
-- **Assumed**: Grams rounded to whole numbers, with one decimal under 10 g (yeast, salt, baking soda, where a gram matters).
+- **Assumed**: Grams rounded to whole numbers, with one decimal under 10 g (yeast, salt, baking soda, where a gram matters), shown only when it isn't zero: "3.5 g", "8 g".
 - **Assumed**: The original stated amount for Converted items is revealed on tap, not always visible, to keep rows short on a phone.
 - **Assumed**: Ingredients stick beside Steps on desktop and tablet (tablet uses the same split on 8 columns: 3 and 5).
 - **Assumed**: Start baking moves from a sticky bottom bar (mobile) to the Header (desktop). DOM order puts it in the Header on both; on mobile it is visually pinned to the bottom.
@@ -231,6 +231,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-09-30): After the first build review: overlays sized to their content with a close X in the header; large stars in the Rating prompt; no trailing ".0" on amounts.
 - 1.2.1 (2026-09-29): Desktop header actions in one row beside the title (Favorite, Share, Edit, Start baking), after the visual review.
 - 1.2.0 (2026-09-29): Added the category label to the Header (SKELETON 1.2.0).
 - 1.1.0 (2026-09-29): Added Favorite, Rating, Mark as baked with Undo, Rating prompt, and component group headings for ingredients and steps (SKELETON 1.1.0).

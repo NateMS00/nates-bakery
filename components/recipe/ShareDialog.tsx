@@ -7,8 +7,8 @@ import { Dialog } from "@/components/ui/Dialog";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import type { ShareLink } from "@/lib/data/types";
 
-// BONES Share dialog: mobile bottom sheet (about half the viewport), desktop modal
-// 5 cols. Title, read-only link with Copy, the privacy note, Revoke link (confirmed
+// BONES Share dialog: mobile bottom sheet, desktop modal 5 cols, both sized to
+// their content with a close X in the header row. Title, read-only link with Copy, the privacy note, Revoke link (confirmed
 // inside the dialog). With no link yet, "Create link" replaces the field.
 
 export function ShareDialog({
@@ -66,8 +66,8 @@ export function ShareDialog({
   }
 
   return (
-    <Dialog open={open} onClose={close} title="Share recipe" sheetHeight="half" modalColumns={5} returnFocus={returnFocus}>
-      <div className="mt-base flex flex-1 flex-col gap-base">
+    <Dialog open={open} onClose={close} title="Share recipe" modalColumns={5} returnFocus={returnFocus}>
+      <div className="mt-sm flex flex-col gap-base">
         {shareLink ? (
           <>
             <div className="flex flex-col gap-xs">
@@ -151,12 +151,6 @@ export function ShareDialog({
             </div>
           </div>
         )}
-
-        <div className="mt-auto flex justify-end pt-sm">
-          <Button variant="text" onClick={close} className="-mr-sm">
-            Close
-          </Button>
-        </div>
       </div>
     </Dialog>
   );

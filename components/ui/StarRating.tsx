@@ -13,8 +13,9 @@ export const StarRating = forwardRef<HTMLDivElement, {
   label?: string;
   showUnrated?: boolean;
   /**
-   * Rating prompt mode: every press saves (no clearing), arrow keys only move focus
-   * so a keyboard user can pick before saving, and the first star takes dialog focus.
+   * Rating prompt mode: stars at starSizePrompt (40px), every press saves (no clearing),
+   * arrow keys only move focus so a keyboard user can pick before saving, and the
+   * first star takes dialog focus.
    */
   prompt?: boolean;
   className?: string;
@@ -47,7 +48,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
         ref={ref}
         role="radiogroup"
         aria-label={label}
-        className="-ml-[calc((var(--spacing-touch-min)-22px)/2)] flex"
+        className={cx("flex", !prompt && "-ml-[calc((var(--spacing-touch-min)-22px)/2)]")}
         onMouseLeave={() => setHover(null)}
       >
         {[1, 2, 3, 4, 5].map((n, i) => (
@@ -71,7 +72,8 @@ export const StarRating = forwardRef<HTMLDivElement, {
               filled={hover === null && value !== null && n <= value}
               preview={hover !== null && n <= hover}
               className={cx(
-                "size-[22px] transition-transform duration-(--motion-fast) ease-skin",
+                prompt ? "size-[40px]" : "size-[22px]",
+                "transition-transform duration-(--motion-fast) ease-skin",
                 popped === n && "scale-[1.08]",
               )}
             />

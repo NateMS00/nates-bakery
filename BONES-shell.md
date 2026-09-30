@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.2.0 · **Updated**: 2026-09-29
+> **Version**: 1.3.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -44,32 +44,31 @@ MOBILE
 
 **Account menu**: a small dropdown anchored to the account button on every device, with Timer alerts, Sign out, and Privacy in that order; dismissed by selecting an item, Esc, or tapping outside. Timer alerts opens the Timer alerts sheet (below) over the current page.
 
-**Timer alerts sheet** (shared overlay, SKELETON FLOW-05; opened from the account menu or Bake Mode's card): mobile bottom sheet, about two thirds of the viewport; desktop centered modal, 5 cols wide. Its content depends on where the app stands:
-- **Not on the Home Screen**: title "Get timer alerts on a locked phone"; one sentence on why ("iPhone only sends alerts to apps on your Home Screen"); 3 numbered steps: tap Share in Safari, choose Add to Home Screen, open Backery from the new icon; Close.
-- **On the Home Screen, alerts off**: same title; "Turn on alerts" (the one prominent action), which triggers the phone's permission prompt; Close.
-- **Alerts on**: "Timer alerts are on" and a line saying timers will alert even when the phone is locked; Close.
-- **Permission denied**: "Alerts are blocked"; how to allow them in the phone's Settings; Close.
+**Timer alerts sheet** (shared overlay, SKELETON FLOW-05; opened from the account menu or Bake Mode's card): mobile bottom sheet sized to its content; desktop centered modal, 5 cols wide. A header row holds the title and a close X. Its content depends on where the app stands:
+- **Not on the Home Screen**: title "Get timer alerts on a locked phone"; one sentence on why ("iPhone only sends alerts to apps on your Home Screen"); 3 numbered steps: tap Share in Safari, choose Add to Home Screen, open Backery from the new icon.
+- **On the Home Screen, alerts off**: same title; "Turn on alerts" (the one prominent action), which triggers the phone's permission prompt.
+- **Alerts on**: "Timer alerts are on" and a line saying timers will alert even when the phone is locked.
+- **Permission denied**: "Alerts are blocked"; how to allow them in the phone's Settings.
 
-Dismissed by Close, Esc, backdrop tap, or swipe down on mobile; focus is trapped inside and returns to what opened it.
+Dismissed by the close X, Esc, backdrop tap, or swipe down on mobile; focus is trapped inside and returns to what opened it.
 
 ```text
 MOBILE (not on the Home Screen)
 +--------------------------------------+
-| GET TIMER ALERTS ON A LOCKED PHONE   |
+| GET TIMER ALERTS ON A LOCKED... [X]  |
 | WHY_SENTENCE                         |
 | 1  TAP SHARE IN SAFARI               |
 | 2  ADD TO HOME SCREEN                |
 | 3  OPEN BACKERY FROM THE NEW ICON    |
-| [             CLOSE              ]   |
 +--------------------------------------+
 ```
 
 ```text
 DESKTOP (alerts off)
 +-----------------------------------------+
-| GET TIMER ALERTS ON A LOCKED PHONE      |
+| GET TIMER ALERTS ON A LOCKED PHONE  [X] |
 | WHY_SENTENCE                            |
-| [TURN ON ALERTS]                  CLOSE |
+| [TURN ON ALERTS]                        |
 +-----------------------------------------+
 ```
 
@@ -108,6 +107,12 @@ MOBILE
 
 ---
 
+## Overlay sizing (all pages)
+
+Viewport shares given in page BONES files ("about a third", "about half") are **maximum heights**, not fixed sizes: every sheet and modal fits its content and never leaves empty space below its last element, up to 90% of the viewport, after which its body scrolls. Every sheet and modal has a header row with its title and a close X (icon button) at the end; there is no separate Close button at the bottom. Exceptions that keep their stated height: overlays that are full-screen forms (Bake Log's entry form on mobile) and sheets with a scrolling list and a footer pinned to the bottom (Library's Filters sheet, the Ingredients used picker).
+
+---
+
 ## Focus variant
 
 Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes primary and utility navigation. The header holds only an Exit control (back to Recipe) and the recipe title; there is no footer. Its full layout is defined in BONES-recipes-bake.md.
@@ -125,6 +130,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-09-30): Added the Overlay sizing rule (fit to content, close X in the header) for every page; Timer alerts sheet follows it.
 - 1.2.0 (2026-09-29): Added the Share variant for shared recipe pages.
 - 1.1.0 (2026-09-29): Added Timer alerts to the account menu and the shared Timer alerts sheet (SKELETON 1.3.0).
 - 1.0.0 (2026-09-29): Initial shell, App and Focus variants.

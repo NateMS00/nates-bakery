@@ -412,19 +412,17 @@ function IngredientRow({
 }
 
 /**
- * The ingredient name: grows to wrap onto up to 2 lines instead of truncating, so the
- * full name is always readable on a phone (BONES 1.3.1). One line of text in a 48px
- * box; Enter doesn't add a line break.
+ * The ingredient name: grows with its content instead of truncating, so the full name
+ * is always readable on a phone. One line of text in a 48px box; Enter doesn't add a
+ * line break.
  */
 function NameField({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (value: string) => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const line = parseFloat(getComputedStyle(el).lineHeight);
-    const chrome = el.offsetHeight - el.clientHeight + parseFloat(getComputedStyle(el).paddingTop) * 2;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight + (el.offsetHeight - el.clientHeight), line * 2 + chrome)}px`;
+    el.style.height = `${el.scrollHeight + (el.offsetHeight - el.clientHeight)}px`;
   }, [value]);
   return (
     <textarea
@@ -439,7 +437,7 @@ function NameField({ id, label, value, onChange }: { id: string; label: string; 
       onKeyDown={(e) => {
         if (e.key === "Enter") e.preventDefault();
       }}
-      className="block min-h-control-height min-w-0 resize-none overflow-y-auto rounded-md border border-border bg-surface-card px-base py-[calc((var(--spacing-control-height)-2px-1.55em)/2)] type-body-md text-ink placeholder:text-muted hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
+      className="block min-h-control-height min-w-0 resize-none overflow-hidden rounded-md border border-border bg-surface-card px-base py-[calc((var(--spacing-control-height)-2px-1.55em)/2)] type-body-md text-ink placeholder:text-muted hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
     />
   );
 }

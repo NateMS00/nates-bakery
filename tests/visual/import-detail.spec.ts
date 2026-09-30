@@ -104,8 +104,9 @@ test("an ingredient group with Missing, Estimated, and Converted rows", async ({
     expect(rights.length).toBe(4);
     expect(new Set(rights).size).toBe(1);
   }
-  // Long names wrap onto up to 2 lines instead of truncating ("Strong white bread flour" takes 2 on a phone).
+  // Long names wrap instead of truncating, however many lines they need.
   const flour = page.getByRole("textbox", { name: "Ingredient 1, name" });
+  await flour.fill("Strong white bread flour, at least 13% protein, from a local mill");
   const fit = await flour.evaluate((el) => ({ h: el.getBoundingClientRect().height, hidden: el.scrollHeight - el.clientHeight }));
   expect(fit.hidden).toBeLessThanOrEqual(1);
   if (mobile()) expect(fit.h).toBeGreaterThan(60);

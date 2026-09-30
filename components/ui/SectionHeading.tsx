@@ -3,9 +3,21 @@ import { TileMark } from "./Tile";
 import { cx } from "./cx";
 
 /** An H2 section title in `heading`, stamped with a tile-mark (SKIN). */
-export function SectionHeading({ id, children, className }: { id: string; children: ReactNode; className?: string }) {
+export function SectionHeading({
+  id,
+  children,
+  className,
+  ref,
+  tabIndex,
+}: {
+  id: string;
+  children: ReactNode;
+  className?: string;
+  ref?: React.Ref<HTMLHeadingElement>;
+  tabIndex?: number;
+}) {
   return (
-    <h2 id={id} className={cx("flex items-center gap-sm type-heading text-ink", className)}>
+    <h2 ref={ref} tabIndex={tabIndex} id={id} className={cx("flex items-center gap-sm type-heading text-ink", className)}>
       <TileMark />
       {children}
     </h2>

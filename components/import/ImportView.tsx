@@ -7,7 +7,6 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ExternalLink, TextLink } from "@/components/ui/TextLink";
-import { TileMark } from "@/components/ui/Tile";
 import { cx } from "@/components/ui/cx";
 import { startImport } from "@/lib/data/actions";
 import { FAIL_MESSAGES, IMPORT_MS, IMPORT_STAGES, SHORTCUT_URL, STAGE_MS, type FailReason } from "@/lib/data/import";
@@ -120,7 +119,7 @@ export function ImportView({ initialUrl, importedBefore }: { initialUrl: string;
       <ShareFromInstagram defaultOpen={!importedBefore} />
 
       {/* Manual Entry */}
-      <p className="mt-xl type-body-md text-body">
+      <p className="mt-lg type-body-md text-body">
         No reel?{" "}
         <TextLink href="/recipes/new" className="inline-flex min-h-touch-min items-center">
           Enter a recipe by hand
@@ -286,7 +285,8 @@ function ProgressStage({ name, state }: { name: string; state: "pending" | "curr
 
 /**
  * BONES Share from Instagram: 3 steps, open until the first import succeeds, then
- * collapsed to "How to share from Instagram", which expands in place. Opening the page
+ * collapsed to a plain "How to share from Instagram" disclosure, which expands in
+ * place into the full section (focus moves to its heading). Opening the page
  * at #share-from-instagram (the Library's empty state) opens it.
  */
 function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
@@ -302,43 +302,46 @@ function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
   const open = toggled ?? (defaultOpen || linkedTo);
   const panelId = useId();
 
-  const steps = (
-    <ol role="list" id={panelId} className="mt-sm flex flex-col">
-      <Step n={1}>
-        <ExternalLink href={SHORTCUT_URL} className="inline-flex min-h-touch-min items-center">
-          Get the Shortcut
-        </ExternalLink>
-      </Step>
-      <Step n={2}>In Instagram, tap Share on a reel, then Backery.</Step>
-      <Step n={3}>The reel opens here and imports on its own.</Step>
-    </ol>
-  );
+  const heading = useRef<HTMLHeadingElement>(null);
+  const expandedByUser = useRef(false);
+  useEffect(() => {
+    if (open && expandedByUser.current) heading.current?.focus();
+  }, [open]);
+
+  if (!open) {
+    // Collapsed: a plain disclosure, not a section heading.
+    return (
+      <div id="share-from-instagram" className="mt-lg scroll-mt-lg">
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => {
+            expandedByUser.current = true;
+            setToggled(true);
+          }}
+          className="inline-flex min-h-touch-min items-center gap-xs rounded-sm type-body-md text-primary underline-offset-3 hover:underline focus-visible:outline-offset-2"
+        >
+          How to share from Instagram
+          <ChevronDown aria-hidden="true" className="size-icon-sm" strokeWidth={2.2} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <section id="share-from-instagram" aria-labelledby="share-heading" className="mt-xl scroll-mt-lg">
-      {defaultOpen ? (
-        <>
-          <SectionHeading id="share-heading">Share from Instagram</SectionHeading>
-          {steps}
-        </>
-      ) : (
-        <>
-          <h2 id="share-heading" className="type-heading text-ink">
-            <button
-              type="button"
-              aria-expanded={open}
-              aria-controls={panelId}
-              onClick={() => setToggled(!open)}
-              className="flex min-h-touch-min w-full items-center gap-sm rounded-sm text-left focus-visible:outline-offset-2"
-            >
-              <TileMark />
-              How to share from Instagram
-              <ChevronDown aria-hidden="true" className={cx("ml-auto size-icon text-primary transition-transform duration-(--motion-base) ease-skin", open && "rotate-180")} />
-            </button>
-          </h2>
-          {open && steps}
-        </>
-      )}
+      <SectionHeading ref={heading} tabIndex={-1} id="share-heading" className="outline-none">
+        Share from Instagram
+      </SectionHeading>
+      <ol role="list" id={panelId} className="mt-sm flex flex-col">
+        <Step n={1}>
+          <ExternalLink href={SHORTCUT_URL} className="inline-flex min-h-touch-min items-center">
+            Get the Shortcut
+          </ExternalLink>
+        </Step>
+        <Step n={2}>In Instagram, tap Share on a reel, then Backery.</Step>
+        <Step n={3}>The reel opens here and imports on its own.</Step>
+      </ol>
     </section>
   );
 }

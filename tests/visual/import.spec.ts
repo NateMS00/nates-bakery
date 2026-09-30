@@ -26,7 +26,9 @@ test("first viewport, page checks, and Share from Instagram collapsed", async ({
   // Recipes have been imported before, so setup is collapsed to its heading.
   const toggle = page.getByRole("button", { name: "How to share from Instagram" });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("heading", { name: "How to share from Instagram" })).toHaveCount(0); // plain disclosure
   await toggle.click();
+  await expect(page.getByRole("heading", { name: "Share from Instagram" })).toBeFocused();
   await expect(page.getByRole("link", { name: /Get the Shortcut/ })).toBeVisible();
   await expect(page.getByRole("link", { name: "Enter a recipe by hand" })).toHaveAttribute("href", "/recipes/new");
 });
@@ -44,7 +46,7 @@ test("first import: Share from Instagram open, and opened by the Library's link"
   await shot(page, "02-first-import");
   // Library (collapsed state) links to #share-from-instagram, which opens it.
   await ready(page, "/import#share-from-instagram");
-  await expect(page.getByRole("button", { name: "How to share from Instagram" })).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("heading", { name: "Share from Instagram" })).toBeVisible();
 });
 
 test("empty field and invalid link show the field error", async ({ page }) => {

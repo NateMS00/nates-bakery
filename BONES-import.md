@@ -4,7 +4,7 @@
 > **Primary Action**: Import → `/import/:draftId`
 > **Primary Device**: mobile, because most imports arrive from Instagram's share menu on the iPhone through the Shortcut (`?url=`)
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.0.0 · **Updated**: 2026-09-29
+> **Version**: 1.0.1 · **Updated**: 2026-09-30
 
 ---
 
@@ -57,7 +57,7 @@ MOBILE
 ```
 
 ### Share from Instagram (SKELETON section 2)
-- **Layout**: full width of the column on both devices; a numbered list of 3 steps; open by default until the first import succeeds, then collapsed to its heading "How to share from Instagram", which expands in place
+- **Layout**: full width of the column on both devices; a numbered list of 3 steps; open by default until the first import succeeds, then collapsed to a plain disclosure: "How to share from Instagram" in body text with a chevron, no tile-mark and not heading-sized, since it's a one-time task and shouldn't weigh like a section. Expanding it in place turns it back into the "Share from Instagram" section with its heading
 - **Content**: 1. "Get the Shortcut" (opens the Shortcut's install link, external); 2. "In Instagram, tap Share on a reel, then Backery"; 3. "The reel opens here and imports on its own." Each step at most 12 words
 - **Behavior**: none beyond expand and collapse
 
@@ -130,4 +130,5 @@ All states render in the Reel Link status area, directly under Import, so the fi
 
 ## CHANGE LOG
 
+- 1.0.1 (2026-09-30): Collapsed "How to share from Instagram" is a plain disclosure, not a heading (build review).
 - 1.0.0 (2026-09-29): Initial wireframe.

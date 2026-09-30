@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.3.1 · **Updated**: 2026-09-30
+> **Version**: 1.3.2 · **Updated**: 2026-09-30
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -165,7 +165,7 @@ MOBILE
 ```
 
 #### Ingredients
-- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), a status area of fixed width reserved for the marker plus Confirm or the To taste toggle (left empty when the row has nothing to check), row menu; every row uses the same columns whether or not it has a marker. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); the name field wraps to a second line inside itself when the name is long (it grows with its content, up to 2 lines, and never truncates), so the full name is always readable; a second line of controls only when the ingredient needs it (marker with Confirm, or marker with To taste), so clean ingredients take one line. On desktop, inside the fixed status area, Confirm and the To taste toggle sit at its right edge, so they line up down the group whatever the marker's width
+- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), a status area of fixed width reserved for the marker plus Confirm or the To taste toggle (left empty when the row has nothing to check), row menu; every row uses the same columns whether or not it has a marker. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); the name field wraps to a second line inside itself when the name is long (it grows with its content as many lines as the name needs, never truncates and never scrolls inside itself), so the full name is always readable; a second line of controls only when the ingredient needs it (marker with Confirm, or marker with To taste), so clean ingredients take one line. On desktop, inside the fixed status area, Confirm and the To taste toggle sit at its right edge, so they line up down the group whatever the marker's width
 - **Empty rows**: a new or empty row shows placeholders, "Ingredient" in the name and "—" in the amount (never "0", which reads as an entered value), so it doesn't read as two blank boxes; Missing amounts show the same "—", matching Needs Your Check; each field keeps its precise screen-reader name ("Caster sugar, grams") instead of a visible label per row
 - **Content**: name (text); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); marker Missing, Estimated, or Converted; Confirm (for Estimated and Converted, removes the marker without changing the value); for Converted, the original stated amount ("was 1 cup") on a line under the row, always visible here; row menu: Move up, Move down, Move to group, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
 - **Behavior**: reordering uses the row menu (and drag on desktop as a shortcut); a deleted row offers Undo; no limit on rows or groups
@@ -290,6 +290,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.3.2 (2026-09-30): No line cap on ingredient names on mobile; the field grows as needed (build review).
 - 1.3.1 (2026-09-30): Ingredient names wrap to 2 lines on mobile instead of truncating; "—" as the amount placeholder; Confirm and To taste aligned to the right edge of the status area on desktop.
 - 1.3.0 (2026-09-30): After the first build review: fixed ingredient columns on desktop so grams align; one-line ingredient rows on mobile unless there's something to check; placeholders on empty rows; Save repeated at the end of the sticky left column on desktop; Discard as a text button; Save bar status matches the error summary; Discard confirmation follows the new destructive-confirmation rule.
 - 1.2.0 (2026-09-29): Added "Uses:" ingredient links on each step and the Ingredients used picker (SKELETON 1.3.0).

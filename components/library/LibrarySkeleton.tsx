@@ -41,10 +41,10 @@ export function LibrarySkeleton() {
       <Skeleton className="mt-sm h-md w-xl" />
       <ul className="mt-sm flex flex-col gap-sm">
         {Array.from({ length: 6 }, (_, i) => (
-          <li key={i} className="grid gap-y-sm rounded-lg border border-hairline bg-surface-card p-base tablet:grid-cols-12 tablet:items-center tablet:gap-x-(--gutter)">
-            <Skeleton className="h-md w-2xl tablet:order-2 tablet:col-span-2" />
-            <Skeleton className={`h-lg tablet:order-1 tablet:col-span-5 ${i % 2 ? "w-3/5" : "w-4/5"}`} />
-            <Skeleton className="h-base w-1/3 tablet:order-3 tablet:col-span-2 tablet:w-3/4" />
+          <li key={i} className="grid gap-y-sm rounded-lg border border-hairline bg-surface-card p-base desktop:grid-cols-12 desktop:items-center desktop:gap-x-(--gutter)">
+            <Skeleton className="h-md w-2xl desktop:order-2 desktop:col-span-2" />
+            <Skeleton className={`h-lg desktop:order-1 desktop:col-span-5 ${i % 2 ? "w-3/5" : "w-4/5"}`} />
+            <Skeleton className="h-base w-1/3 desktop:order-3 desktop:col-span-2 desktop:w-3/4" />
           </li>
         ))}
       </ul>

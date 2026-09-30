@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 export async function NotFoundContent() {
   const session = await getSession();
   return (
-    <div className="py-2xl">
+    <div className="pb-2xl">
       <h1 className="type-display-md text-ink desktop:type-display-lg">Page not found</h1>
       <p className="mt-sm max-w-prose type-body-md text-body">This page doesn&rsquo;t exist, or the recipe was deleted.</p>
       <ButtonLink href={session ? "/recipes" : "/login"} variant="secondary" className="mt-lg">

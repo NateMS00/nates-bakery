@@ -160,7 +160,11 @@ export function LibraryView({ recipes: initialRecipes, drafts: initialDrafts }: 
             ) : (
               <>
                 <p aria-live="polite" className="mt-sm type-label text-muted">
-                  {searching ? `${results.length} of ${recipes.length} recipes` : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"}`}
+                  {!searching
+                    ? `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"}`
+                    : results.length === 0
+                      ? `No matches out of ${recipes.length} recipes`
+                      : `${results.length} of ${recipes.length} recipes`}
                 </p>
                 {results.length > 0 ? (
                   <RecipeList key={searchParams.toString()} recipes={results} />
@@ -210,7 +214,7 @@ function ImportAction({ centered = false }: { centered?: boolean }) {
 /** BONES Empty: no recipes and no drafts. */
 function EmptyState() {
   return (
-    <div className="mt-lg flex flex-col items-start tablet:mx-auto tablet:max-w-[calc(var(--col)*4+var(--gutter)*3)] tablet:items-center tablet:text-center desktop:mt-xl">
+    <div className="mx-auto mt-lg flex flex-col items-center text-center tablet:max-w-[calc(var(--col)*4+var(--gutter)*3)] desktop:mt-xl">
       <TilePanel className="w-full max-w-[calc(var(--spacing-3xl)*4)]" />
       <p className="mt-lg type-body-lg text-ink">Save your first recipe from a reel</p>
       <ImportAction centered />

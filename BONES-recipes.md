@@ -1,10 +1,10 @@
 # BONES: `/recipes` (Library)
 
-> **Source**: SKELETON.md v1.2.0, `/recipes`
+> **Source**: SKELETON.md v1.3.1, `/recipes`
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.0.0 · **Updated**: 2026-09-29
+> **Version**: 1.1.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -56,20 +56,22 @@ MOBILE
 
 ### Search (SKELETON section 1)
 - **Layout**: desktop 8 cols, on the same row as the start of Filters; mobile one row shared with the Filters button: search field takes the remaining width, Filters button at the end
-- **Content**: search field labeled "Search recipes or ingredients", with a clear control once it has text
+- **Content**: search field with the visible label "Search" and the placeholder "Recipe or ingredient", and a clear control once it has text
 - **Behavior**: results update as you type (after a short pause) and write `?q=`; the field keeps its value on refresh from the URL
 
 ```text
 DESKTOP
 +-----------------------------------------------------+-----------------+
-| [SEARCH RECIPES OR INGREDIENTS                  x]  |                 |
+| SEARCH                                              |                 |
+| [RECIPE OR INGREDIENT                           x]  |                 |
 +-----------------------------------------------------+-----------------+
 ```
 
 ```text
 MOBILE
 +--------------------------------------+
-| [SEARCH RECIPES...    x] [FILTERS 2] |
+| SEARCH                               |
+| [RECIPE OR INGR...    x] [FILTERS 2] |
 +--------------------------------------+
 ```
 
@@ -81,7 +83,8 @@ MOBILE
 ```text
 DESKTOP
 +-----------------------------------------------------------------------+
-| [SEARCH RECIPES OR INGREDIENTS              ]                         |
+| SEARCH                                                                |
+| [RECIPE OR INGREDIENT                       ]                         |
 | [CATEGORY v] [ALL|BAKED|NOT BAKED YET] [FAVORITES] [RATING v]  CLEAR  |
 +-----------------------------------------------------------------------+
 ```
@@ -89,14 +92,15 @@ DESKTOP
 ```text
 MOBILE
 +--------------------------------------+
-| [SEARCH RECIPES...     ] [FILTERS 2] |
+| SEARCH                               |
+| [RECIPE OR INGR...     ] [FILTERS 2] |
 | [CAKE x] [FAVORITES x]   CLEAR ALL   |
 +--------------------------------------+
 ```
 
 ### Drafts (SKELETON section 3)
 - **Layout**: desktop full width, one row per draft; mobile one row per draft, full width
-- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet) or "Ready to review" (links to `/import/:draftId`); at most 3 rows, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
+- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet) or "Ready to review" (links to `/import/:draftId`); at most 2 rows on mobile and 3 on desktop, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
 - **Behavior**: hidden when there are no drafts or when any search or filter is active (SKELETON). An Importing row turns into Ready to review when the import finishes, without a page reload
 
 ```text
@@ -174,8 +178,8 @@ MOBILE
 | Loading | Recipes not yet loaded | Search and Filters render; Recipes shows 6 placeholder items in final proportions; Drafts hidden until loaded |
 | Empty | No recipes and no drafts | Search, Filters, Drafts, and Recipes hide. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up Share from Instagram" link → `/import` (its Share from Instagram section) |
 | Only drafts | No saved recipes, at least one draft | Search and Filters hide; Drafts shows; Recipes reduces to one line "No saved recipes yet" |
-| No results | Search or filters match nothing | Result count reads "0 of 24 recipes"; the list is replaced by "Nothing matches" plus Clear search (when `?q=` is set) and Clear filters (when any filter is set) |
-| Filters sheet | Filters button (mobile only) | Bottom sheet, about three quarters of the viewport. Order: title "Filters" with Close; Category as a single-choice list with counts; Status as a three-part segmented control; Favorites toggle; Rating as a single-choice list; footer pinned to the bottom of the sheet with Clear and "Show n recipes" (n updates live). Dismissed by Close, Esc, backdrop tap, or swipe down, which discard unapplied changes. Focus is trapped inside and returns to the Filters button on close |
+| No results | Search or filters match nothing | Result count reads "No matches out of 24 recipes" (words, not a 0); the list is replaced by "Nothing matches" plus Clear search (when `?q=` is set) and Clear filters (when any filter is set) |
+| Filters sheet | Filters button (mobile only) | Bottom sheet sized to its content, with a footer pinned to its bottom. Order: a header row with "Filters" and a close X; Category as wrapping single-choice chips ("All" first, then each category with its count: "Cake 6"); Status as a three-part segmented control; Favorites toggle; Rating as wrapping single-choice chips (Any, 3★ and up, 4★ and up, 5★); footer with Clear and "Show n recipes" (n updates live). All four filters fit on one 390 × 844 screen without scrolling; if they ever don't, the body scrolls above the pinned footer. Dismissed by the close X, Esc, backdrop tap, or swipe down, which discard unapplied changes. Focus is trapped inside and returns to the Filters button on close |
 
 ---
 
@@ -187,7 +191,9 @@ MOBILE
 - **Assumed**: The mobile sheet applies changes on "Show n recipes", while desktop applies each change immediately, because on a phone every change would otherwise rerender the list hidden behind the sheet.
 - **Assumed**: Rating filter choices are Any, 3★ and up, 4★ and up, and 5★; the URL still accepts any value from 1 to 5.
 - **Assumed**: Drafts that are still importing appear as "Importing…" rows (SKELETON only lists drafts once finished), so the owner can see an import is on its way after leaving `/import`.
-- **Assumed**: Drafts show at most 3 rows, then expand in place, since SKELETON defines no drafts route.
+- **Assumed**: Drafts show at most 2 rows on mobile and 3 on desktop, then expand in place, since SKELETON defines no drafts route. On a phone, more than 2 pushed the recipes (the page's main content) out of the first viewport.
+- **Assumed**: Category and Rating in the mobile Filters sheet are wrapping chips, not radio lists, so all four filters are visible at once instead of the sheet opening on a long category list.
+- **Assumed**: The search label is the short "Search", with the detail in the placeholder; the label stays visible (SKIN: never placeholder-only).
 - **Assumed**: A result count above the list (not in SKELETON), announced to screen readers when it changes, so filtering has audible feedback.
 - **Assumed**: 30 recipes, then Show more, instead of infinite scroll, so the footer stays reachable and position survives going back.
 - **Assumed**: The favorite mark in the list is read-only, so scrolling with a thumb can't toggle it by accident; favoriting happens on the Recipe page.
@@ -199,4 +205,5 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.0 (2026-09-30): After the first build review: 2 drafts on mobile, Filters sheet with wrapping chips and a close X, "Search" label, no-results count in words.
 - 1.0.0 (2026-09-29): Initial wireframe.

@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <>
       <SkipLink />
       <AppHeader />
-      <main id="main" tabIndex={-1} className="mx-auto max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] px-(--gutter) pt-base outline-none">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] px-(--gutter) pt-lg outline-none tablet:pt-xl">
         {children}
       </main>
       <SiteFooter />

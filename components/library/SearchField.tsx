@@ -4,9 +4,9 @@ import { Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { IconButton } from "@/components/ui/IconButton";
 
-// BONES Search: labeled "Search recipes or ingredients", a clear control once it has
-// text, results update after a short pause and write ?q=. SKIN input, with the label
-// visible above the field (SKIN: never placeholder-only).
+// BONES Search: visible label "Search", placeholder "Recipe or ingredient", a clear
+// control once it has text; results update after a short pause and write ?q=.
+// SKIN input: the label stays visible (never placeholder-only).
 
 const PAUSE_MS = 300;
 
@@ -34,7 +34,7 @@ export function SearchField({ initial, onSearch, trailing }: { initial: string; 
   return (
     <div className="flex min-w-0 flex-col gap-xs">
       <label htmlFor="library-search" className="type-label text-muted">
-        Search recipes or ingredients
+        Search
       </label>
       <div className="flex items-stretch gap-sm">
         {/* The 48px field box is the target; a tap on its padding focuses the input. */}
@@ -49,6 +49,7 @@ export function SearchField({ initial, onSearch, trailing }: { initial: string; 
             type="search"
             enterKeyHint="search"
             autoComplete="off"
+            placeholder="Recipe or ingredient"
             value={text}
             onChange={(e) => change(e.target.value)}
             onKeyDown={(e) => {
@@ -57,7 +58,7 @@ export function SearchField({ initial, onSearch, trailing }: { initial: string; 
                 onSearch(text.trim());
               }
             }}
-            className="min-w-0 flex-1 self-stretch bg-transparent px-sm type-body-md outline-none [&::-webkit-search-cancel-button]:appearance-none"
+            className="min-w-0 flex-1 self-stretch bg-transparent px-sm type-body-md outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:appearance-none"
           />
           {text && (
             <IconButton label="Clear search" onClick={clear} className="-my-px">

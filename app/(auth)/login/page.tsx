@@ -9,7 +9,7 @@ export const metadata = { title: "Sign in" };
 export default async function LoginStub({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const next = (await searchParams).next ?? "/recipes";
   return (
-    <main id="main" className="mx-auto max-w-[calc(var(--col)*6+var(--gutter)*5)] px-(--gutter) py-2xl">
+    <main id="main" className="mx-auto max-w-[calc(var(--col)*6+var(--gutter)*5)] px-(--gutter) pt-lg pb-2xl tablet:pt-xl">
       <p className="type-wordmark text-primary">Backery</p>
       <h1 className="mt-lg type-display-md text-ink">Sign in</h1>
       <p className="mt-sm type-body-md text-body">

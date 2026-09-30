@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectFitsContent, expectPageBasics, expectTouchTargets, ready } from "./helpers";
+import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
 
 // /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md, plus the
 // Definition of Done checks from CLAUDE.md. Screenshots land in screenshots/recipe/.
@@ -13,6 +13,7 @@ test("default: pastel de nata (Has estimates)", async ({ page }) => {
   await shot(page, "02-full", true);
 
   await expectPageBasics(page);
+  await expectPageTop(page);
 
   // Has estimates notice between Header and Scale.
   await expect(page.getByText("1 amount is an estimate.")).toBeVisible();

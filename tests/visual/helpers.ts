@@ -87,3 +87,13 @@ export async function expectFocusRings(page: Page, stops: number) {
     expect(ring, ring).toMatch(/:3px$/);
   }
 }
+
+/** SKIN Page Top: content starts 24px below the tile band on mobile, 32px from tablet up. */
+export async function expectPageTop(page: Page) {
+  const gap = await page.evaluate(() => {
+    const band = document.querySelector("header > [aria-hidden=true]:last-child") as HTMLElement;
+    const first = document.querySelector("main")!.firstElementChild as HTMLElement;
+    return Math.round(first.getBoundingClientRect().top - band.getBoundingClientRect().bottom);
+  });
+  expect(gap).toBe(page.viewportSize()!.width < 768 ? 24 : 32);
+}

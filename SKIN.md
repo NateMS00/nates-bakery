@@ -508,6 +508,60 @@ components:
   checkbox-error:
     borderColor: "{colors.error}"
     borderWidth: "2px"
+  radio:
+    size: "24px"
+    hitArea: "{sizing.touch-min}"
+    backgroundColor: "{colors.surface-card}"
+    borderColor: "{colors.border}"
+    borderWidth: "1.5px"
+    rounded: "{rounded.full}"
+    checkedBorderColor: "{colors.primary}"
+    dotColor: "{colors.primary}"
+    dotSize: "10px"
+  radio-hover:
+    borderColor: "{colors.ink}"
+  radio-active:
+    borderColor: "{colors.primary}"
+    borderWidth: "2px"
+  radio-focus:
+    outline: "3px solid {colors.focus-ring}"
+    outlineOffset: "2px"
+  radio-disabled:
+    backgroundColor: "{colors.surface-disabled}"
+    borderColor: "{colors.hairline}"
+    dotColor: "{colors.disabled}"
+    cursor: "not-allowed"
+  radio-error:
+    borderColor: "{colors.error}"
+    borderWidth: "2px"
+  choice-chip:
+    backgroundColor: "{colors.surface-card}"
+    textColor: "{colors.ink}"
+    borderColor: "{colors.border}"
+    borderWidth: "1px"
+    typography: "{typography.body-sm}"
+    fontWeight: 700
+    rounded: "{rounded.md}"
+    minHeight: "{sizing.touch-min}"
+    padding: "0 {spacing.base}"
+    countColor: "{colors.muted}"
+    gap: "{spacing.sm}"
+  choice-chip-hover:
+    borderColor: "{colors.ink}"
+    backgroundColor: "{colors.surface-sunken}"
+  choice-chip-active:
+    backgroundColor: "{colors.primary}"
+    borderColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    countColor: "{colors.on-primary}"
+  choice-chip-focus:
+    outline: "3px solid {colors.focus-ring}"
+    outlineOffset: "2px"
+  choice-chip-disabled:
+    backgroundColor: "{colors.surface-disabled}"
+    borderColor: "{colors.hairline}"
+    textColor: "{colors.disabled}"
+    cursor: "not-allowed"
   toggle:
     trackWidth: "52px"
     trackHeight: "32px"
@@ -1046,6 +1100,9 @@ A 4px base. `{spacing.base}` (16px) is the default gap inside cards and the mobi
 - Gutters (page side padding and column gap): `{spacing.base}` on mobile, `{spacing.lg}` on tablet, `{spacing.xl}` on desktop.
 - Reading columns (Import, Bake Log, Link Unavailable) cap at 8 of 12 columns so lines stay under about 75 characters.
 
+### Page Top
+Every page's content starts `{spacing.lg}` (24px) below the `tile-band` on mobile and `{spacing.xl}` (32px) on tablet and desktop, whatever comes first (an H1, a back link, a message). The band is a frame; nothing should touch it.
+
 ### Whitespace Philosophy
 Generous around the things you act on, tight inside the things you scan. Ingredient rows are compact (`{spacing.md}` vertical padding) so a whole list fits on one screen; sections breathe (`{spacing.lg}`–`{spacing.xl}`) so the page reads as a sequence of tiles. Empty space is warm canvas, never pure white, so a sparse screen still feels like a surface, not a void.
 
@@ -1119,6 +1176,10 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 **`select`** — Like `input` with a cobalt chevron at the end; for Category and the desktop Rating filter. States match `input`; disabled also greys the chevron.
 
 **`checkbox`** — A 24px square box with a 1.5px `{colors.border}` edge and `{rounded.sm}` (a slightly eased tile corner), inside a `{sizing.touch-min}` hit area that includes its label. Checked fills cobalt with an `{colors.on-primary}` tick. Used in Bake Mode's ingredient checklist and the Ingredients used picker. States: hover ink border; active (checked) cobalt; focus 3px ring; disabled grey; error 2px error border.
+
+**`radio`** — A 24px round control with a 1.5px `{colors.border}` ring inside a 48px hit area that includes its label; selected shows a 10px cobalt dot and a cobalt ring. For single-choice lists that need to read as a list (long option labels, descriptions under each option). Grouped in a `fieldset` with a legend. States: hover ink ring; active (selected) 2px cobalt ring with the dot; focus 3px ring; disabled grey; error 2px error ring.
+
+**`choice-chip`** — A single-choice option drawn as a tile: glazed card fill, `{colors.border}` edge, bold `body-sm` label with an optional muted count ("Cake 6"), 48px tall, `{rounded.md}`. Chips wrap to new lines, never scroll. The selected chip fills cobalt like a painted tile. Use it instead of `radio` when the options are short and should be seen at a glance (category and rating in the Filters sheet); the group is a radio group for assistive technology (`role="radiogroup"`, each chip `role="radio"` with `aria-checked`). Not to be confused with `chip-filter`, which removes an active filter. States: hover grout fill and ink edge; active (selected) cobalt fill with on-primary text and count; focus 3px ring; disabled grey.
 
 **`toggle`** — A 52×32px pill track (`{colors.surface-sunken}`, border edge) with a round thumb, inside a 48px hit area, always with a visible text label; on state fills the track cobalt. Used for Favorites (desktop filter) and To taste. States: hover ink track border; active (on) cobalt track; focus 3px ring; disabled grey.
 

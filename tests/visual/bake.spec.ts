@@ -30,9 +30,11 @@ async function open(page: Page, path: string) {
 test("step 1: first viewport, notices, and page checks", async ({ page }) => {
   await open(page, `${NATA}?scale=1.5`);
   await expect(page).toHaveURL(/scale=1\.5&step=1$/); // the URL is completed with ?step=1
-  await expect(heading(page)).toHaveText("Step 1");
+  await expect(heading(page)).toHaveText(/Step 1$/);
   await expect(page.getByText("Some amounts are estimates.")).toBeVisible();
-  await expect(page.getByText("Get alerts when your phone is locked.")).toBeVisible();
+  // The Timer alerts card waits for the first timer (BONES 1.2.0): step 1 opens with one notice.
+  await expect(page.getByText("Get alerts when your phone is locked.")).toHaveCount(0);
+  await expect(heading(page)).toHaveText("Pastry · Step 1");
   const counter = page.locator("header p").last();
   await expect(counter).toContainText("1.5×");
   await expect(counter).toContainText(mobile() ? "1/8" : "Step 1 of 8");
@@ -73,26 +75,26 @@ test("moving between steps writes ?step= and focuses the step heading", async ({
   await open(page, NATA);
   await next(page).click();
   await expect(page).toHaveURL(/step=2$/);
-  await expect(heading(page)).toHaveText("Step 2");
+  await expect(heading(page)).toHaveText(/Step 2$/);
   await expect(heading(page)).toBeFocused();
   await expect(page.getByRole("button", { name: "Previous" })).toBeVisible();
   // Step 2 isn't step 1: the notices and the open ingredient list are gone.
   await expect(page.getByText("Some amounts are estimates.")).toHaveCount(0);
   if (mobile()) await expect(page.getByRole("button", { name: "All ingredients (10)" })).toHaveAttribute("aria-expanded", "false");
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(heading(page)).toHaveText("Step 1");
+  await expect(heading(page)).toHaveText(/Step 1$/);
   // A refresh keeps your place.
   await open(page, `${NATA}?step=5`);
-  await expect(heading(page)).toHaveText("Step 5");
-  await expect(page.locator("#step-heading").locator("xpath=preceding-sibling::p")).toHaveText("Custard");
+  await expect(heading(page)).toHaveText(/Step 5$/);
+  await expect(heading(page)).toHaveText("Custard · Step 5");
 });
 
 test("invalid step opens the nearest valid step", async ({ page }) => {
   await open(page, `${NATA}?step=99&scale=banana`);
-  await expect(heading(page)).toHaveText("Step 8");
+  await expect(heading(page)).toHaveText(/Step 8$/);
   await expect(page).toHaveURL(new RegExp(`${NATA}\\?step=8$`));
   await open(page, `${NATA}?step=0`);
-  await expect(heading(page)).toHaveText("Step 1");
+  await expect(heading(page)).toHaveText(/Step 1$/);
 });
 
 test("swipe left and right changes steps on touch screens", async ({ page }) => {
@@ -106,16 +108,19 @@ test("swipe left and right changes steps on touch screens", async ({ page }) => 
       at("pointerup", 200 + d);
     }, dx);
   await swipe(-120);
-  await expect(heading(page)).toHaveText("Step 2");
+  await expect(heading(page)).toHaveText(/Step 2$/);
   await swipe(120);
-  await expect(heading(page)).toHaveText("Step 1");
+  await expect(heading(page)).toHaveText(/Step 1$/);
 });
 
 test("timers: start, run across steps, survive a refresh, pause, clear", async ({ page }) => {
   await open(page, NATA);
   const startButton = page.getByRole("button", { name: "Start 15 min timer" });
   await startButton.click();
-  await expect(page.getByRole("button", { name: "15 min timer running" })).toBeDisabled(); // can't start twice
+  // The button becomes a live status (not a disabled button), so it can't start twice.
+  await expect(page.getByRole("button", { name: "Start 15 min timer" })).toHaveCount(0);
+  await expect(page.getByText(/^Running · 1[45]:\d\d$/)).toBeVisible();
+  await expect(page.getByText("Get alerts when your phone is locked.")).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "timer started" })).toHaveText("Step 1 · Pastry timer started, 15 minutes.");
   const row = page.getByText("Step 1 · Pastry").filter({ visible: true }).last();
   await expect(row).toBeVisible();
@@ -146,6 +151,9 @@ test("several timers: the mobile strip shows 2, then +n more", async ({ page }) 
   if (mobile()) {
     const more = page.getByRole("button", { name: "+1 more" });
     await expect(more).toBeVisible();
+    // Two timers take at most about a sixth of the screen.
+    const rows = await page.getByRole("region", { name: "Timers" }).locator("ul").boundingBox();
+    expect(rows!.height).toBeLessThanOrEqual(844 / 6 + 5);
     await shot(page, "04-several-timers");
     await more.click();
     await expect(page.getByRole("button", { name: /^Pause timer/ })).toHaveCount(3);
@@ -193,9 +201,37 @@ test("last step: Finish goes to the bake log with the scale", async ({ page }) =
   await open(page, `${NATA}?step=8&scale=2`);
   await expect(page.getByRole("button", { name: "Finish" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next step" })).toHaveCount(0);
-  await shot(page, "07-last-step");
   await page.getByRole("button", { name: "Finish" }).click();
   await page.waitForURL(/\/recipes\/pasteis-de-nata\/log\?new=1&scale=2$/);
+});
+
+test("finish with a running timer asks first", async ({ page }) => {
+  await open(page, `${NATA}?step=8&scale=2`);
+  await page.getByRole("button", { name: "Start 12 min timer" }).click();
+  await expect(page.getByText(/^Running · 1[12]:\d\d$/)).toBeVisible();
+  await shot(page, "07-last-step");
+  const finish = page.getByRole("button", { name: "Finish" });
+  await finish.click();
+  await expect(page.getByRole("dialog", { name: "Stop timers and finish?" })).toContainText("Your running timers will stop.");
+  await expectDestructiveConfirmation(page, "Stop timers and finish?", "Stop and finish", "Keep baking");
+  await page.waitForTimeout(350);
+  await shot(page, "13-finish-confirmation");
+  await page.getByRole("button", { name: "Keep baking" }).click();
+  if (!mobile()) await expect(finish).toBeFocused();
+  await finish.click();
+  await page.getByRole("button", { name: "Stop and finish" }).click();
+  await page.waitForURL(/\/recipes\/pasteis-de-nata\/log\?new=1&scale=2$/);
+});
+
+test("for this step: 8 rows, then 'and n more' opens All ingredients", async ({ page }) => {
+  await open(page, "/recipes/brown-butter-cookies/bake?step=1&scale=2");
+  const rows = page.locator("p", { hasText: "For this step" }).locator("xpath=following-sibling::ul[1]/li");
+  await expect(rows).toHaveCount(8);
+  await page.getByRole("button", { name: "and 2 more" }).click();
+  const all = page.locator("#all-heading");
+  if (mobile()) await expect(all.getByRole("button")).toBeFocused();
+  else await expect(all).toBeFocused();
+  await expect(page.getByRole("checkbox", { name: /Flaky sea salt/ })).toBeVisible();
 });
 
 test("exit: straight out without timers; confirmation with a timer running", async ({ page }) => {
@@ -220,6 +256,7 @@ test("exit: straight out without timers; confirmation with a timer running", asy
 
 test("timer alerts card opens the sheet; Dismiss hides it for good", async ({ page }) => {
   await open(page, NATA);
+  await page.getByRole("button", { name: "Start 15 min timer" }).click();
   await page.getByRole("button", { name: "Set up" }).click();
   await expect(page.getByRole("dialog", { name: "Get timer alerts on a locked phone" })).toBeVisible();
   await page.waitForTimeout(350);
@@ -227,7 +264,8 @@ test("timer alerts card opens the sheet; Dismiss hides it for good", async ({ pa
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Dismiss" }).last().click();
   await expect(page.getByText("Get alerts when your phone is locked.")).toHaveCount(0);
-  await open(page, NATA);
+  await page.getByRole("button", { name: /^Clear timer/ }).filter({ visible: true }).click();
+  await page.getByRole("button", { name: "Start 15 min timer" }).click();
   await expect(page.getByText("Get alerts when your phone is locked.")).toHaveCount(0);
 });
 
@@ -241,7 +279,7 @@ test("screen may lock: notice when the device refuses to stay awake", async ({ p
 });
 
 test("a recipe without groups", async ({ page }) => {
-  await open(page, "/recipes/brown-butter-cookies/bake?step=1");
+  await open(page, "/recipes/brown-butter-cookies/bake?step=2");
   await expect(page.getByRole("button", { name: "Start 6 min timer" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Start 15 min timer" })).toBeVisible();
   await shot(page, "11-no-groups-two-timers");

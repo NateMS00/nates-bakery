@@ -36,11 +36,12 @@ function Controls({ timer, onPause, onResume, onClear }: { timer: Timer } & Acti
   );
 }
 
-function Time({ timer, now, className }: { timer: Timer; now: number; className?: string }) {
+function Time({ timer, now, compact = false }: { timer: Timer; now: number; compact?: boolean }) {
   const done = Boolean(timer.finishedAt);
   const paused = !done && timer.endsAt === null;
   return (
-    <span className={cx("type-timer", done ? "text-warning" : "text-ink", className)}>
+    // SKIN timer-row: the timer size (34px), or timeSizeCompact (28px) in the mobile strip.
+    <span className={cx("type-timer", compact && "text-[28px]", done ? "text-warning" : "text-ink")}>
       {formatRemaining(remainingMs(timer, now))}
       {paused && <span className="ml-sm type-caption text-muted">Paused</span>}
     </span>
@@ -79,13 +80,16 @@ export function TimerStrip({ timers, now, ...actions }: { timers: Timer[]; now: 
   if (!timers.length) return null;
   const shown = expanded ? timers : timers.slice(0, STRIP_ROWS);
   return (
-    <section aria-label="Timers" className="border-b border-hairline px-(--gutter) py-xs">
+    <section aria-label="Timers" className="border-b border-hairline px-(--gutter)">
       <ul role="list">
         {shown.map((t) => (
-          <li key={t.id} className={cx("-mx-sm flex items-center gap-sm rounded-md px-sm", t.finishedAt !== null && "bg-warning-wash")}>
-            <span className="min-w-0 flex-1 type-caption text-muted">{t.label}</span>
-            <Time timer={t} now={now} />
-            <Controls timer={t} {...actions} />
+          // Two short lines: the label (one truncated line), then the time with Pause and Clear.
+          <li key={t.id} className={cx("-mx-sm rounded-md px-sm pt-xs", t.finishedAt !== null && "bg-warning-wash")}>
+            <p className="truncate type-caption text-muted">{t.label}</p>
+            <div className="-mr-sm flex items-center justify-between gap-sm">
+              <Time timer={t} now={now} compact />
+              <Controls timer={t} {...actions} />
+            </div>
           </li>
         ))}
       </ul>

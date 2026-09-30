@@ -746,6 +746,11 @@ components:
     textDecorationThickness: "2px"
     textUnderlineOffset: "4px"
     whiteSpace: "nowrap"
+  step-eyebrow:
+    textColor: "{colors.primary}"
+    typography: "{typography.label}"
+    fontSize: 15px
+    separator: " · "
   step-number:
     textColor: "{colors.primary}"
     typography: "{typography.amount}"
@@ -828,6 +833,7 @@ components:
     labelTypography: "{typography.caption}"
     labelColor: "{colors.muted}"
     timeTypography: "{typography.timer}"
+    timeSizeCompact: "28px"
     timeColor: "{colors.ink}"
   timer-row-done:
     backgroundColor: "{colors.warning-wash}"
@@ -1078,6 +1084,7 @@ Declare each with `font-display: swap`, and preload the two used in the first vi
 - The body size is 17px, one step above the usual 16, and nothing a baker reads mid-bake is under 15px: phones sit on the counter, not in the hand.
 - Fraunces's `WONK` axis stays at the font file's default (on). Its leaning n, m, h and k are part of the hand-made feel, visible in the wordmark; don't set `WONK` to 0.
 - Serif is for naming things (recipes, sections, groups); sans is for doing things (steps, buttons, notes). Never set a step or a button in Fraunces, and never set a recipe title in Atkinson.
+- Step numbers use the mono `step-number` only in numbered step lists (Recipe page, editor); Bake Mode's step heading is the `step-eyebrow` in the reading face.
 - Every number that is weighed or timed uses a mono token (`amount`, `amount-lg`, `timer`, `step-number`), so figures never shift width as a timer counts down or a scale changes. The unit after it ("g") is set in the reading face in `{colors.muted}`, 3px from the number, because a monospaced space leaves an awkward gap ("250  g").
 - Times inside step text ("15 min") are not set in mono; they use `time-mark` in the reading face, so the sentence keeps its rhythm.
 - Atkinson's zero is slashed in both the Mono and Next cuts, with no plain alternate. It stays: telling 0 from O at arm's length is worth the slightly technical look.
@@ -1207,6 +1214,8 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`time-mark`** — Times detected in step text ("15 min", "2 hours"): bold cobalt in the reading face with a 2px dotted underline at 4px offset, never breaking across lines. On the Recipe and Shared Recipe pages it is not interactive; in Bake Mode the same times become `button-secondary` timer buttons.
 
+**`step-eyebrow`** — The one-line heading above a step in Bake Mode, "FILLING · STEP 3": cobalt uppercase `label` at 15px in the reading face, the group and the step joined with a middle dot. It is the page's H1 for assistive technology but visually small, so the step text stays the largest element. Monospace is never used here; it made "Step 3" read like code.
+
 **`step-number`** — Step numbers in cobalt bold `{typography.amount}`, at least 2 characters wide so steps 1–9 and 10+ align.
 
 **`card`** — The glazed tile: `{colors.surface-card}` with a 1px `{colors.hairline}` border, `{rounded.lg}`, `{spacing.base}` padding. For Latest Bake, bake log entries, Needs Your Check, the Source block, and the editor's group blocks. Not interactive.
@@ -1217,7 +1226,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`ingredient-row`** — Name in ink `body-md` on the left, grams in ink `amount` on a shared right edge (the "g" unit in muted `body-md`, 3px after the number), a hairline below each row, and markers or the "was 1 cup" original in muted caption under the name. A "to taste" ingredient shows the words "to taste" in muted `body-md` where the amount would be, with no marker: markers are only for amounts that need attention.
 
-**`timer-row`** — A card with the step label in muted caption and the time in `{typography.timer}`; Pause and Clear are `icon-button`s. When the timer finishes, `timer-row-done` fills it with `{colors.warning-wash}` and turns the time and border `{colors.warning}` until dismissed.
+**`timer-row`** — A card with the step label in muted caption and the time in `{typography.timer}` (34px); in Bake Mode's mobile strip, the compact form puts the label on its own truncated line and the time at `timeSizeCompact` (28px) beside the controls; Pause and Clear are `icon-button`s. When the timer finishes, `timer-row-done` fills it with `{colors.warning-wash}` and turns the time and border `{colors.warning}` until dismissed.
 
 **`menu`** + **`menu-item`** — Anchored dropdowns (account menu, row menus on desktop): a glazed card with `{elevation.float}`; items are 48px rows of ink `body-md`. `menu-item-destructive` (Delete) uses `{colors.error}` text. Item states: hover grout fill; active cobalt wash and text; focus 3px inset ring; disabled grey. On mobile, row menus (editor rows, bake log entries) render their items inside a `sheet`; the account menu stays an anchored dropdown on every device, because three items don't justify a sheet.
 

@@ -175,6 +175,7 @@ const chocolateChipCookies: Recipe = {
     ing("k-flaky", null, "Flaky sea salt, to finish", null),
   ],
   steps: [
+    step("k0", null, "Weigh out everything and line two trays.", ["k-butter", "k-brown", "k-caster", "k-eggs", "k-vanilla", "k-flour", "k-soda", "k-salt", "k-choc", "k-flaky"]),
     step("k1", null, "Brown the butter over medium heat until it smells nutty, about 6 minutes. Pour into a bowl and cool for 15 minutes.", ["k-butter"], [{ text: "6 minutes", minutes: 6 }, { text: "15 minutes", minutes: 15 }]),
     step("k2", null, "Whisk in both sugars, then the eggs and vanilla until glossy.", ["k-brown", "k-caster", "k-eggs", "k-vanilla"]),
     step("k3", null, "Fold in the flour, bicarbonate of soda and salt, then the chocolate.", ["k-flour", "k-soda", "k-salt", "k-choc"]),

@@ -20,7 +20,7 @@ import type { Ingredient, Recipe } from "@/lib/data/types";
 import { formatGrams, formatScale, parseScale } from "@/lib/format";
 import { splitStepText } from "@/lib/time-marks";
 import { TimerBanner, TimersPanel, TimerStrip } from "./TimerViews";
-import { useTimers } from "./useTimers";
+import { formatRemaining, remainingMs, useTimers } from "./useTimers";
 import { useWakeLock } from "./useWakeLock";
 
 // /recipes/:recipeId/bake (Bake Mode), BONES-recipes-bake.md, in the Focus shell
@@ -120,13 +120,13 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
   const [checks, setChecks] = useSessionSet(`backery.checks.${recipe.id}`);
   const [dismissed, setDismissed] = useSessionSet(`backery.bake.${recipe.id}`);
 
-  // Timer alerts card: while alerts are off and it hasn't been dismissed for good; on
-  // step 1 and whenever a timer starts. Notifications themselves are STUBBED.
+  // Timer alerts card: while alerts are off and it hasn't been dismissed for good, once a
+  // timer has started. Notifications themselves are STUBBED.
   const [cardDismissed, setCardDismissed] = useState(false);
-  const [startedHere, setStartedHere] = useState(false);
   const alertsOff = isClient && readAlertsState() !== "alerts-on";
   const cardHidden = cardDismissed || (isClient && window.localStorage.getItem(CARD_DISMISSED) === "1");
-  const showAlertsCard = alertsOff && !cardHidden && (stepNumber === 1 || startedHere);
+  // BONES 1.2.0: it appears once a timer has started in this bake, when locked-phone alerts matter.
+  const showAlertsCard = alertsOff && !cardHidden && timers.length > 0;
   const [sheetOpen, setSheetOpen] = useState(false);
   const setUp = useRef<HTMLButtonElement>(null);
 
@@ -153,6 +153,13 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
     clearAll();
     setChecks(new Set());
     setDismissed(new Set());
+  }
+  // Finish: straight to the log, or first "Stop timers and finish?" while a timer runs.
+  const [finishOpen, setFinishOpen] = useState(false);
+  const finishButton = useRef<HTMLButtonElement>(null);
+  function finish() {
+    endBake();
+    router.push(`/recipes/${recipe.id}/log?new=1&scale=${scale}`);
   }
 
   // The pinned bottom bar (timer strip + Step nav): the page reserves its height.
@@ -254,9 +261,9 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
             </div>
 
             <div className={cx((showEstimates || showAlertsCard || screenMayLock) && "mt-lg")}>
-              {groupName(step.groupId) && <p className="type-label text-primary">{groupName(step.groupId)}</p>}
-              <h1 ref={heading} id="step-heading" tabIndex={-1} className="mt-xs type-amount-lg font-bold text-primary outline-none">
-                Step {stepNumber}
+              {/* SKIN step-eyebrow: the page's H1, small so the step text stays the largest element */}
+              <h1 ref={heading} id="step-heading" tabIndex={-1} className="type-label text-[15px] text-primary outline-none">
+                {groupName(step.groupId) && `${groupName(step.groupId)} · `}Step {stepNumber}
               </h1>
               <p className="mt-sm type-step-text text-ink tablet:text-[28px]">
                 {splitStepText(step.text, step.timeMarks).map((part, i) =>
@@ -303,21 +310,33 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                 <div className="mt-lg flex flex-col gap-sm tablet:flex-row tablet:flex-wrap">
                   {step.timeMarks.map((mark, i) => {
                     const source = `${step.id}:${i}`;
-                    const running = timers.some((t) => t.source === source && !t.finishedAt);
+                    const live = timers.find((t) => t.source === source && !t.finishedAt);
+                    if (live) {
+                      // BONES 1.2.0: a started time becomes a live status, never a greyed-out button.
+                      const paused = live.endsAt === null;
+                      return (
+                        <p
+                          key={source}
+                          className="inline-flex min-h-touch-min items-center justify-center gap-sm rounded-md border-[1.5px] border-primary bg-primary-wash px-lg type-button text-primary max-tablet:w-full"
+                        >
+                          <TimerIcon aria-hidden="true" className="size-icon-sm" />
+                          {paused ? "Paused" : "Running"} <span aria-hidden="true">·</span>{" "}
+                          <span className="type-amount-lg">{formatRemaining(remainingMs(live, now))}</span>
+                        </p>
+                      );
+                    }
                     return (
                       <Button
                         key={source}
                         variant="secondary"
-                        disabled={running}
                         onClick={() => {
                           // Several times in one step: the duration tells their timers apart.
                           start(source, step.timeMarks.length > 1 ? `${label} · ${formatTimeChip(mark.minutes).replace(/ /g, "\u00a0")}` : label, mark.minutes);
-                          setStartedHere(true);
                         }}
                         className="w-full tablet:w-auto"
                       >
                         <TimerIcon aria-hidden="true" />
-                        {running ? `${formatTimeChip(mark.minutes)} timer running` : `Start ${formatTimeChip(mark.minutes)} timer`}
+                        Start {formatTimeChip(mark.minutes)} timer
                       </Button>
                     );
                   })}
@@ -403,10 +422,12 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
           )}
           {last ? (
             <Button
+              ref={finishButton}
               variant="primary"
+              aria-haspopup={active ? "dialog" : undefined}
               onClick={() => {
-                endBake();
-                router.push(`/recipes/${recipe.id}/log?new=1&scale=${scale}`);
+                if (active) setFinishOpen(true);
+                else finish();
               }}
               className={cx("min-h-touch-bake!", stepNumber > 1 ? "col-span-2" : "col-span-3")}
             >
@@ -426,6 +447,19 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
       </p>
 
       <TimerAlertsSheet open={sheetOpen} onClose={() => setSheetOpen(false)} returnFocus={setUp} />
+      <ConfirmDialog
+        open={finishOpen}
+        onClose={() => setFinishOpen(false)}
+        returnFocus={finishButton}
+        title="Stop timers and finish?"
+        body="Your running timers will stop."
+        confirm="Stop and finish"
+        cancel="Keep baking"
+        onConfirm={async () => {
+          setFinishOpen(false);
+          finish();
+        }}
+      />
       <ConfirmDialog
         open={exitOpen}
         onClose={() => setExitOpen(false)}

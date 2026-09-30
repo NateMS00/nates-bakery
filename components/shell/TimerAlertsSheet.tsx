@@ -8,9 +8,10 @@ import { Dialog } from "@/components/ui/Dialog";
 // the app stands. Scheduling alerts on the server is STUBBED until the backend
 // exists; this sheet only asks the browser for permission.
 
-type AlertsState = "not-home-screen" | "alerts-off" | "alerts-on" | "denied";
+export type AlertsState = "not-home-screen" | "alerts-off" | "alerts-on" | "denied";
 
-function readState(): AlertsState {
+/** Where timer alerts stand on this device (not on the Home Screen, off, on, denied). */
+export function readAlertsState(): AlertsState {
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -33,7 +34,7 @@ export function TimerAlertsSheet({
 }) {
   // Only opens after a tap, so reading the browser in render is safe (never on the server).
   const [answered, setAnswered] = useState<AlertsState | null>(null);
-  const state: AlertsState = open ? (answered ?? readState()) : "not-home-screen";
+  const state: AlertsState = open ? (answered ?? readAlertsState()) : "not-home-screen";
 
   async function turnOn() {
     const result = await Notification.requestPermission();

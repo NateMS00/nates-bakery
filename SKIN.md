@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Backery
+name: "Nate’s Bakery"
 description: >
   A glazed-tile kitchen notebook. Every screen sits on a warm tin-glaze white, like the
   surface of a Lisbon azulejo, with a single deep cobalt doing all the talking: primary
@@ -985,7 +985,7 @@ components:
 
 ## Overview
 
-Backery reads like a baker's notebook left on a tiled Lisbon counter. The base canvas is `{colors.canvas}` (#F6F2E8), a warm tin-glaze white rather than paper white, so long recipe pages feel soft and ceramic instead of clinical. `{colors.primary}` (#1D3F9E) is azulejo cobalt, the colour of hand-painted tiles, and it is the only strong colour in the system: it marks what you can do next (Start baking, Import, Save), what is selected (a filter, a scale preset, a favorite), and the tile motif that frames the app. Depth is flat and glazed: surfaces are separated by grout-like `{colors.hairline}` lines, and only floating layers get a shadow. Titles are set in Fraunces with its soft axis turned up, which gives a hand-lettered warmth; everything you read while baking is set in Atkinson Hyperlegible, built for low-vision legibility, because grams misread from a metre away ruin a bake.
+Nate’s Bakery reads like a baker's notebook left on a tiled Lisbon counter. The base canvas is `{colors.canvas}` (#F6F2E8), a warm tin-glaze white rather than paper white, so long recipe pages feel soft and ceramic instead of clinical. `{colors.primary}` (#1D3F9E) is azulejo cobalt, the colour of hand-painted tiles, and it is the only strong colour in the system: it marks what you can do next (Start baking, Import, Save), what is selected (a filter, a scale preset, a favorite), and the tile motif that frames the app. Depth is flat and glazed: surfaces are separated by grout-like `{colors.hairline}` lines, and only floating layers get a shadow. Titles are set in Fraunces with its soft axis turned up, which gives a hand-lettered warmth; everything you read while baking is set in Atkinson Hyperlegible, built for low-vision legibility, because grams misread from a metre away ruin a bake.
 
 The design takes its DNA from three places, without copying any of them: the cobalt-on-white repetition of Lisbon's azulejo façades and the historic tile workshops that painted them; the calm, content-first hierarchy of recipe managers like Mela, whose cook mode proved that big type beats clever layout in a kitchen; and the confident pattern-plus-type packaging of Portuguese heritage brands like Claus Porto, where one strong pattern carries the brand so the rest can stay quiet.
 
@@ -1076,7 +1076,7 @@ Declare each with `font-display: swap`, and preload the two used in the first vi
 | `button` | Atkinson Next | 16px | 700 | 1 | 0.1px | Buttons, nav links, segmented items |
 | `caption` | Atkinson Next | 14px | 400 | 1.4 | 0.1px | Metadata: dates, counts, "Not rated", status lines |
 | `label` | Atkinson Next | 13px | 700 | 1.2 | 0.9px | Uppercase: category labels, markers, field eyebrows |
-| `wordmark` | Fraunces italic | 24px | 700 | 1 | -0.3px | The "Backery" wordmark only |
+| `wordmark` | Fraunces italic | 24px | 700 | 1 | -0.3px | The "Nate’s Bakery" wordmark only |
 
 ### Principles
 - The body size is 17px, one step above the usual 16, and nothing a baker reads mid-bake is under 15px: phones sit on the counter, not in the hand.
@@ -1248,7 +1248,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`app-footer`** — The shell footer: canvas fill with a hairline top rule, `{spacing.2xl}` above it, and its links (Privacy) in muted `caption`, underlined as `text-link`s. Quiet on purpose: it only has to be findable.
 
-**`wordmark`** — "Backery" in Fraunces italic `wordmark` style, cobalt. Links to the Library in the App variant; plain text in the Share variant.
+**`wordmark`** — "Nate’s Bakery" (typographic apostrophe) in Fraunces italic `wordmark` style, cobalt. Links to the Library in the App variant; plain text in the Share variant.
 
 **`tile-band`** — A 24px strip of the azulejo motif in cobalt on canvas, between two 1px cobalt rules, like the painted border (barra) that frames a tile panel. Used under `app-header` and along the top of `sheet`. Decorative and hidden from assistive technology.
 

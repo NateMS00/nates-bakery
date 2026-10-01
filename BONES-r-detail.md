@@ -4,7 +4,7 @@
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.1.0 · **Updated**: 2026-09-30
+> **Version**: 1.1.1 · **Updated**: 2026-10-01
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -17,7 +17,7 @@ MAIN
 ├── HEADER
 │   ├── CATEGORY
 │   ├── RECIPE_TITLE                        H1
-│   ├── SHARED_BY ("Shared by Nathan")
+│   ├── SHARED_BY ("Shared by Nate")
 │   ├── RATING (read-only, hidden when unrated)
 │   ├── SOURCE_CREDIT (@creator)
 │   ├── YIELD · TOTAL_TIME
@@ -31,7 +31,7 @@ MAIN
     └── STEP × n
 ```
 
-**First viewport (mobile)**: category, title, "Shared by Nathan", rating, creator, yield and time, Watch the original reel, and the Scale presets.
+**First viewport (mobile)**: category, title, "Shared by Nate", rating, creator, yield and time, Watch the original reel, and the Scale presets.
 
 ---
 
@@ -39,7 +39,7 @@ MAIN
 
 ### Header (SKELETON section 1)
 - **Layout**: desktop full width: title block 9 cols, Watch the original reel 3 cols right-aligned; mobile single column, with Watch the original reel full width at the end of the header
-- **Content**: category label; title (wraps, never truncates); "Shared by Nathan"; rating as stars, read-only, labeled "Rated 4 out of 5" for screen readers, hidden when unrated; "@creator"; yield at the current scale and total time; Watch the original reel, opening the reel in a new tab. No back link, favorite, share, or edit
+- **Content**: category label; title (wraps, never truncates); "Shared by Nate"; rating as stars, read-only, labeled "Rated 4 out of 5" for screen readers, hidden when unrated; "@creator"; yield at the current scale and total time; Watch the original reel, opening the reel in a new tab. No back link, favorite, share, or edit
 - **Behavior**: yield updates with the scale
 
 ```text
@@ -123,5 +123,6 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.1 (2026-10-01): App renamed to Nate’s Bakery; "Shared by Nate".
 - 1.1.0 (2026-09-30): Tablet split is 4 + 4 columns, matching BONES-recipes-detail 1.4.0 (accessibility audit).
 - 1.0.0 (2026-09-29): Initial wireframe.

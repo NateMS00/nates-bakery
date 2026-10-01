@@ -1,9 +1,9 @@
-# SKELETON: Backery
+# SKELETON: Nate’s Bakery
 
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.3.2 · **Updated**: 2026-09-30
+> **Version**: 1.3.3 · **Updated**: 2026-10-01
 
 ---
 
@@ -205,8 +205,8 @@ Default access: public.
 - **Success**: Timers alert on the iPhone even when it's locked or another app is open
 
 1. Owner opens Timer alerts → the Timer alerts sheet.
-2. If Backery isn't running from the Home Screen, the sheet shows how to add it (Share → Add to Home Screen) and to open Backery from the new icon.
-3. Owner opens Backery from the Home Screen and returns to Timer alerts → "Turn on alerts".
+2. If Nate’s Bakery isn't running from the Home Screen, the sheet shows how to add it (Share → Add to Home Screen) and to open Nate’s Bakery from the new icon.
+3. Owner opens Nate’s Bakery from the Home Screen and returns to Timer alerts → "Turn on alerts".
 4. System asks for notification permission; owner allows it.
 5. From then on, every timer started in Bake Mode also schedules an alert for its end time.
 
@@ -300,7 +300,7 @@ Default access: public.
 ### `/r/:shareToken` (Shared Recipe)
 - **Primary Action**: Watch the original reel → external link (credit to the creator)
 - **Section Stack**:
-  1. `Header`: category, title, "Shared by Nathan", Nathan's rating (read-only, hidden when unrated), source credit.
+  1. `Header`: category, title, "Shared by Nate", Nathan's rating (read-only, hidden when unrated), source credit.
   2. `Scale`: the batch multiplier (`?scale=`).
   3. `Ingredients`: scaled grams under component groups, with Estimated markers so the friend knows which amounts are guesses.
   4. `Steps`: numbered steps under component groups.
@@ -348,6 +348,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.3.3 (2026-10-01): App renamed to Nate’s Bakery; shared pages read "Shared by Nate".
 - 1.3.2 (2026-09-30): Bake Log gains `?edit=<entryId>` so Add notes and Edit open the entry form in one tap; log dates can't be in the future (owner's local date).
 - 1.3.1 (2026-09-29): Recorded data decisions from the build kickoff: separate ingredient and step groups, structured yield with rounding, several timers per step, "to taste" as an amount state.
 - 1.3.0 (2026-09-29): Added FLOW-05 Turn on timer alerts (Home Screen web app + notifications), Timer alerts in the account menu, and ingredients linked to each step.

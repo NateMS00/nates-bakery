@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.6.0 · **Updated**: 2026-10-01
+> **Version**: 1.6.1 · **Updated**: 2026-10-01
 
 ---
 
@@ -45,7 +45,7 @@ MOBILE
 **Account menu**: a small dropdown anchored to the account button on every device, with Timer alerts, Sign out, and Privacy in that order; dismissed by selecting an item, Esc, or tapping outside. Timer alerts opens the Timer alerts sheet (below) over the current page.
 
 **Timer alerts sheet** (shared overlay, SKELETON FLOW-05; opened from the account menu or Bake Mode's card): mobile bottom sheet sized to its content; desktop centered modal, 5 cols wide. A header row holds the title and a close X. Its content depends on where the app stands:
-- **Not on the Home Screen**: title "Get timer alerts on a locked phone"; one sentence on why ("iPhone only sends alerts to apps on your Home Screen"); 3 numbered steps: tap Share in Safari, choose Add to Home Screen, open Backery from the new icon.
+- **Not on the Home Screen**: title "Get timer alerts on a locked phone"; one sentence on why ("iPhone only sends alerts to apps on your Home Screen"); 3 numbered steps: tap Share in Safari, choose Add to Home Screen, open Nate’s Bakery from the new icon.
 - **On the Home Screen, alerts off**: same title; "Turn on alerts" (the one prominent action), which triggers the phone's permission prompt.
 - **Alerts on**: "Timer alerts are on" and a line saying timers will alert even when the phone is locked.
 - **Permission denied**: "Alerts are blocked"; how to allow them in the phone's Settings.
@@ -59,7 +59,7 @@ MOBILE (not on the Home Screen)
 | WHY_SENTENCE                         |
 | 1  TAP SHARE IN SAFARI               |
 | 2  ADD TO HOME SCREEN                |
-| 3  OPEN BACKERY FROM THE NEW ICON    |
+| 3  OPEN NATE’S BAKERY FROM THE ICON    |
 +--------------------------------------+
 ```
 
@@ -146,6 +146,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.6.1 (2026-10-01): App renamed to Nate’s Bakery.
 - 1.6.0 (2026-10-01): Page action bars hide while the on-screen keyboard is open (iPhone testing).
 - 1.5.0 (2026-09-30): Share variant also used by the auth pages, and by Privacy, Not found and Error when signed out (BONES-system.md); footer kept at the bottom on short pages.
 - 1.4.0 (2026-09-30): Added the Destructive confirmations rule for every page.

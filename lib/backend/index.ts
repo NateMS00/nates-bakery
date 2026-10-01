@@ -22,7 +22,7 @@ function notBuiltYet(): never {
 
 export async function dataBackend(): Promise<DataBackend> {
   if (backendName() === "fixtures") return (await import("./fixtures/data")).fixturesData;
-  return notBuiltYet();
+  return (await import("./supabase/data")).supabaseData;
 }
 
 export async function authBackend(): Promise<AuthBackend> {

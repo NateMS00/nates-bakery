@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ShareShell } from "@/components/shell/ShareShell";
+import { PublicShell } from "@/components/shell/PublicShell";
 
 // Share area: public, gated only by the share token (SKELETON §3). proxy.ts doesn't
 // match /r, so signed-out friends get straight in. Share links are private by intent,
@@ -7,5 +7,5 @@ import { ShareShell } from "@/components/shell/ShareShell";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function ShareLayout({ children }: { children: React.ReactNode }) {
-  return <ShareShell>{children}</ShareShell>;
+  return <PublicShell>{children}</PublicShell>;
 }

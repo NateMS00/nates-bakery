@@ -740,11 +740,9 @@ components:
     paddingBottom: "{spacing.xs}"
     marginTop: "{spacing.lg}"
   time-mark:
-    textColor: "{colors.primary}"
+    textColor: "{colors.ink}"
     fontWeight: 700
-    textDecoration: "underline dotted"
-    textDecorationThickness: "2px"
-    textUnderlineOffset: "4px"
+    textDecoration: "none"
     whiteSpace: "nowrap"
   step-eyebrow:
     textColor: "{colors.primary}"
@@ -1086,7 +1084,7 @@ Declare each with `font-display: swap`, and preload the two used in the first vi
 - Serif is for naming things (recipes, sections, groups); sans is for doing things (steps, buttons, notes). Never set a step or a button in Fraunces, and never set a recipe title in Atkinson.
 - Step numbers use the mono `step-number` only in numbered step lists (Recipe page, editor); Bake Mode's step heading is the `step-eyebrow` in the reading face.
 - Every number that is weighed or timed uses a mono token (`amount`, `amount-lg`, `timer`, `step-number`), so figures never shift width as a timer counts down or a scale changes. The unit after it ("g") is set in the reading face in `{colors.muted}`, 3px from the number, because a monospaced space leaves an awkward gap ("250  g").
-- Times inside step text ("15 min") are not set in mono; they use `time-mark` in the reading face, so the sentence keeps its rhythm.
+- Times inside step text ("15 min") are not set in mono; they use `time-mark`, bold in the reading face and the body text color, so the sentence keeps its rhythm and nothing looks like a link.
 - Atkinson's zero is slashed in both the Mono and Next cuts, with no plain alternate. It stays: telling 0 from O at arm's length is worth the slightly technical look.
 - Weight, not size alone, carries hierarchy in the sans: 400 to read, 500 for steps and amounts, 700 for actions and labels.
 - Uppercase appears only in `label`, always tracked +0.9px, and only for short tags (one to three words).
@@ -1212,7 +1210,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`group-heading`** — Component group names (Crust, Filling, Assembly) in Fraunces italic `subheading`, cobalt, with a hairline rule under them and `{spacing.lg}` above, like a painted label on a tile panel.
 
-**`time-mark`** — Times detected in step text ("15 min", "2 hours"): bold cobalt in the reading face with a 2px dotted underline at 4px offset, never breaking across lines. On the Recipe and Shared Recipe pages it is not interactive; in Bake Mode the same times become `button-secondary` timer buttons.
+**`time-mark`** — Times detected in step text ("15 min", "2 hours"): bold in the reading face, in `{colors.ink}` like the sentence around it, never breaking across lines. No cobalt and no underline: on the Recipe and Shared Recipe pages it is not interactive, and link styling would invite a tap that does nothing (cobalt is reserved for things you can act on). Weight alone lets times stand out when scanning a step. In Bake Mode the same times become `button-secondary` timer buttons.
 
 **`step-eyebrow`** — The one-line heading above a step in Bake Mode, "FILLING · STEP 3": cobalt uppercase `label` at 15px in the reading face, the group and the step joined with a middle dot. It is the page's H1 for assistive technology but visually small, so the step text stays the largest element. Monospace is never used here; it made "Step 3" read like code.
 
@@ -1311,6 +1309,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 | Use `{spacing.*}` tokens for every gap and padding | Invent in-between values like 10px or 20px |
 | Keep one primary action per screen (the same action may repeat when one copy scrolls away); everything else is secondary, text, or icon | Put two different cobalt-filled actions on one screen, or two copies side by side |
 | Show markers as text plus glyph ("~ Estimated") | Signal Estimated, Converted, or Missing by colour alone |
+| Mark times in step text with weight only (`time-mark`: bold, body colour) | Give anything that isn't interactive link styling (cobalt, underline) |
 | Use the azulejo motif as a frame (header band, sheet edge), a section stamp (`tile-mark` before H2s), or an empty-state panel | Put text on top of the pattern, use it as a page background, or stamp more than section titles |
 | Set the "g" after an amount in the reading face, muted, 3px away | Let the monospaced face set the unit, leaving a wide gap |
 | Soften corners with `{rounded.md}` (8px) on buttons, notices, fields, and the segmented control | Make buttons pill-shaped or leave them sharp-cornered |

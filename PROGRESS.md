@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–6 from `PROMPTS.md` are built, reviewed, and committed; prompt 7 is built and waiting for review. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 356 checks pass.
+Prompts 1–7 from `PROMPTS.md` are built, reviewed, and committed; prompt 8 is built and waiting for review. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 400 checks pass.
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -14,7 +14,8 @@ Prompts 1–6 from `PROMPTS.md` are built, reviewed, and committed; prompt 7 is 
 | 4. Import | `/import` | `c8530ee`, review fixes `0216013` |
 | 5. Bake Mode | `/recipes/:recipeId/bake` | `38dae5b`, review fixes `bcf1c5a`, timer sort `d7bc884` |
 | 6. Bake Log | `/recipes/:recipeId/log` | `c8ffc52`, review fixes `d4eb83a`, `658fc0e` |
-| 7. Shared recipe | `/r/:shareToken`, `/r/expired` | built, in review |
+| 7. Shared recipe | `/r/:shareToken`, `/r/expired` | `02ca899` |
+| 8. Auth and system pages | `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error | built, in review |
 
 Also in place across the app: the theme generated from `SKIN.md` (`npm run theme`), self-hosted fonts, the App and Focus shells, SKIN's page top, the overlay sizing rule, and the shared destructive-confirmation dialog.
 
@@ -29,22 +30,28 @@ Agreed: the Discard check also covers date and scale changes; Edit focuses What 
 - **`?edit=<entryId>`** (SKELETON 1.3.2, BONES-recipes-log 1.1.0): Add notes (on the log and the Recipe page) and the entry menu's Edit open that entry's form directly; the link survives a refresh. Opening and closing replace the history entry; an unknown id drops the param with no error. Focus returns to the opener, or to the entry's heading when the opener is gone or the form came from a link.
 - Specs updated by Nathan: SKELETON 1.3.2, BONES-recipes-log 1.1.0, BONES-recipes-bake 1.2.1.
 
+## Prompt 7 review (2026-09-30)
+
+- `time-mark` is bold in the body text colour with no underline (SKIN.md update), on the Recipe page, the shared page, and in Bake Mode's step text; Bake Mode's timer buttons are unchanged.
+- BACKLOG: Open Graph link preview for shared recipes.
+
 ## Next
 
-1. Review fixes for prompt 7 (Shared recipe), if any.
-2. Then prompts 8 (auth and system pages), and 9 (accessibility audit).
+1. Review fixes for prompt 8 (auth and system pages), if any.
+2. Then prompt 9 (accessibility and responsive audit).
 
 ## Half-finished and stubbed
 
 Nothing is half-built or uncommitted. These are deliberate stubs until the backend is chosen:
 
 - **Data:** fixtures in server memory (`lib/data/recipes.ts`); changes last until the server restarts. Favorite, rating, bakes, and share links are saved through server actions (`lib/data/actions.ts`), so the Recipe page, Library, and Bake Log agree.
-- **Auth:** a cookie-based stub session in `proxy.ts`, with a placeholder `/login` ("Continue as owner").
+- **Auth:** a cookie-based stub session in `proxy.ts`. The Sign In pages are final, but their actions run on `lib/auth/stub.ts`: sign in as `owner@backery.local` / `backery-owner`; reset "emails" are written to the server log, and any token starting `reset-` works once.
 - **Import service:** takes 4.5 seconds and always produces the same Kouign-amann draft; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail.
 - **Timers:** kept in the browser, not on a server, so locked-phone alerts can't be scheduled; no notifications are sent. The chime is synthesized until a real sound is chosen.
 - **Placeholders:** the Shortcut install link, reel thumbnails.
 - **Owner name** on shared pages ("Shared by Nathan") is a constant in `lib/auth/stub.ts` until accounts exist.
-- **Not built yet:** `/privacy` (the footer links to it, so it shows not-found for now), `/login` (real), `/forgot-password`, `/reset-password`, and the final not-found and error pages (prompt 8).
+- **Privacy copy** is a draft for Nathan; its promises (password stored only as a hash, no tracking cookies, reels not kept) must hold when the backend is chosen.
+- **Fault injection:** the `backery_stub_fail_saves` and `backery_stub_fail_loads` cookies make saves or loads fail, for the error states.
 
 Known issues and follow-ups are in `BACKLOG.md`.
 

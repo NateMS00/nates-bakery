@@ -6,9 +6,11 @@ import { SkipLink } from "./SkipLink";
 // BONES-shell Share variant, for friends without an account: the wordmark only, not a
 // link (nothing on shared pages leads into the owner area); no navigation, no account
 // menu; the header scrolls with the page. Footer: Privacy. Landmarks: skip link,
-// header, main, footer; no nav.
+// header, main, footer; no nav. Also used, as a build decision (BONES-shell has no
+// variant for them), by the Sign In pages and by Privacy, Not Found, and Error when
+// signed out, so a guest never sees owner navigation.
 
-export function ShareShell({ children }: { children: ReactNode }) {
+export function PublicShell({ children }: { children: ReactNode }) {
   return (
     // A column as tall as the screen, so /r/expired can center its message between
     // header and footer.

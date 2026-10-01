@@ -10,6 +10,7 @@ import type { Draft, Recipe, SharedRecipe } from "./types";
 // the server restarts.
 // - BACKERY_FIXTURE_DELAY_MS simulates latency, so Loading states can be seen.
 // - BACKERY_FIXTURE_SET=empty | only-drafts switches to the Library's empty cases.
+// - The backery_stub_fail_loads=1 cookie makes every load fail (the Error page).
 // - The backery_fixture_ns cookie gives a browser its own copy of the fixtures, so
 //   parallel Playwright tests can't see each other's writes.
 
@@ -31,8 +32,14 @@ function seed(): Db {
   });
 }
 
+// STUB fault injection: with this cookie set, every data load fails, so the Error page
+// can be seen and tested before there's a real server to fail.
+const FAIL_LOADS_COOKIE = "backery_stub_fail_loads";
+
 export async function db(): Promise<Db> {
-  const ns = (await cookies()).get(FIXTURE_NS_COOKIE)?.value ?? "default";
+  const jar = await cookies();
+  if (jar.get(FAIL_LOADS_COOKIE)?.value === "1") throw new Error("Simulated load failure (backery_stub_fail_loads)");
+  const ns = jar.get(FIXTURE_NS_COOKIE)?.value ?? "default";
   let found = store.__backeryDb!.get(ns);
   if (!found) {
     found = seed();

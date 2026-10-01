@@ -268,7 +268,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
               <p className="mt-sm type-step-text text-ink tablet:text-[28px]">
                 {splitStepText(step.text, step.timeMarks).map((part, i) =>
                   part.kind === "time" ? (
-                    <span key={i} className="font-bold whitespace-nowrap text-primary underline decoration-dotted decoration-2 underline-offset-4">
+                    <span key={i} className="font-bold whitespace-nowrap text-ink">
                       {part.text}
                     </span>
                   ) : (

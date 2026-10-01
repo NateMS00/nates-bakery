@@ -4,7 +4,8 @@ import type { Group, Step } from "@/lib/data/types";
 import { groupItems } from "./IngredientList";
 
 // BONES Steps: numbered, full text, numbering continues across groups.
-// Detected times are marked inline (SKIN time-mark) but aren't interactive here.
+// Detected times are marked inline (SKIN time-mark: bold, body colour, nothing
+// link-like) because they aren't interactive here.
 
 export function StepList({ groups, steps }: { groups: Group[]; steps: Step[] }) {
   const numberOf = new Map(steps.map((s, i) => [s.id, i + 1]));
@@ -20,7 +21,7 @@ export function StepList({ groups, steps }: { groups: Group[]; steps: Step[] }) 
                 <p className="type-body-lg text-ink">
                   {splitStepText(step.text, step.timeMarks).map((part, i) =>
                     part.kind === "time" ? (
-                      <span key={i} className="font-bold whitespace-nowrap text-primary underline decoration-dotted decoration-2 underline-offset-4">
+                      <span key={i} className="font-bold whitespace-nowrap text-ink">
                         {part.text}
                       </span>
                     ) : (

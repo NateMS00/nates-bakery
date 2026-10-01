@@ -1,25 +1,26 @@
-import { Button } from "@/components/ui/Button";
-import { stubSignIn } from "@/lib/auth/actions";
+import type { Metadata } from "next";
+import { AuthColumn } from "@/components/auth/AuthColumn";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { Notice } from "@/components/ui/Notice";
+import { safeNext } from "@/lib/auth/stub";
 
-// STUB sign-in, only so Sign out and the signed-out redirect can be exercised.
-// The real Sign In page comes with PROMPTS.md step 8 and the backend.
+// /login (Sign In), SKELETON: email, password, a link to /forgot-password; the
+// Password updated notice after a reset; no sign-up link. Continues to `?next=`.
 
-export const metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign in" };
 
-export default async function LoginStub({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const next = (await searchParams).next ?? "/recipes";
+type Props = { searchParams: Promise<{ next?: string; reset?: string }> };
+
+export default async function SignInPage({ searchParams }: Props) {
+  const { next, reset } = await searchParams;
   return (
-    <main id="main" className="mx-auto max-w-[calc(var(--col)*6+var(--gutter)*5)] px-(--gutter) pt-lg pb-2xl tablet:pt-xl">
-      <p className="type-wordmark text-primary">Backery</p>
-      <h1 className="mt-lg type-display-md text-ink">Sign in</h1>
-      <p className="mt-sm type-body-md text-body">
-        Sign-in isn&rsquo;t built yet. This stub signs you back in as the owner.
-      </p>
-      <form action={stubSignIn.bind(null, next)} className="mt-lg">
-        <Button type="submit" variant="primary">
-          Continue as owner
-        </Button>
-      </form>
-    </main>
+    <AuthColumn title="Sign in">
+      {reset === "done" && (
+        <div role="status" className="mt-base">
+          <Notice tone="info">Password updated. Sign in with your new password.</Notice>
+        </div>
+      )}
+      <LoginForm next={safeNext(next)} />
+    </AuthColumn>
   );
 }

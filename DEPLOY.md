@@ -17,14 +17,14 @@ in Vercel's environment variables, never in the repo.
 
 ## Before the first deploy
 
-- [ ] Rename the branch `master` → `main`.
-- [ ] Check `gh auth status`, then create the private GitHub repository and push.
+- [x] Rename the branch `master` → `main`.
+- [x] Check `gh auth status`, then create the private GitHub repository and push: `NateMS00/nates-bakery`, private (2026-10-01).
 
 ## Vercel
 
 - [ ] Import the GitHub repository.
 - [ ] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Production). Not `BACKERY_BACKEND`, not `BACKERY_FEATURE_IMPORT`.
-- [ ] Functions region: Portland (`pdx1`), next to the Supabase project.
+- [x] Functions region: Portland (`pdx1`), next to the Supabase project, set in `vercel.json` (applies from the first deploy).
 - [ ] Deploy.
 
 ## After the first deploy

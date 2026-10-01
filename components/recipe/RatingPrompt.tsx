@@ -1,31 +1,34 @@
 "use client";
 
-import type { RefObject } from "react";
 import { Button } from "@/components/ui/Button";
-import { Dialog } from "@/components/ui/Dialog";
+import { Dialog, type FocusTarget } from "@/components/ui/Dialog";
 import { StarRating } from "@/components/ui/StarRating";
 
-// BONES Rating prompt: after Mark as baked, only when unrated. Mobile bottom sheet,
-// desktop modal 4 cols, both sized to their content. "How was it?" with a close X,
-// 5 stars at SKIN's starSizePrompt (40px), centered, Skip directly below.
-// Choosing a star saves and closes. Focus starts on the first star and returns
-// to Mark as baked.
+// BONES Rating prompt (Recipe page and Bake Log): mobile bottom sheet, desktop modal
+// 4 cols, both sized to their content. A title with a close X, 5 stars at SKIN's
+// starSizePrompt (40px), centered, Skip directly below. Choosing a star saves and
+// closes. Focus starts on the first star, or on the current rating when there is one
+// (the Bake Log shows it so it can be kept or changed), and returns to the opener.
 
 export function RatingPrompt({
   open,
   onRate,
   onClose,
   returnFocus,
+  title = "How was it?",
+  value = null,
 }: {
   open: boolean;
   onRate: (rating: number) => void;
   onClose: () => void;
-  returnFocus: RefObject<HTMLElement | null>;
+  returnFocus: FocusTarget;
+  title?: string;
+  value?: number | null;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title="How was it?" modalColumns={4} returnFocus={returnFocus}>
+    <Dialog open={open} onClose={onClose} title={title} modalColumns={4} returnFocus={returnFocus}>
       <StarRating
-        value={null}
+        value={value}
         prompt
         label="Rating"
         className="mt-sm justify-center"

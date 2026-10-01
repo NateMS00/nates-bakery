@@ -7,6 +7,13 @@ import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouc
 const NATA = "/recipes/pasteis-de-nata";
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "recipe", name, fullPage);
 
+// Favorite, rating, bakes, and share links are saved on the server now: each test has
+// its own copy of the fixtures (namespace cookie).
+test.beforeEach(async ({ context }, info) => {
+  const value = `${info.project.name}-${info.testId}`;
+  for (const port of [3100, 3101]) await context.addCookies([{ name: "backery_fixture_ns", value, url: `http://localhost:${port}` }]);
+});
+
 test("default: pastel de nata (Has estimates)", async ({ page }) => {
   await ready(page, NATA);
   await shot(page, "01-first-viewport");

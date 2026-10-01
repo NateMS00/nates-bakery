@@ -5,6 +5,13 @@ import { capture, expectFocusRings, expectPageBasics, expectPageTop, expectTouch
 // full on :3100 (34 recipes, 4 drafts), latency on :3101, empty on :3102, only drafts on :3103.
 
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "library", name, fullPage);
+
+// Favorites set on the Recipe page are saved on the server: each test has its own copy
+// of the fixtures (namespace cookie).
+test.beforeEach(async ({ context }, info) => {
+  const value = `${info.project.name}-${info.testId}`;
+  for (const port of [3100, 3101, 3102, 3103]) await context.addCookies([{ name: "backery_fixture_ns", value, url: `http://localhost:${port}` }]);
+});
 const count = (page: Page) => page.locator("#recipes-heading ~ p[aria-live]");
 const items = (page: Page) => page.locator("#recipes-heading ~ ul > li");
 

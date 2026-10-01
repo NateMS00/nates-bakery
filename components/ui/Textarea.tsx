@@ -5,7 +5,7 @@ import { cx } from "./cx";
 
 // SKIN textarea: like input, at least 96px tall and growing with its content.
 
-export function Textarea({ className, value, error, ...props }: ComponentProps<"textarea"> & { error?: boolean }) {
+export function Textarea({ className, value, error, ref: outerRef, ...props }: ComponentProps<"textarea"> & { error?: boolean }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -15,7 +15,11 @@ export function Textarea({ className, value, error, ...props }: ComponentProps<"
   }, [value]);
   return (
     <textarea
-      ref={ref}
+      ref={(el) => {
+        ref.current = el;
+        if (typeof outerRef === "function") outerRef(el);
+        else if (outerRef) outerRef.current = el;
+      }}
       value={value}
       rows={3}
       className={cx(

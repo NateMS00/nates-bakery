@@ -14,9 +14,13 @@ import { cx } from "./cx";
 // Also closes on backdrop tap and, on mobile, a swipe down. Focus returns to
 // whatever opened it.
 
+/** Where focus goes on close: an element ref, or a function that finds it at that moment. */
+export type FocusTarget = RefObject<HTMLElement | null> | (() => HTMLElement | null);
+
 const widths = {
   4: "tablet:w-[calc(var(--col)*4+var(--gutter)*3)]",
   5: "tablet:w-[calc(var(--col)*5+var(--gutter)*4)]",
+  6: "tablet:w-[calc(var(--col)*6+var(--gutter)*5)]",
 };
 
 export function Dialog({
@@ -28,19 +32,25 @@ export function Dialog({
   footer,
   initialFocus,
   returnFocus,
+  onAfterClose,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
   modalColumns: keyof typeof widths;
-  /** Fixed mobile height, only for BONES-shell's exceptions (e.g. "about three quarters"). */
-  sheetHeight?: "three-quarters";
+  /**
+   * Fixed mobile height, only for BONES-shell's exceptions: "three-quarters" for a list
+   * with a pinned footer, "full" for a full-screen form (Bake Log's entry form).
+   */
+  sheetHeight?: "three-quarters" | "full";
   /** Pinned to the bottom of the sheet, outside the scrolling body. */
   footer?: ReactNode;
   initialFocus?: RefObject<HTMLElement | null>;
   /** Where focus goes on close; defaults to the element focused when it opened. */
-  returnFocus?: RefObject<HTMLElement | null>;
+  returnFocus?: FocusTarget;
+  /** Runs once the dialog has fully closed and focus has returned (to chain another overlay). */
+  onAfterClose?: () => void;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -61,16 +71,39 @@ export function Dialog({
     }
   }, [open, initialFocus]);
 
+  // Full-screen form on a phone: follow the visual viewport, so the pinned Save and
+  // Cancel stay just above the on-screen keyboard instead of behind it.
+  useEffect(() => {
+    const dialog = ref.current;
+    const vv = window.visualViewport;
+    if (!open || sheetHeight !== "full" || !dialog || !vv) return;
+    const fit = () => {
+      const phone = !window.matchMedia("(min-width: 768px)").matches;
+      dialog.style.top = phone ? `${vv.offsetTop}px` : "";
+      dialog.style.height = phone ? `${vv.height}px` : "";
+      dialog.style.maxHeight = phone ? `${vv.height}px` : "";
+    };
+    fit();
+    vv.addEventListener("resize", fit);
+    vv.addEventListener("scroll", fit);
+    return () => {
+      vv.removeEventListener("resize", fit);
+      vv.removeEventListener("scroll", fit);
+      dialog.style.top = dialog.style.height = dialog.style.maxHeight = "";
+    };
+  }, [open, sheetHeight]);
+
   function handleClose() {
     document.documentElement.style.overflow = "";
     if (ref.current) ref.current.style.transform = "";
-    const target = returnFocus?.current ?? opener.current;
+    const target = (typeof returnFocus === "function" ? returnFocus() : returnFocus?.current) ?? opener.current;
     if (target?.isConnected) target.focus();
     if (open) onClose();
+    onAfterClose?.();
   }
 
   function onPointerDown(e: PointerEvent) {
-    if (window.matchMedia("(min-width: 768px)").matches) return;
+    if (sheetHeight === "full" || window.matchMedia("(min-width: 768px)").matches) return;
     drag.current = { startY: e.clientY, dy: 0 };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
@@ -105,6 +138,7 @@ export function Dialog({
         "tablet:inset-0 tablet:m-auto tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
         widths[modalColumns],
         sheetHeight === "three-quarters" && "max-tablet:h-[75vh]",
+        sheetHeight === "full" && "max-tablet:h-dvh max-tablet:max-h-dvh max-tablet:rounded-none",
       )}
     >
       {open && (
@@ -117,7 +151,8 @@ export function Dialog({
             onPointerCancel={onPointerUp}
           >
             <TileBand />
-            <div aria-hidden="true" className="mx-auto mt-sm h-xs w-2xl rounded-full bg-border" />
+            {/* A full-screen form has no grab handle: it closes through Cancel or the X. */}
+            {sheetHeight !== "full" && <div aria-hidden="true" className="mx-auto mt-sm h-xs w-2xl rounded-full bg-border" />}
           </div>
           <div className="flex shrink-0 items-start gap-sm pt-sm pr-sm pl-base tablet:pt-lg tablet:pr-lg tablet:pl-xl">
             <h2 id={titleId} className="flex-1 pt-sm type-heading text-ink">

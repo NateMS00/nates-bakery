@@ -2,7 +2,7 @@
 
 import { Pencil, Share } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -14,7 +14,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StarRating } from "@/components/ui/StarRating";
 import { ExternalLink, TextLink } from "@/components/ui/TextLink";
 import { categoryLabel } from "@/lib/data/categories";
-import { recipeActions, useRecipe } from "@/lib/data/store";
+import { useOwnerRecipe } from "@/lib/data/useOwnerRecipe";
 import type { BakeLogEntry, Recipe } from "@/lib/data/types";
 import { formatBakeDate, formatDuration, formatScale, formatYield, parseScale, todayIso } from "@/lib/format";
 import { IngredientList } from "./IngredientList";
@@ -31,8 +31,7 @@ import Link from "next/link";
 const JUST_MARKED_MS = 10_000;
 
 export function RecipeView({ initial }: { initial: Recipe }) {
-  const recipe = useRecipe(initial);
-  const actions = useMemo(() => recipeActions(initial), [initial]);
+  const { recipe, actions } = useOwnerRecipe(initial);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { scale } = parseScale(searchParams.get("scale") ?? undefined);
@@ -61,8 +60,9 @@ export function RecipeView({ initial }: { initial: Recipe }) {
     window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
   }
 
-  function markAsBaked() {
-    const entry = actions.addBake({ date: todayIso(), scale });
+  async function markAsBaked() {
+    const entry = await actions.addBake({ date: todayIso(), scale });
+    if (!entry) return;
     setJustMarked({ entry });
     if (recipe.rating === null) setRatingOpen(true);
   }

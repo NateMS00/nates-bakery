@@ -65,8 +65,14 @@ function simple(s: Simple): Recipe {
 
 const LOAF: [number, string, string] = [1, "loaf", "loaves"];
 
+/** Every other week back from `from`: a long bake log (Bake Log's Show more after 20). */
+function fortnightly(from: string, count: number): string[] {
+  const start = Date.parse(`${from}T00:00:00Z`);
+  return Array.from({ length: count }, (_, i) => new Date(start - i * 14 * 86_400_000).toISOString().slice(0, 10));
+}
+
 export const LIBRARY_RECIPES: Recipe[] = [
-  simple({ id: "country-sourdough", title: "Country sourdough", category: "bread", rating: 5, favorite: true, baked: ["2026-09-27", "2026-09-13", "2026-08-30"], created: "2026-06-02", makes: LOAF, minutes: 1440, creator: "wildyeast.ines" }),
+  simple({ id: "country-sourdough", title: "Country sourdough", category: "bread", rating: 5, favorite: true, baked: fortnightly("2026-09-27", 24), created: "2026-06-02", makes: LOAF, minutes: 1440, creator: "wildyeast.ines" }),
   simple({ id: "focaccia", title: "Rosemary focaccia", category: "bread", rating: 4, baked: ["2026-09-22"], created: "2026-07-11", makes: [1, "tray", "trays"], minutes: 300, creator: "panificio.leo" }),
   simple({ id: "bagels", title: "New York bagels", category: "bread", rating: 3, baked: ["2026-05-18"], created: "2026-05-10", makes: [8, "bagel", "bagels"], minutes: 960, creator: "boilandbake" }),
   simple({ id: "pita", title: "Pillowy pita", category: "bread", created: "2026-09-20", makes: [8, "pita", "pitas"], minutes: 120, creator: "levant.kitchen" }),

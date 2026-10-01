@@ -20,7 +20,7 @@ import {
   writeFilters,
   type LibraryFilters,
 } from "@/lib/data/library";
-import { simulateImports, useDrafts, useRecipes } from "@/lib/data/store";
+import { simulateImports, useDrafts } from "@/lib/data/store";
 import type { Draft, Recipe } from "@/lib/data/types";
 import { DraftsSection } from "./DraftsSection";
 import { FilterRow } from "./FilterControls";
@@ -32,8 +32,7 @@ import { SearchField } from "./SearchField";
 // Drafts, Recipes, with a page header for the H1 and the primary action (Import from a
 // reel), which is the sticky action-bar on mobile. Query state lives in the URL.
 
-export function LibraryView({ recipes: initialRecipes, drafts: initialDrafts }: { recipes: Recipe[]; drafts: Draft[] }) {
-  const recipes = useRecipes(initialRecipes);
+export function LibraryView({ recipes, drafts: initialDrafts }: { recipes: Recipe[]; drafts: Draft[] }) {
   const drafts = useDrafts(initialDrafts);
   const pathname = usePathname();
   const searchParams = useSearchParams();

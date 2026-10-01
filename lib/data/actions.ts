@@ -3,8 +3,9 @@
 import { cookies } from "next/headers";
 import { blockers, newId, toRecipeContent, type EditorState } from "./editor";
 import { normalizeReelUrl, type FailReason, type StartResult } from "./import";
+import { sortLog } from "./bakeLog";
 import { db } from "./recipes";
-import type { Recipe } from "./types";
+import type { BakeLogEntry, Recipe, ShareLink } from "./types";
 
 // Server actions over the in-memory fixtures. The same checks run here as in the
 // editor, so a draft with a Missing amount can't be saved by any route.
@@ -133,4 +134,68 @@ export async function startImport(link: string, options: { again?: boolean } = {
     startedAt: Date.now(),
   });
   return { status: "started", draftId };
+}
+
+// ── Recipe page and Bake Log (owner actions) ──
+// These were client-only until the Bake Log existed; now the Recipe page, Library, and
+// Bake Log all read the same server data.
+
+async function findRecipe(recipeId: string) {
+  return (await db()).recipes.find((r) => r.id === recipeId) ?? null;
+}
+
+export async function setFavorite(recipeId: string, favorite: boolean) {
+  const r = await findRecipe(recipeId);
+  if (r) r.favorite = favorite;
+}
+
+export async function setRating(recipeId: string, rating: number | null) {
+  const r = await findRecipe(recipeId);
+  if (r) r.rating = rating;
+}
+
+export type BakeFields = Omit<BakeLogEntry, "id">;
+
+export async function addBake(recipeId: string, fields: BakeFields): Promise<BakeLogEntry | null> {
+  const r = await findRecipe(recipeId);
+  if (!r) return null;
+  const entry: BakeLogEntry = { id: newId("bake"), ...clean(fields) };
+  r.bakeLog = sortLog([entry, ...r.bakeLog]);
+  return entry;
+}
+
+export async function updateBake(recipeId: string, entryId: string, fields: BakeFields): Promise<boolean> {
+  const r = await findRecipe(recipeId);
+  if (!r || !r.bakeLog.some((e) => e.id === entryId)) return false;
+  r.bakeLog = sortLog(r.bakeLog.map((e) => (e.id === entryId ? { id: e.id, ...clean(fields) } : e)));
+  return true;
+}
+
+/** Deleting the last entry makes the recipe Not baked yet again (SKELETON). */
+export async function deleteBake(recipeId: string, entryId: string) {
+  const r = await findRecipe(recipeId);
+  if (r) r.bakeLog = r.bakeLog.filter((e) => e.id !== entryId);
+}
+
+export async function createShareLink(recipeId: string): Promise<ShareLink | null> {
+  const r = await findRecipe(recipeId);
+  if (!r) return null;
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  const token = Array.from({ length: 12 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+  r.shareLink = { token, createdAt: new Date().toISOString() };
+  return r.shareLink;
+}
+
+export async function revokeShareLink(recipeId: string) {
+  const r = await findRecipe(recipeId);
+  if (r) r.shareLink = null;
+}
+
+function clean(f: BakeFields): BakeFields {
+  return {
+    date: f.date,
+    scale: f.scale,
+    whatChanged: f.whatChanged?.trim() || undefined,
+    howItTurnedOut: f.howItTurnedOut?.trim() || undefined,
+  };
 }

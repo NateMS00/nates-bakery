@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode, type RefObject } from "react";
 import { Button } from "./Button";
-import { Dialog } from "./Dialog";
+import { Dialog, type FocusTarget } from "./Dialog";
 import { cx } from "./cx";
 
 // BONES-shell Destructive confirmations: a header row with the question and a close
@@ -53,7 +53,7 @@ export function ConfirmDialog({
 }: {
   open: boolean;
   onClose: () => void;
-  returnFocus?: RefObject<HTMLElement | null>;
+  returnFocus?: FocusTarget;
   title: string;
   body: ReactNode;
   confirm: string;

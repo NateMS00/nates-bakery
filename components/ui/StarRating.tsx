@@ -15,7 +15,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
   /**
    * Rating prompt mode: stars at starSizePrompt (40px), every press saves (no clearing),
    * arrow keys only move focus so a keyboard user can pick before saving, and the
-   * first star takes dialog focus.
+   * first star (or the current rating) takes dialog focus.
    */
   prompt?: boolean;
   className?: string;
@@ -62,7 +62,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
             aria-checked={value === n}
             aria-label={`Rate ${n} out of 5`}
             tabIndex={i === focusIndex ? 0 : -1}
-            data-autofocus={prompt && i === 0 ? true : undefined}
+            data-autofocus={prompt && i === focusIndex ? true : undefined}
             onClick={() => choose(n)}
             onKeyDown={(e) => onKeyDown(e, i)}
             onMouseEnter={() => setHover(n)}

@@ -34,6 +34,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         )}
       >
         <input
+          suppressHydrationWarning
           ref={ref}
           id={id}
           aria-invalid={error ? true : undefined}

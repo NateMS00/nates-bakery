@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–9 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 416 checks pass.
+Prompts 1–9 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 424 checks pass on a clean run (the 32 skipped are the phone-only viewport tests in desktop projects).
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -73,6 +73,12 @@ Nothing is half-built or uncommitted. These are deliberate stubs until the backe
 - **Fault injection:** the `backery_stub_fail_saves` and `backery_stub_fail_loads` cookies make saves or loads fail, for the error states.
 
 Known issues and follow-ups are in `BACKLOG.md`.
+
+## iPhone testing (2026-09-30)
+
+- `npm run dev:lan` serves the dev server on the local network (`next.config.ts` allows this machine's own LAN addresses); open `http://<Mac's IP>:3000` in Safari. Plain HTTP, so wake lock, clipboard read, and notifications are unavailable on the phone.
+- Everything pinned to the bottom (sheets, action bars, Bake Mode's step nav and timer strip, the full-screen log form) follows the visual viewport through `components/system/ViewportVars.tsx` and the `pin-bottom` utility, so it stays above Safari's toolbar and the keyboard. Tested in Chrome with a simulated visual viewport (`tests/visual/viewport.spec.ts`); WebKit isn't available on macOS 12.
+- `suppressHydrationWarning` on `<html>` and the text inputs, for attributes Chrome for iOS injects before hydration.
 
 ## Running it
 

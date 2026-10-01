@@ -110,7 +110,7 @@ export function RecipeFormPage({
         <div
           data-action-bar
           className={cx(
-            "fixed inset-x-0 bottom-0 z-20 bg-canvas px-(--gutter) pt-sm pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:bg-transparent tablet:p-0 tablet:shadow-none",
+            "z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-sm pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:bg-transparent tablet:p-0 tablet:shadow-none",
             keyboardOpen && "max-tablet:hidden",
           )}
         >

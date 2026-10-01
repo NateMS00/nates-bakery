@@ -411,7 +411,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
       </main>
 
       {/* Pinned bottom: the mobile timer strip, then Step nav (primary action) */}
-      <div ref={bar} className="fixed inset-x-0 bottom-0 z-20 bg-canvas shadow-bar">
+      <div ref={bar} className="pin-bottom z-20 bg-canvas shadow-bar">
         <div className="tablet:hidden">
           <TimerStrip timers={timers} now={now} onPause={pause} onResume={resume} onClear={clear} />
         </div>

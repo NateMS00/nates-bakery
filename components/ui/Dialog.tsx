@@ -79,27 +79,26 @@ export function Dialog({
     }
   }, [open, initialFocus, hydrated]);
 
-  // Full-screen form on a phone: follow the visual viewport, so the pinned Save and
-  // Cancel stay just above the on-screen keyboard instead of behind it.
+  // When the keyboard opens (or a field takes focus), keep the focused field in view
+  // inside the sheet's scrolling body, above the pinned footer.
   useEffect(() => {
     const dialog = ref.current;
     const vv = window.visualViewport;
-    if (!open || sheetHeight !== "full" || !dialog || !vv) return;
-    const fit = () => {
-      const phone = !window.matchMedia("(min-width: 768px)").matches;
-      dialog.style.top = phone ? `${vv.offsetTop}px` : "";
-      dialog.style.height = phone ? `${vv.height}px` : "";
-      dialog.style.maxHeight = phone ? `${vv.height}px` : "";
-    };
-    fit();
-    vv.addEventListener("resize", fit);
-    vv.addEventListener("scroll", fit);
+    if (!open || !dialog) return;
+    const reveal = () =>
+      requestAnimationFrame(() => {
+        const field = document.activeElement;
+        if (field instanceof HTMLElement && dialog.contains(field) && field.matches("input, textarea, select")) {
+          field.scrollIntoView({ block: "nearest" });
+        }
+      });
+    dialog.addEventListener("focusin", reveal);
+    vv?.addEventListener("resize", reveal);
     return () => {
-      vv.removeEventListener("resize", fit);
-      vv.removeEventListener("scroll", fit);
-      dialog.style.top = dialog.style.height = dialog.style.maxHeight = "";
+      dialog.removeEventListener("focusin", reveal);
+      vv?.removeEventListener("resize", reveal);
     };
-  }, [open, sheetHeight]);
+  }, [open]);
 
   function handleClose() {
     document.documentElement.style.overflow = "";
@@ -141,12 +140,17 @@ export function Dialog({
         if (e.target === ref.current) onClose();
       }}
       className={cx(
-        "fixed inset-x-0 top-auto bottom-0 m-0 h-fit max-h-[90vh] w-full max-w-full overflow-hidden rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim open:flex open:flex-col",
+        // Mobile: pinned to the bottom of the visible area (see `pin-bottom` in globals.css),
+        // at most 90% of it. Tablet up: a centered modal, at most 90% of the dynamic viewport.
+        "fixed m-0 h-fit w-full max-w-full overflow-hidden rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim open:flex open:flex-col",
+        "max-tablet:pin-bottom tablet:max-h-[90dvh]",
+        sheetHeight !== "full" && "max-tablet:max-h-[calc(var(--vv-height)*0.9)]",
         "animate-[sheet-up_var(--motion-sheet)_var(--ease-skin)] backdrop:animate-[fade-in_var(--motion-sheet)_var(--ease-skin)]",
         "tablet:inset-0 tablet:m-auto tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
         widths[modalColumns],
-        sheetHeight === "three-quarters" && "max-tablet:h-[75vh]",
-        sheetHeight === "full" && "max-tablet:h-dvh max-tablet:max-h-dvh max-tablet:rounded-none",
+        sheetHeight === "three-quarters" && "max-tablet:h-[calc(var(--vv-height)*0.75)]",
+        // The whole visible area: above the keyboard while it's open, so Save and Cancel sit just over it.
+        sheetHeight === "full" && "max-tablet:h-(--vv-height) max-tablet:max-h-(--vv-height) max-tablet:rounded-none",
       )}
     >
       {open && hydrated && (

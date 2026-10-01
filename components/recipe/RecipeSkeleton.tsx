@@ -16,7 +16,7 @@ export function RecipeSkeleton() {
           <Skeleton className="ml-lg size-icon" />
           <div
             data-action-bar
-            className="fixed inset-x-0 bottom-0 z-20 bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:ml-sm tablet:bg-transparent tablet:p-0 tablet:shadow-none"
+            className="z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:ml-sm tablet:bg-transparent tablet:p-0 tablet:shadow-none"
           >
             <Button variant="primary" disabled className="w-full tablet:w-auto">
               Start baking

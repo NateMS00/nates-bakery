@@ -44,6 +44,7 @@ export function SearchField({ initial, onSearch, trailing }: { initial: string; 
         >
           <Search aria-hidden="true" className="ml-md size-icon-sm shrink-0 text-muted" strokeWidth={2} />
           <input
+            suppressHydrationWarning
             ref={input}
             id="library-search"
             type="search"

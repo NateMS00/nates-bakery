@@ -30,7 +30,7 @@ export default function Loading() {
           </div>
         </div>
       </main>
-      <div className="fixed inset-x-0 bottom-0 bg-canvas shadow-bar">
+      <div className="pin-bottom bg-canvas shadow-bar">
         <div className="mx-auto grid max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] grid-cols-3 gap-sm px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))]">
           <Button variant="primary" disabled className="col-span-3 min-h-touch-bake">
             Next step

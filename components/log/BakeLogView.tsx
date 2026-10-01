@@ -169,7 +169,7 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
           {/* Log bar (primary action): pinned on mobile, in the header from tablet up. */}
           <div
             data-action-bar
-            className="fixed inset-x-0 bottom-0 z-20 bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:shrink-0 tablet:bg-transparent tablet:p-0 tablet:shadow-none"
+            className="z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:shrink-0 tablet:bg-transparent tablet:p-0 tablet:shadow-none"
           >
             <ButtonLink
               ref={logButton}

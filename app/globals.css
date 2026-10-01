@@ -96,11 +96,41 @@
   }
 }
 
+/* The visible area, kept current by components/system/ViewportVars.tsx. Without
+   JavaScript, the dynamic viewport (100dvh), never 100vh. */
+:root {
+  --vv-top: 0px;
+  --vv-height: 100dvh;
+}
+
+/* Pinned to the bottom of what's on screen: above iOS Safari's toolbar and, while it's
+   open, the keyboard. Anchored from the top (offset + height of the visual viewport,
+   then pulled up by its own height), because the bottom of the layout viewport can sit
+   behind the toolbar. Each element pads its own bottom with env(safe-area-inset-bottom)
+   for the home indicator. */
+@utility pin-bottom {
+  position: fixed;
+  inset-inline: 0;
+  bottom: auto;
+  top: calc(var(--vv-top) + var(--vv-height));
+  translate: 0 -100%;
+}
+
+/* A focused field in a sheet scrolls into view with a little room around it. */
+dialog :is(input, textarea, select) {
+  scroll-margin-block: var(--spacing-base);
+}
+
 /* BONES: on mobile the page reserves space at its end for a sticky action-bar,
    so the bar never covers the last content (footer included). */
 @media (max-width: 767.98px) {
   body:has([data-action-bar]) {
     padding-bottom: calc(var(--spacing-touch-min) + 2 * var(--spacing-md) + env(safe-area-inset-bottom));
+  }
+  /* While the keyboard is open, a page's action bar would ride on top of it and cover
+     what's being typed, so it steps aside (as the editor's Save bar always has). */
+  html[data-keyboard-open] [data-action-bar] {
+    display: none;
   }
 }
 

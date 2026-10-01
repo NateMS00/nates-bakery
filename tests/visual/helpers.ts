@@ -10,7 +10,7 @@ export async function capture(page: Page, dir: string, name: string, fullPage = 
   // Full-page captures draw the sticky action-bar once at the end of the page (in the
   // space the page reserves for it), not pinned mid-capture.
   const style = await page.addStyleTag({
-    content: "body{position:relative} [data-action-bar]{position:absolute!important;bottom:0!important}",
+    content: "body{position:relative} [data-action-bar]{position:absolute!important;top:auto!important;bottom:0!important;translate:none!important}",
   });
   await page.screenshot({ path, fullPage: true });
   await style.evaluate((el) => (el as Element).remove());

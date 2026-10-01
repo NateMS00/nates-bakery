@@ -78,6 +78,7 @@ export function ShareDialog({
               </label>
               <div className="flex gap-sm">
                 <input
+                  suppressHydrationWarning
                   ref={field}
                   id="share-link"
                   readOnly

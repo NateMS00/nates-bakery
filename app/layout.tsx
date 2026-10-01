@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ViewportVars } from "@/components/system/ViewportVars";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
@@ -19,8 +20,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={fontVariables}>
-      <body className="min-h-dvh">{children}</body>
+    // suppressHydrationWarning: Chrome for iOS adds autofill attributes (__gcrremoteframetoken)
+    // to <html> before React hydrates. Only this element's own attributes are exempt.
+    <html lang="en" className={fontVariables} suppressHydrationWarning>
+      <body className="min-h-dvh">
+        <ViewportVars />
+        {children}
+      </body>
     </html>
   );
 }

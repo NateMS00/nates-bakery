@@ -158,6 +158,7 @@ function ReelField({
         )}
       >
         <input
+          suppressHydrationWarning
           ref={ref}
           id={id}
           type="url"

@@ -263,6 +263,7 @@ function GroupBlock({
         <div className="-mr-sm flex items-center gap-sm border-b border-hairline pb-xs">
           {renaming ? (
             <input
+              suppressHydrationWarning
               aria-label="Group name"
               autoFocus
               defaultValue={group.name}
@@ -356,6 +357,7 @@ function IngredientRow({
             )}
           >
             <input
+              suppressHydrationWarning
               id={amountFieldId(ingredient.id)}
               aria-label={`${name}, grams`}
               aria-invalid={error || undefined}

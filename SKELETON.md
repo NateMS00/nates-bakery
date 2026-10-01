@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.3.1 · **Updated**: 2026-09-29
+> **Version**: 1.3.2 · **Updated**: 2026-09-30
 
 ---
 
@@ -90,7 +90,7 @@ Default access: owner; signed-out → `/login?next=` plus the requested path (in
   - Params: `?scale=` carried from Recipe; `?step=` is the current step (default 1), so a refresh keeps your place
 - `/recipes/:recipeId/log` - **Bake Log**
   - Goal: Record what changed and how each bake turned out, so the next bake is better.
-  - Params: `?new=1` opens the new entry form
+  - Params: `?new=1` opens the new entry form; `?edit=<entryId>` opens that entry's form (an unknown id opens the log and drops the param, no error)
 
 ### Share
 
@@ -294,7 +294,7 @@ Default access: public.
 - **Primary Action**: Log a bake → `?new=1`
 - **Section Stack**:
   1. `Entries`: every bake, newest first: date, scale used, and, when written, what changed and how it turned out.
-- **Overlays**: New or edit entry form (`?new=1` for new; only the date is required); Delete entry confirmation (deleting the last entry makes the recipe Not baked yet again); Rating prompt after a new entry is saved.
+- **Overlays**: New or edit entry form (`?new=1` for new, `?edit=<entryId>` to edit; only the date is required, and it can't be later than today in the owner's local time); Delete entry confirmation (deleting the last entry makes the recipe Not baked yet again); Rating prompt after a new entry is saved.
 - **States**: Empty → a prompt to log the first bake.
 
 ### `/r/:shareToken` (Shared Recipe)
@@ -348,6 +348,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.3.2 (2026-09-30): Bake Log gains `?edit=<entryId>` so Add notes and Edit open the entry form in one tap; log dates can't be in the future (owner's local date).
 - 1.3.1 (2026-09-29): Recorded data decisions from the build kickoff: separate ingredient and step groups, structured yield with rounding, several timers per step, "to taste" as an amount state.
 - 1.3.0 (2026-09-29): Added FLOW-05 Turn on timer alerts (Home Screen web app + notifications), Timer alerts in the account menu, and ingredients linked to each step.
 - 1.2.1 (2026-09-29): Review Import's Source now includes the reel transcript.

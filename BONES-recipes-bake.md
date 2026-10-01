@@ -4,7 +4,7 @@
 > **Primary Action**: Next step (Finish on the last step → `/recipes/:recipeId/log?new=1`)
 > **Primary Device**: mobile, because the iPhone sits propped on the counter and is read from about an arm's length away, often touched with floury hands; a propped-up iPad (tablet) is the second case
 > **Shell**: BONES-shell.md, Focus variant
-> **Version**: 1.2.0 · **Updated**: 2026-09-30
+> **Version**: 1.2.1 · **Updated**: 2026-09-30
 
 ---
 
@@ -87,7 +87,7 @@ MOBILE
 ### Timers (SKELETON section 2)
 - **Layout**: desktop and tablet right column (4 of 12 cols; 3 of 8 on tablet), above All Ingredients; mobile a compact strip pinned just above Step nav, so running timers stay visible on every step
 - **Content**: one row per timer: label (step number and group, "Step 3 · Filling", plus the duration when two timers come from the same step), time remaining, Pause or Resume, Clear. Desktop and tablet: label above, time in SKIN's `timer` size beside the controls. Mobile strip: each timer is two short lines, the label on one line (truncated, never wrapped) and below it the time at the strip's smaller size with Pause and Clear, so two timers never take more than about a sixth of the screen; at most 2 timers in the strip, then "+n more", which expands the strip upward to show all
-- **Behavior**: hidden when no timer exists. Timers run across steps and survive a refresh (they are kept as end times, not counters). Remaining time is not announced every second; only start, pause, and finish are announced
+- **Behavior**: hidden when no timer exists. Timers are sorted by time remaining, soonest first, in both the mobile strip and the desktop panel, so the next one to finish is always on top (paused timers sort by their remaining time too). Timers run across steps and survive a refresh (they are kept as end times, not counters). Remaining time is not announced every second; only start, pause, and finish are announced
 
 ```text
 DESKTOP (right column)
@@ -194,6 +194,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.2.1 (2026-09-30): Timers sorted by time remaining, soonest first (recorded from the build).
 - 1.2.0 (2026-09-30): After the first build review: one step eyebrow line ("FILLING · STEP 3") as the H1; compact two-line timers in the mobile strip; started timer buttons show a live "Running · 29:12" status; Timer alerts card appears when the first timer starts; Finish asks before stopping running timers.
 - 1.1.0 (2026-09-29): Added the Timer alerts card and sheet; "For this step" now reads the editor's ingredient links (SKELETON 1.3.0).
 - 1.0.0 (2026-09-29): Initial wireframe.

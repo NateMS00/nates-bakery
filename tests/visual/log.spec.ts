@@ -98,6 +98,9 @@ test("new entry from Bake Mode: form, save, rating prompt, then the new entry", 
   // Date today, scale from Bake Mode, focus on What changed.
   await expect(dialog.getByLabel("Date")).toHaveValue(today());
   await expect(dialog.getByLabel("Scale")).toHaveValue("1.5");
+  // Decimal keypad on phones; the visible "×" is skipped by screen readers.
+  await expect(dialog.getByLabel("Scale")).toHaveAttribute("inputmode", "decimal");
+  await expect(dialog.getByText("×", { exact: true })).toHaveAttribute("aria-hidden", "true");
   await expect(dialog.getByLabel("What changed")).toBeFocused();
   await page.waitForTimeout(350);
   const box = await dialog.boundingBox();
@@ -153,7 +156,7 @@ test("new entry from Bake Mode: form, save, rating prompt, then the new entry", 
   await expect(first).toBeFocused();
   await expect(first).toContainText("1.5×");
   await expect(page.getByText("4 bakes")).toBeVisible();
-  await expect(page.getByRole("status").filter({ hasText: "Bake logged" })).toBeAttached();
+  await expect(page.getByRole("status").filter({ hasText: "Bake saved" })).toBeAttached();
   await page.waitForTimeout(300);
   await shot(page, "08-new-entry");
 
@@ -213,6 +216,7 @@ test("edit: Add notes opens the entry in the form; no rating prompt", async ({ p
   await expect(entry).toContainText("Half batch: six tarts");
   // The Add notes button is gone, so focus goes to the entry's heading.
   await expect(entry.getByRole("heading")).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: "Bake saved" })).toBeAttached();
 });
 
 test("delete: confirmation, then focus on the next entry", async ({ page }) => {
@@ -266,4 +270,29 @@ test("entry menu: Edit and Delete", async ({ page }) => {
   await shot(page, "12-entry-menu");
   await page.getByRole("menuitem", { name: "Edit" }).click();
   await expect(form(page, "Edit bake").getByLabel("What changed")).toHaveValue(/./);
+});
+
+test.describe("today is the owner's local date", () => {
+  // Bogotá is UTC−5: at 8 pm on 30 Sep it is already 1 Oct in UTC.
+  test.use({ timezoneId: "America/Bogota" });
+
+  test("an evening bake defaults to today and saves; tomorrow is rejected", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-09-30T20:00:00-05:00"));
+    await ready(page, NATA);
+    await page.getByRole("link", { name: "Log a bake" }).click();
+    const dialog = form(page);
+    const date = dialog.getByLabel("Date");
+    await expect(date).toHaveValue("2026-09-30");
+    await expect(date).toHaveAttribute("max", "2026-09-30");
+
+    await date.fill("2026-10-01");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog.getByText("The date can't be in the future")).toBeVisible();
+
+    await date.fill("2026-09-30");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("dialog", { name: "How was this bake?" }).getByRole("button", { name: "Skip" }).click();
+    await expect(page.getByRole("heading", { level: 2 }).first()).toHaveText("Wed 30 Sep");
+    await expect(page.getByText("4 bakes")).toBeVisible();
+  });
 });

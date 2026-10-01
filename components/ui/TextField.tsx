@@ -45,7 +45,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           )}
           {...props}
         />
-        {suffix && <span className="ml-[3px] type-body-md text-muted">{suffix}</span>}
+        {/* The unit is shown, not read: the label already names the field. */}
+        {suffix && (
+          <span aria-hidden="true" className="ml-[3px] type-body-md text-muted">
+            {suffix}
+          </span>
+        )}
       </div>
       {error && (
         <p id={errorId} className="type-body-sm text-error">

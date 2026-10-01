@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, type ReactNode, type RefObject, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode, type RefObject, type PointerEvent } from "react";
 import { IconButton } from "./IconButton";
 import { TileBand } from "./Tile";
 import { cx } from "./cx";
@@ -57,10 +57,18 @@ export function Dialog({
   const opener = useRef<HTMLElement | null>(null);
   const drag = useRef<{ startY: number; dy: number } | null>(null);
   const titleId = useId();
+  // Content renders only in the browser: a closed <dialog> shows nothing on the server,
+  // and client-only values (today's local date in a form) can't mismatch on hydration.
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     const dialog = ref.current;
-    if (!dialog) return;
+    // Wait for the content (see `hydrated`), so focus can land inside.
+    if (!dialog || !hydrated) return;
     if (open && !dialog.open) {
       opener.current = document.activeElement as HTMLElement | null;
       dialog.showModal();
@@ -69,7 +77,7 @@ export function Dialog({
     } else if (!open && dialog.open) {
       dialog.close();
     }
-  }, [open, initialFocus]);
+  }, [open, initialFocus, hydrated]);
 
   // Full-screen form on a phone: follow the visual viewport, so the pinned Save and
   // Cancel stay just above the on-screen keyboard instead of behind it.
@@ -141,7 +149,7 @@ export function Dialog({
         sheetHeight === "full" && "max-tablet:h-dvh max-tablet:max-h-dvh max-tablet:rounded-none",
       )}
     >
-      {open && (
+      {open && hydrated && (
         <>
           <div
             className="shrink-0 touch-none tablet:hidden"

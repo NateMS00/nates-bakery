@@ -67,6 +67,12 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
 
   const entries = recipe.bakeLog;
 
+  /** Polite status message; cleared first so the same words are announced again. */
+  function announce(message: string) {
+    setAnnouncement("");
+    window.setTimeout(() => setAnnouncement(message), 100);
+  }
+
   function closeForm() {
     setEditing(null);
     if (isNew) router.replace(pathname, { scroll: false });
@@ -93,7 +99,7 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   async function saveEdit(entry: BakeLogEntry, fields: BakeFields) {
     const ok = await actions.updateBake(entry.id, fields);
     if (!ok) return false;
-    setAnnouncement(`Bake on ${formatBakeDate(fields.date)} saved`);
+    announce("Bake saved");
     closeForm();
     return true;
   }
@@ -101,7 +107,8 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   function finishNew() {
     setRatingOpen(false);
     setHighlightId(newEntryId);
-    setAnnouncement("Bake logged");
+    // After the Rating prompt closes, so the dialog's own announcement doesn't cut it off.
+    announce("Bake saved");
   }
 
   async function confirmDelete() {
@@ -110,7 +117,7 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
     const neighbour = entries[i + 1] ?? entries[i - 1];
     afterDelete.current = { id: neighbour ? headingId(neighbour.id) : null };
     await actions.removeBake(deleting.id);
-    setAnnouncement("Bake deleted");
+    announce("Bake deleted");
     setDeleting(null);
   }
 

@@ -89,7 +89,7 @@ test.describe("signed out", () => {
     await page.getByLabel("Email").fill("someone@example.com");
     await page.getByRole("button", { name: "Send reset link" }).click();
     await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
-    await expect(page.getByText(/If there’s a Backery account for someone@example\.com, a reset link is on its way/)).toBeVisible();
+    await expect(page.getByText(/If there’s a Backery account for someone@example\.com, a reset link is on its way\. It works once, for one hour\. Open it on this device, in this browser\./)).toBeVisible();
     // The intro and the form are replaced by the sent state.
     await expect(page.getByText("Enter the email you sign in with")).toHaveCount(0);
     await expect(page.getByLabel("Email")).toHaveCount(0);
@@ -125,8 +125,17 @@ test.describe("signed out", () => {
     // Used once: the same link now goes to Forgot Password with a notice.
     await page.goto(`/reset-password?token=${token}`);
     await page.waitForURL(/\/forgot-password\?expired=1$/);
-    await expect(page.getByText("That reset link has expired or was already used. Send a new one below.")).toBeVisible();
+    await expect(page.getByText("That reset link has expired, was already used, or was opened in a different browser. Send a new one below.")).toBeVisible();
     await shot(page, "08-forgot-expired");
+  });
+
+  test("an emailed link that doesn't work lands on Forgot password with the notice, never an error page", async ({ page }) => {
+    // A code from another browser, Supabase's own error redirect, or nothing at all.
+    for (const path of ["/auth/confirm?code=not-from-this-browser", "/auth/confirm?error=access_denied&error_code=otp_expired", "/auth/confirm"]) {
+      await page.goto(path);
+      await page.waitForURL(/\/forgot-password\?expired=1$/);
+      await expect(page.getByText("That reset link has expired, was already used, or was opened in a different browser. Send a new one below.")).toBeVisible();
+    }
   });
 
   test("reset password: an invalid or missing token", async ({ page }) => {

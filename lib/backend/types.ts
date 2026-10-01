@@ -47,10 +47,17 @@ export interface AuthBackend {
   /** "invalid" for a wrong email or password alike (no account enumeration). */
   signIn(email: string, password: string): Promise<"ok" | "invalid">;
   signOut(): Promise<void>;
-  /** Sends a reset link if the address has an account; says nothing either way. */
-  requestPasswordReset(email: string): Promise<void>;
-  /** /auth/confirm: exchanges an emailed link's one-time token; false if used or expired. */
-  confirmEmailLink(tokenHash: string | null, type: string | null): Promise<boolean>;
+  /**
+   * Sends a reset link if the address has an account; says nothing either way.
+   * `confirmUrl` is this site's /auth/confirm, where the link should come back to.
+   */
+  requestPasswordReset(email: string, confirmUrl: string): Promise<void>;
+  /**
+   * /auth/confirm: exchanges what the emailed link brought back (a PKCE `code`, or a
+   * `token_hash` from a custom template) for a reset session. False when it's used,
+   * expired, or opened in a different browser than the one that asked for it.
+   */
+  confirmEmailLink(link: { code: string | null; tokenHash: string | null; type: string | null }): Promise<boolean>;
   /** Whether the current reset link can still set a password (single use). */
   resetLinkIsValid(token: string | undefined): Promise<boolean>;
   /** Sets the new password and uses up the link; "expired" if it was already used. */

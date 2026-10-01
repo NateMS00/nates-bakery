@@ -6,12 +6,16 @@ import { supabaseServer } from "./server";
 // Supabase Auth: one owner account (created in the dashboard; sign-ups are off), email
 // and password, the session in cookies (@supabase/ssr).
 //
-// Password reset (BONES-system.md), single use:
-// 1. Forgot password asks Supabase to email a reset link. The email template points it
-//    at /auth/confirm with a one-time token hash.
-// 2. /auth/confirm exchanges that token (Supabase uses it up), which starts a session,
-//    and sets RECOVERY_COOKIE: this session may only set a new password. While the
-//    cookie is there, nobody counts as signed in anywhere else in the app.
+// Password reset (BONES-system.md), single use, with Supabase's default email template:
+// 1. Forgot password asks Supabase to email a reset link that comes back to
+//    /auth/confirm (redirectTo; allowed in the dashboard's redirect URLs). The server
+//    client uses PKCE, so this browser also keeps a one-time code verifier in a cookie.
+// 2. The link goes through Supabase and lands on /auth/confirm?code=…, which exchanges
+//    the code with that verifier (Supabase uses the code up) for a session, and sets
+//    RECOVERY_COOKIE: this session may only set a new password. While the cookie is
+//    there, nobody counts as signed in anywhere else in the app. Opened in another
+//    browser, there's no verifier, the exchange fails, and the page says the link
+//    expired. (A custom template could send ?token_hash= instead; that works too.)
 // 3. Set a new password updates it, signs out every session, and clears the cookie, so
 //    neither the link nor the page works again (→ Forgot password, "expired").
 
@@ -54,19 +58,28 @@ export const supabaseAuth: AuthBackend = {
     await endRecovery();
   },
 
-  async requestPasswordReset(email) {
+  async requestPasswordReset(email, confirmUrl) {
     const db = await supabaseServer();
     // Supabase answers the same for unknown addresses; errors (like rate limits) are
     // logged, never shown, so the page can't reveal which emails have an account.
-    const { error } = await db.auth.resetPasswordForEmail(email);
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: confirmUrl });
     if (error) console.warn(`Password reset email not sent: ${error.message}`);
   },
 
-  async confirmEmailLink(tokenHash, type) {
-    if (type !== "recovery" || !tokenHash) return false;
+  async confirmEmailLink({ code, tokenHash, type }) {
     const db = await supabaseServer();
-    const { error } = await db.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
-    if (error) return false;
+    let ok = false;
+    try {
+      if (code) {
+        // Throws, rather than returning an error, when this browser has no verifier.
+        ok = !(await db.auth.exchangeCodeForSession(code)).error;
+      } else if (tokenHash && type === "recovery") {
+        ok = !(await db.auth.verifyOtp({ type: "recovery", token_hash: tokenHash })).error;
+      }
+    } catch {
+      ok = false;
+    }
+    if (!ok) return false;
     (await cookies()).set(RECOVERY_COOKIE, "1", { path: "/", httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: RECOVERY_MAX_AGE });
     return true;
   },

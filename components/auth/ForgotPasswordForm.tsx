@@ -27,7 +27,8 @@ export function ForgotPasswordForm({ expired }: { expired: boolean }) {
           Check your email
         </h2>
         <p className="mt-sm type-body-md text-body">
-          If there’s a Backery account for {state.email}, a reset link is on its way. It works once, for one hour.
+          If there’s a Backery account for {state.email}, a reset link is on its way. It works once, for one hour. Open it on this device, in
+          this browser.
         </p>
         <TextLink href="/login" className="mt-base inline-flex min-h-touch-min items-center type-body-md">
           Back to sign in
@@ -41,7 +42,7 @@ export function ForgotPasswordForm({ expired }: { expired: boolean }) {
       <p className="mt-sm type-body-md text-body">Enter the email you sign in with, and we’ll send you a link to set a new password.</p>
       {expired && (
         <div role="status" className="mt-base">
-          <Notice tone="warning">That reset link has expired or was already used. Send a new one below.</Notice>
+          <Notice tone="warning">That reset link has expired, was already used, or was opened in a different browser. Send a new one below.</Notice>
         </div>
       )}
       <form action={action} noValidate className="mt-lg flex flex-col gap-base">

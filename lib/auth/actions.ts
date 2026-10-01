@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authBackend } from "@/lib/backend";
 import { PASSWORD_MIN_LENGTH, safeNext } from "./rules";
@@ -32,9 +33,17 @@ export async function requestPasswordReset(_prev: ResetRequestState, form: FormD
   const email = String(form.get("email") ?? "").trim();
   if (!email) return { email, error: "Enter your email" };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { email, error: "Enter an email address like name@example.com" };
-  await (await authBackend()).requestPasswordReset(email);
+  await (await authBackend()).requestPasswordReset(email, await confirmUrl());
   // The same answer whether or not the address has an account.
   return { email, sent: true };
+}
+
+/** This site's /auth/confirm, from the request (localhost in development, the Vercel address live). */
+async function confirmUrl() {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}/auth/confirm`;
 }
 
 export type ResetState = { error?: string };

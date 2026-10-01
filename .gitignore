@@ -35,3 +35,4 @@ next-env.d.ts
 /screenshots/
 /audit-results/
 /test-results-audit/
+/test-results-supabase/

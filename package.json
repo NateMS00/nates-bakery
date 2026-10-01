@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "BACKERY_BACKEND=fixtures next dev",
-    "dev:lan": "BACKERY_BACKEND=fixtures next dev -H 0.0.0.0",
+    "dev": "BACKERY_BACKEND=fixtures BACKERY_FEATURE_IMPORT=on next dev",
+    "dev:lan": "BACKERY_BACKEND=fixtures BACKERY_FEATURE_IMPORT=on next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

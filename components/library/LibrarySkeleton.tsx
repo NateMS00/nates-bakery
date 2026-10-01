@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 // final proportions; Drafts stay hidden until loaded. Search and Filters are drawn as
 // placeholders in their final shape, because their options come from the data.
 
-export function LibrarySkeleton() {
+export function LibrarySkeleton({ importEnabled }: { importEnabled: boolean }) {
   return (
     <div aria-busy="true">
       <p className="sr-only" role="status">
@@ -17,8 +17,8 @@ export function LibrarySkeleton() {
           data-action-bar
           className="z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:bg-transparent tablet:p-0 tablet:shadow-none"
         >
-          <ButtonLink href="/import" variant="primary" className="w-full tablet:w-auto">
-            Import from a reel
+          <ButtonLink href={importEnabled ? "/import" : "/recipes/new"} variant="primary" className="w-full tablet:w-auto">
+            {importEnabled ? "Import from a reel" : "New recipe"}
           </ButtonLink>
         </div>
       </div>

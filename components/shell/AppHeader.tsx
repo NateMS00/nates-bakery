@@ -13,7 +13,8 @@ import { AccountMenu } from "./AccountMenu";
 const navLinkClass =
   "inline-flex min-h-touch-min items-center border-b-3 border-transparent px-md type-button text-body transition-colors duration-(--motion-fast) ease-skin hover:border-hairline hover:text-ink focus-visible:outline-offset-2 aria-[current=page]:border-primary aria-[current=page]:text-primary";
 
-export function AppHeader() {
+/** `showImport`: the Import link, only while the Import feature is on (lib/features.ts). */
+export function AppHeader({ showImport }: { showImport: boolean }) {
   const pathname = usePathname();
   return (
     <header>
@@ -28,9 +29,11 @@ export function AppHeader() {
           <Link href="/recipes" aria-current={pathname === "/recipes" ? "page" : undefined} className={cx(navLinkClass, "max-tablet:hidden")}>
             Library
           </Link>
-          <Link href="/import" aria-current={pathname === "/import" ? "page" : undefined} className={navLinkClass}>
-            Import
-          </Link>
+          {showImport && (
+            <Link href="/import" aria-current={pathname === "/import" ? "page" : undefined} className={navLinkClass}>
+              Import
+            </Link>
+          )}
         </nav>
         <AccountMenu />
       </div>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { importEnabled } from "@/lib/features";
 import { AppHeader } from "./AppHeader";
 import { SiteFooter } from "./SiteFooter";
 import { SkipLink } from "./SkipLink";
@@ -11,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <SkipLink />
-      <AppHeader />
+      <AppHeader showImport={importEnabled()} />
       <main
         id="main"
         tabIndex={-1}

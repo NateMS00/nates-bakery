@@ -31,8 +31,18 @@ import { SearchField } from "./SearchField";
 // /recipes (Library), BONES-recipes.md. Sections in SKELETON order: Search, Filters,
 // Drafts, Recipes, with a page header for the H1 and the primary action (Import from a
 // reel), which is the sticky action-bar on mobile. Query state lives in the URL.
+// With the Import feature off (lib/features.ts), the primary action is New recipe,
+// there are no drafts, and nothing mentions reels.
 
-export function LibraryView({ recipes, drafts: initialDrafts }: { recipes: Recipe[]; drafts: Draft[] }) {
+export function LibraryView({
+  recipes,
+  drafts: initialDrafts,
+  importEnabled,
+}: {
+  recipes: Recipe[];
+  drafts: Draft[];
+  importEnabled: boolean;
+}) {
   const drafts = useDrafts(initialDrafts);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -75,11 +85,11 @@ export function LibraryView({ recipes, drafts: initialDrafts }: { recipes: Recip
       {/* Page header: H1 and, except in Empty, the primary action */}
       <div className="flex items-center justify-between gap-lg">
         <h1 className="type-display-md text-ink desktop:type-display-lg">Library</h1>
-        {!isEmpty && <ImportAction />}
+        {!isEmpty && <PrimaryAction importEnabled={importEnabled} />}
       </div>
 
       {isEmpty ? (
-        <EmptyState />
+        <EmptyState importEnabled={importEnabled} />
       ) : (
         <>
           {!onlyDrafts && (
@@ -193,8 +203,11 @@ export function LibraryView({ recipes, drafts: initialDrafts }: { recipes: Recip
   );
 }
 
-/** Primary action: the sticky action-bar on mobile, in the page header from tablet up. */
-function ImportAction({ centered = false }: { centered?: boolean }) {
+/**
+ * Primary action: the sticky action-bar on mobile, in the page header from tablet up.
+ * Import from a reel, or New recipe while the Import feature is off.
+ */
+function PrimaryAction({ importEnabled, centered = false }: { importEnabled: boolean; centered?: boolean }) {
   return (
     <div
       data-action-bar
@@ -203,23 +216,25 @@ function ImportAction({ centered = false }: { centered?: boolean }) {
         (centered ? " tablet:mt-lg" : "")
       }
     >
-      <ButtonLink href="/import" variant="primary" className="w-full tablet:w-auto">
-        Import from a reel
+      <ButtonLink href={importEnabled ? "/import" : "/recipes/new"} variant="primary" className="w-full tablet:w-auto">
+        {importEnabled ? "Import from a reel" : "New recipe"}
       </ButtonLink>
     </div>
   );
 }
 
 /** BONES Empty: no recipes and no drafts. */
-function EmptyState() {
+function EmptyState({ importEnabled }: { importEnabled: boolean }) {
   return (
     <div className="mx-auto mt-lg flex flex-col items-center text-center tablet:max-w-[calc(var(--col)*4+var(--gutter)*3)] desktop:mt-xl">
       <TilePanel className="w-full max-w-[calc(var(--spacing-3xl)*4)]" />
-      <p className="mt-lg type-body-lg text-ink">Save your first recipe from a reel</p>
-      <ImportAction centered />
-      <TextLink href="/import#share-from-instagram" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">
-        Set up Share from Instagram
-      </TextLink>
+      <p className="mt-lg type-body-lg text-ink">{importEnabled ? "Save your first recipe from a reel" : "Add your first recipe"}</p>
+      <PrimaryAction importEnabled={importEnabled} centered />
+      {importEnabled && (
+        <TextLink href="/import#share-from-instagram" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">
+          Set up Share from Instagram
+        </TextLink>
+      )}
     </div>
   );
 }

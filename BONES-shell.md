@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.5.0 · **Updated**: 2026-09-30
+> **Version**: 1.6.0 · **Updated**: 2026-10-01
 
 ---
 
@@ -113,6 +113,12 @@ On a page shorter than the viewport, `main` grows to fill the remaining height, 
 
 ---
 
+## On-screen keyboard (all pages)
+
+While the on-screen keyboard is open, page action bars (Start baking, Import from a reel, Log a bake, Save recipe) hide, so a bar never rides on top of the keyboard and covers the field being typed in; they return when the keyboard closes. Full-screen forms keep their own Cancel/Save footer, sitting just above the keyboard, with the focused field scrolled into view above it (SKIN, Mobile Browser Viewport).
+
+---
+
 ## Overlay sizing (all pages)
 
 Viewport shares given in page BONES files ("about a third", "about half") are **maximum heights**, not fixed sizes: every sheet and modal fits its content and never leaves empty space below its last element, up to 90% of the viewport, after which its body scrolls. Every sheet and modal has a header row with its title and a close X (icon button) at the end; there is no separate Close button at the bottom. Exceptions that keep their stated height: overlays that are full-screen forms (Bake Log's entry form on mobile) and sheets with a scrolling list and a footer pinned to the bottom (Library's Filters sheet, the Ingredients used picker).
@@ -140,6 +146,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.6.0 (2026-10-01): Page action bars hide while the on-screen keyboard is open (iPhone testing).
 - 1.5.0 (2026-09-30): Share variant also used by the auth pages, and by Privacy, Not found and Error when signed out (BONES-system.md); footer kept at the bottom on short pages.
 - 1.4.0 (2026-09-30): Added the Destructive confirmations rule for every page.
 - 1.3.0 (2026-09-30): Added the Overlay sizing rule (fit to content, close X in the header) for every page; Timer alerts sheet follows it.

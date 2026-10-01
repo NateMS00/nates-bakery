@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–9 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 424 checks pass on a clean run (the 32 skipped are the phone-only viewport tests in desktop projects).
+Prompts 1–9 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 430 checks pass on a clean run (the 38 skipped are the phone-only viewport tests in desktop projects).
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -79,6 +79,7 @@ Known issues and follow-ups are in `BACKLOG.md`.
 - `npm run dev:lan` serves the dev server on the local network (`next.config.ts` allows this machine's own LAN addresses); open `http://<Mac's IP>:3000` in Safari. Plain HTTP, so wake lock, clipboard read, and notifications are unavailable on the phone.
 - Everything pinned to the bottom (sheets, action bars, Bake Mode's step nav and timer strip, the full-screen log form) follows the visual viewport through `components/system/ViewportVars.tsx` and the `pin-bottom` utility, so it stays above Safari's toolbar and the keyboard. Tested in Chrome with a simulated visual viewport (`tests/visual/viewport.spec.ts`); WebKit isn't available on macOS 12.
 - `suppressHydrationWarning` on `<html>` and the text inputs, for attributes Chrome for iOS injects before hydration.
+- Confirmed in Safari on the iPhone (2026-10-01), after a debug readout found the causes: sheets use `height: auto` on phones (Safari sized `fit-content` from the insets and clipped them to 118px); the full-screen log form fills the strip around Safari's address pill above the keyboard; the focused field is re-scrolled into view while the keyboard opens, with the footer's height as scroll padding; focus rings show for keyboard use only (`components/system/InputModality.tsx`), while focus still moves as BONES-shell asks; row menu sheets start on their first action.
 
 ## Running it
 

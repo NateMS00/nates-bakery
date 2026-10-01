@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { InputModality } from "@/components/system/InputModality";
 import { ViewportVars } from "@/components/system/ViewportVars";
 import { fontVariables } from "./fonts";
 import "./globals.css";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <body className="min-h-dvh">
         <ViewportVars />
+        <InputModality />
         {children}
       </body>
     </html>

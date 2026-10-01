@@ -62,11 +62,13 @@ export function ActionMenu({ label, title, items }: { label: string; title: stri
           <ChevronLeft aria-hidden="true" className="size-icon-sm" /> {sub.title}
         </button>
       )}
-      {shown.map((action) => (
+      {shown.map((action, i) => (
         <button
           key={action.label}
           type="button"
           role="menuitem"
+          // The sheet's initial focus: the first action, not the close X.
+          data-autofocus={!sub && i === 0 ? true : undefined}
           disabled={action.disabled}
           onClick={() => choose(action)}
           className={cx(itemClass, action.destructive && "text-error")}

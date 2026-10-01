@@ -1031,7 +1031,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 - **Info wash** (`{colors.info-wash}` — #DDE5F6; dark #1E2A52): background of the Converted marker and `notice-info`; text on it uses `{colors.primary}` or `{colors.ink}`.
 
 ### States
-- **Focus ring** (`{colors.focus-ring}` — #2A5BD7; dark #8FB0FF): the keyboard focus outline on every interactive component, always 3px with an offset so it sits on the background, not on the component. 5.3:1 against canvas and 5.8:1 against cards. Brighter than cobalt so a focused cobalt button still shows a distinct ring.
+- **Focus ring** (`{colors.focus-ring}` — #2A5BD7; dark #8FB0FF): the keyboard focus outline on every interactive component, always 3px with an offset so it sits on the background, not on the component. Focus itself moves the same way for every input (into an overlay when it opens, back to its trigger when it closes), but the ring shows only for keyboard use: after a tap or click it stays hidden, and Tab, arrow keys or Esc bring it back. Text fields keep their ring when tapped, since it marks where you're typing. 5.3:1 against canvas and 5.8:1 against cards. Brighter than cobalt so a focused cobalt button still shows a distinct ring.
 - **Disabled** (`{colors.disabled}` — #8E8A7D; dark #6A7090) on **Disabled surface** (`{colors.surface-disabled}` — #E8E3D7; dark #1B2340): controls that can't be used. They lose their cobalt entirely and turn to grey glaze, so "unavailable" reads by shape and colour, not by opacity. Use sparingly: BONES prefers explaining over disabling (Save recipe stays enabled).
 - **Scrim** (`{colors.scrim}`): the dimmed layer behind sheets and modals: cobalt-ink at 36% in light mode, so the warm canvas dims without turning grey, and near-black at 64% in dark mode.
 
@@ -1263,7 +1263,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 | Breakpoint | Width | Key Changes |
 |---|---|---|
 | Mobile | < 768px | 4 columns, `{spacing.base}` gutters. Page H1s use `display-md`. Primary actions move into the sticky `action-bar`. Filters live in a `sheet`. Row menus render as sheets; the account menu stays a dropdown. `step-text` at 24px |
-| Tablet | 768–1279px | 8 columns, `{spacing.lg}` gutters. Two-column recipe layout (ingredients 3, steps 5). `step-text` at 28px. Sheets become `modal`s. Primary actions return to page headers except in Bake Mode |
+| Tablet | 768–1279px | 8 columns, `{spacing.lg}` gutters. Two-column recipe layout (scale and ingredients 4, steps 4). `step-text` at 28px. Sheets become `modal`s. Primary actions return to page headers except in Bake Mode |
 | Desktop | ≥ 1280px | 12 columns, `{spacing.xl}` gutters. Page H1s use `display-lg`. Filters in one row. All menus as anchored `menu`s |
 | Wide | > 1264px content | Content caps at `{sizing.content-max}` (1200px) and centers; the `tile-band` still runs the full window width |
 
@@ -1278,6 +1278,12 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 - Grids: the recipe page's ingredients/steps split collapses to one column under 768px; the Library's row list becomes stacked cards.
 - Spacing: section gaps step down one token on mobile (`{spacing.xl}` → `{spacing.lg}`).
 - Type: only `display-lg` → `display-md` and `step-text` 28 → 24px change size; body sizes never shrink on mobile.
+
+### Mobile Browser Viewport
+Learned on a real iPhone in Safari, where Chrome-based tests passed while the phone failed:
+- Everything pinned to the bottom (`action-bar`, `sheet`, Bake Mode's step nav and timer strip, the footer of full-screen forms) is positioned against the **visible area** the browser reports live (the visual viewport), never the full page height (`100vh`), so it sits above Safari's toolbar and the keyboard on any device. Nothing hardcodes a toolbar or keyboard height.
+- A `sheet`'s height comes from its content (`height: auto`, `bottom: auto` over a dialog's default inset), capped at 90% of the visible area with its body scrolling inside. Never let two opposing edges (top and bottom) decide a sheet's height.
+- While the on-screen keyboard is open, page `action-bar`s hide, and a full-screen form keeps the focused field scrolled into view above its footer once the keyboard has finished opening.
 
 ### Dark Mode
 - Follows the device setting (`prefers-color-scheme`) by default. Every colour token has a `colors-dark` value; components don't change.
@@ -1315,6 +1321,8 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 | Soften corners with `{rounded.md}` (8px) on buttons, notices, fields, and the segmented control | Make buttons pill-shaped or leave them sharp-cornered |
 | Keep 48px targets, 64px in Bake Mode | Shrink targets on mobile to fit more in a row; wrap instead |
 | Show focus with the 3px `{colors.focus-ring}` outline and offset | Remove outlines or rely on a colour shift to show focus |
+| Move focus into overlays and back for every input, showing the ring only for keyboard use | Skip moving focus on touch, or show a ring on a button the user just tapped |
+| Anchor bottom UI to the visible area the browser reports live | Use `100vh` or a hardcoded toolbar or keyboard height |
 
 ---
 
@@ -1326,9 +1334,10 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 4. `{colors.primary}` appears on one `button-primary` per screen, selected states, links, the wordmark, and the tile motif, nowhere else. `{colors.crust}` appears only in stars and `timer-alert`.
 5. Every number the user weighs or times uses `amount`, `amount-lg`, `timer`, or `step-number`, right-aligned in lists; its unit uses the reading face in `{colors.muted}`; times inside step text use `time-mark`.
 6. Cards and rows are border-only; use `{elevation.float}` only for `menu`, `sheet`, `modal`, and `timer-alert`, and `{elevation.bar}` only for `action-bar`.
-7. Every interactive element implements its `-hover`, `-active`, `-focus`, and `-disabled` variants, and form fields their `-error` variant, with the 3px `{colors.focus-ring}` outline.
+7. Every interactive element implements its `-hover`, `-active`, `-focus`, and `-disabled` variants, and form fields their `-error` variant, with the 3px `{colors.focus-ring}` outline, shown for keyboard use only (text fields also when tapped).
 8. Every tap target is at least `{sizing.touch-min}`; Bake Mode's step buttons use `{sizing.touch-bake}`.
 9. Markers (Estimated, Converted, Missing, Suggested) always show their text and glyph.
 10. Render the azulejo SVG exactly as given, `aria-hidden`, and never under text.
 11. Honour `prefers-reduced-motion`: no slides, scales, spinners, or shimmer.
-12. If you need a value this file doesn't define, check Known Gaps first; otherwise use the nearest token and report it. Never add a colour, font, radius, or shadow.
+12. Anchor every bottom-pinned element and sheet to the live visible area (Mobile Browser Viewport); sheets size to their content.
+13. If you need a value this file doesn't define, check Known Gaps first; otherwise use the nearest token and report it. Never add a colour, font, radius, or shadow.

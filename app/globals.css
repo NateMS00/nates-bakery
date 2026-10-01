@@ -111,9 +111,20 @@
 @utility pin-bottom {
   position: fixed;
   inset-inline: 0;
+  inset-block-end: auto; /* overrides a modal <dialog>'s default inset: 0 */
   bottom: auto;
   top: calc(var(--vv-top) + var(--vv-height));
   translate: 0 -100%;
+}
+
+/* Focus rings for keyboard use only (components/system/InputModality.tsx). After a tap or
+   click, focus still moves (sheets, returns), but no ring is drawn. Text fields keep
+   theirs: the ring marks where you're typing. Unlayered, so it beats the utilities. */
+html[data-input="pointer"] :focus-visible:not(textarea, select, input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"])) {
+  outline: none;
+}
+html[data-input="pointer"] :is(input[type="checkbox"], input[type="radio"]):focus-visible ~ * {
+  outline: none;
 }
 
 /* A focused field in a sheet scrolls into view with a little room around it. */

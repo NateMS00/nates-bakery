@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode, type RefObject, type PointerEvent } from "react";
+import { focusFor } from "@/components/system/InputModality";
 import { IconButton } from "./IconButton";
 import { TileBand } from "./Tile";
 import { cx } from "./cx";
@@ -73,38 +74,61 @@ export function Dialog({
       opener.current = document.activeElement as HTMLElement | null;
       dialog.showModal();
       document.documentElement.style.overflow = "hidden";
-      (initialFocus?.current ?? dialog.querySelector<HTMLElement>("[data-autofocus]"))?.focus();
+      focusFor(initialFocus?.current ?? dialog.querySelector<HTMLElement>("[data-autofocus]"));
     } else if (!open && dialog.open) {
       dialog.close();
     }
   }, [open, initialFocus, hydrated]);
 
-  // When the keyboard opens (or a field takes focus), keep the focused field in view
-  // inside the sheet's scrolling body, above the pinned footer.
+  // Keep the focused field in view inside the sheet's scrolling body, above the pinned
+  // footer: on focus, and again whenever the visible area changes while the keyboard
+  // slides in (iOS fires several resizes, and the sheet's new size lands a frame after
+  // ViewportVars updates), so the last pass sees the final size.
   useEffect(() => {
     const dialog = ref.current;
     const vv = window.visualViewport;
     if (!open || !dialog) return;
-    const reveal = () =>
-      requestAnimationFrame(() => {
-        const field = document.activeElement;
-        if (field instanceof HTMLElement && dialog.contains(field) && field.matches("input, textarea, select")) {
-          field.scrollIntoView({ block: "nearest" });
-        }
-      });
+    const timers: number[] = [];
+    const revealNow = () => {
+      const field = document.activeElement;
+      if (field instanceof HTMLElement && dialog.contains(field) && field.matches("input, textarea, select")) {
+        field.scrollIntoView({ block: "nearest" });
+      }
+    };
+    const reveal = () => {
+      timers.splice(0).forEach((t) => window.clearTimeout(t));
+      requestAnimationFrame(() => requestAnimationFrame(revealNow));
+      for (const ms of [120, 320, 600]) timers.push(window.setTimeout(revealNow, ms));
+    };
     dialog.addEventListener("focusin", reveal);
     vv?.addEventListener("resize", reveal);
     return () => {
+      timers.forEach((t) => window.clearTimeout(t));
       dialog.removeEventListener("focusin", reveal);
       vv?.removeEventListener("resize", reveal);
     };
   }, [open]);
 
+  // The footer's height as scroll-padding on the body, so scrollIntoView never stops a
+  // field behind the pinned Cancel/Save row.
+  const footerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const footerEl = footerRef.current;
+    const body = bodyRef.current;
+    if (!open || !footerEl || !body) return;
+    const sync = () => body.style.setProperty("scroll-padding-bottom", `${footerEl.offsetHeight}px`);
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(footerEl);
+    return () => observer.disconnect();
+  }, [open, hydrated, footer]);
+
   function handleClose() {
     document.documentElement.style.overflow = "";
     if (ref.current) ref.current.style.transform = "";
     const target = (typeof returnFocus === "function" ? returnFocus() : returnFocus?.current) ?? opener.current;
-    if (target?.isConnected) target.focus();
+    if (target?.isConnected) focusFor(target);
     if (open) onClose();
     onAfterClose?.();
   }
@@ -141,9 +165,13 @@ export function Dialog({
       }}
       className={cx(
         // Mobile: pinned to the bottom of the visible area (see `pin-bottom` in globals.css),
-        // at most 90% of it. Tablet up: a centered modal, at most 90% of the dynamic viewport.
-        "fixed m-0 h-fit w-full max-w-full overflow-hidden rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim open:flex open:flex-col",
-        "max-tablet:pin-bottom tablet:max-h-[90dvh]",
+        // at most 90% of it. Its height is `auto`, from the content: Safari sizes
+        // `fit-content` from the space between `top` and the bottom of the layout viewport,
+        // which is nearly nothing for a sheet anchored at the visible bottom (it clipped the
+        // Rating prompt to 118px). Tablet up: a centered modal (inset 0, margin auto), where
+        // fit-content keeps it from stretching; at most 90% of the dynamic viewport.
+        "fixed m-0 h-auto w-full max-w-full overflow-hidden rounded-t-lg bg-surface-card text-ink shadow-float backdrop:bg-scrim open:flex open:flex-col",
+        "max-tablet:pin-bottom tablet:h-fit tablet:max-h-[90dvh]",
         sheetHeight !== "full" && "max-tablet:max-h-[calc(var(--vv-height)*0.9)]",
         "animate-[sheet-up_var(--motion-sheet)_var(--ease-skin)] backdrop:animate-[fade-in_var(--motion-sheet)_var(--ease-skin)]",
         "tablet:inset-0 tablet:m-auto tablet:rounded-lg tablet:animate-[modal-in_var(--motion-sheet)_var(--ease-skin)]",
@@ -151,6 +179,10 @@ export function Dialog({
         sheetHeight === "three-quarters" && "max-tablet:h-[calc(var(--vv-height)*0.75)]",
         // The whole visible area: above the keyboard while it's open, so Save and Cancel sit just over it.
         sheetHeight === "full" && "max-tablet:h-(--vv-height) max-tablet:max-h-(--vv-height) max-tablet:rounded-none",
+        // Safari floats its address pill between the visible area and the keyboard; a
+        // card-coloured spread fills that strip (and anything else around the form) so the
+        // page never shows through. The footer stays where it is.
+        sheetHeight === "full" && "max-tablet:shadow-[0_0_0_100vh_var(--color-surface-card)]!",
       )}
     >
       {open && hydrated && (
@@ -175,6 +207,7 @@ export function Dialog({
             </IconButton>
           </div>
           <div
+            ref={bodyRef}
             className={cx(
               "min-h-0 flex-1 overflow-y-auto px-base tablet:px-xl",
               footer ? "pb-base" : "pb-[calc(var(--spacing-lg)+env(safe-area-inset-bottom))] tablet:pb-xl",
@@ -183,7 +216,7 @@ export function Dialog({
             {children}
           </div>
           {footer && (
-            <div className="shrink-0 border-t border-hairline px-base pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] tablet:px-xl tablet:pb-lg">
+            <div ref={footerRef} className="shrink-0 border-t border-hairline px-base pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] tablet:px-xl tablet:pb-lg">
               {footer}
             </div>
           )}

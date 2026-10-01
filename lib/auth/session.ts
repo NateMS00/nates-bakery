@@ -1,7 +1,8 @@
-import { cookies } from "next/headers";
-import { STUB_SESSION_COOKIE, sessionFromCookie, type Session } from "./stub";
+import { authBackend } from "@/lib/backend";
+import type { Session } from "./rules";
+
+export type { Session };
 
 export async function getSession(): Promise<Session | null> {
-  const store = await cookies();
-  return sessionFromCookie(store.get(STUB_SESSION_COOKIE)?.value);
+  return (await authBackend()).getSession();
 }

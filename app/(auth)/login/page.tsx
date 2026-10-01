@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthColumn } from "@/components/auth/AuthColumn";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Notice } from "@/components/ui/Notice";
-import { safeNext } from "@/lib/auth/stub";
+import { safeNext } from "@/lib/auth/rules";
 
 // /login (Sign In), SKELETON: email, password, a link to /forgot-password; the
 // Password updated notice after a reset; no sign-up link. Continues to `?next=`.

@@ -12,16 +12,17 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [["list"]],
   use: { channel: "chrome", baseURL: "http://localhost:3100" },
+  // Every server runs on the fixtures backend (lib/backend), never Supabase.
   webServer: [
-    { command: "npx next start -p 3100", port: 3100, reuseExistingServer: true },
+    { command: "npx next start -p 3100", port: 3100, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures" } },
     {
       command: "npx next start -p 3101",
       port: 3101,
       reuseExistingServer: true,
-      env: { BACKERY_FIXTURE_DELAY_MS: "4000" },
+      env: { BACKERY_BACKEND: "fixtures", BACKERY_FIXTURE_DELAY_MS: "4000" },
     },
-    { command: "npx next start -p 3102", port: 3102, reuseExistingServer: true, env: { BACKERY_FIXTURE_SET: "empty" } },
-    { command: "npx next start -p 3103", port: 3103, reuseExistingServer: true, env: { BACKERY_FIXTURE_SET: "only-drafts" } },
+    { command: "npx next start -p 3102", port: 3102, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures", BACKERY_FIXTURE_SET: "empty" } },
+    { command: "npx next start -p 3103", port: 3103, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures", BACKERY_FIXTURE_SET: "only-drafts" } },
   ],
   projects: [
     { name: "mobile-light", use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: "light" } },

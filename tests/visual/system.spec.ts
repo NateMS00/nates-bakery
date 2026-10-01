@@ -3,7 +3,7 @@ import { capture, expectFocusRings, expectPageBasics, expectPageTop, expectTouch
 
 // Auth and system pages (PROMPTS.md step 8), built from SKELETON.md alone: /login,
 // /forgot-password, /reset-password, /privacy, not-found, and error. Auth is a STUB
-// (lib/auth/stub.ts): owner@backery.local / backery-owner; reset tokens start "reset-".
+// (lib/backend/fixtures/auth.ts): owner@backery.local / backery-owner; reset tokens start "reset-".
 
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "system", name, fullPage);
 const EMAIL = "owner@backery.local";

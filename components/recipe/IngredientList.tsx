@@ -18,7 +18,21 @@ export function groupItems<T extends { groupId: string | null }>(groups: Group[]
   ];
 }
 
-export function IngredientList({ groups, ingredients, scale }: { groups: Group[]; ingredients: Ingredient[]; scale: number }) {
+/**
+ * `shared`: a friend's view (BONES-r-detail): only the Estimated marker, read as
+ * "Estimated amount"; Converted and its "was 1 cup" reveal aren't shown.
+ */
+export function IngredientList({
+  groups,
+  ingredients,
+  scale,
+  shared = false,
+}: {
+  groups: Group[];
+  ingredients: Ingredient[];
+  scale: number;
+  shared?: boolean;
+}) {
   return (
     <>
       {groupItems(groups, ingredients).map(({ group, items }) => (
@@ -26,7 +40,7 @@ export function IngredientList({ groups, ingredients, scale }: { groups: Group[]
           {group && <GroupHeading>{group.name}</GroupHeading>}
           <ul role="list" className={group ? undefined : "mt-sm"}>
             {items.map((ingredient) => (
-              <IngredientRow key={ingredient.id} ingredient={ingredient} scale={scale} />
+              <IngredientRow key={ingredient.id} ingredient={ingredient} scale={scale} shared={shared} />
             ))}
           </ul>
         </div>
@@ -35,10 +49,10 @@ export function IngredientList({ groups, ingredients, scale }: { groups: Group[]
   );
 }
 
-function IngredientRow({ ingredient, scale }: { ingredient: Ingredient; scale: number }) {
+function IngredientRow({ ingredient, scale, shared }: { ingredient: Ingredient; scale: number; shared: boolean }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const originalId = `original-${ingredient.id}`;
-  const hasMarker = ingredient.status === "estimated" || ingredient.status === "converted";
+  const hasMarker = ingredient.status === "estimated" || (ingredient.status === "converted" && !shared);
 
   return (
     <li className="grid grid-cols-[1fr_auto] items-baseline gap-x-base border-b border-hairline py-md">
@@ -53,8 +67,8 @@ function IngredientRow({ ingredient, scale }: { ingredient: Ingredient; scale: n
       )}
       {hasMarker && (
         <div className="col-span-2 mt-xs flex flex-wrap items-center gap-x-sm type-caption text-muted">
-          {ingredient.status === "estimated" && <EstimatedMarker />}
-          {ingredient.status === "converted" && (
+          {ingredient.status === "estimated" && <EstimatedMarker spoken={shared ? "amount" : undefined} />}
+          {ingredient.status === "converted" && !shared && (
             <>
               <ConvertedMarker expanded={showOriginal} onToggle={() => setShowOriginal((v) => !v)} controls={originalId} />
               <span id={originalId} hidden={!showOriginal}>

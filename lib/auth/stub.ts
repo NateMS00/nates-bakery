@@ -11,6 +11,9 @@ export interface Session {
 
 const OWNER: Session = { role: "owner", email: "owner@backery.local" };
 
+/** STUB: the owner's display name on shared pages ("Shared by Nathan"), until accounts exist. */
+export const OWNER_NAME = "Nathan";
+
 export function sessionFromCookie(value: string | undefined): Session | null {
   return value === "guest" ? null : OWNER;
 }

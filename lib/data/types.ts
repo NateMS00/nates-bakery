@@ -113,3 +113,12 @@ export interface Draft {
   /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */
   content?: import("./editor").EditorState;
 }
+
+/**
+ * What a friend's browser receives for /r/:shareToken: only what the page shows, so
+ * nothing private (bake log, favorite, the owner's recipe id) leaves the server.
+ */
+export type SharedRecipe = Pick<
+  Recipe,
+  "title" | "category" | "yield" | "totalTimeMinutes" | "source" | "ingredientGroups" | "stepGroups" | "ingredients" | "steps" | "rating"
+> & { sharedBy: string };

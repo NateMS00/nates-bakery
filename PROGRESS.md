@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–5 from `PROMPTS.md` are built, reviewed, and committed; prompt 6 is built and waiting for review. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 328 checks pass.
+Prompts 1–6 from `PROMPTS.md` are built, reviewed, and committed; prompt 7 is built and waiting for review. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 356 checks pass.
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -13,7 +13,8 @@ Prompts 1–5 from `PROMPTS.md` are built, reviewed, and committed; prompt 6 is 
 | 3. Review Import and the recipe editor | `/import/:draftId`, `/recipes/new`, `/recipes/:recipeId/edit` | `4463c4c`, review fixes `d1fdebc`, `b17c01e` |
 | 4. Import | `/import` | `c8530ee`, review fixes `0216013` |
 | 5. Bake Mode | `/recipes/:recipeId/bake` | `38dae5b`, review fixes `bcf1c5a`, timer sort `d7bc884` |
-| 6. Bake Log | `/recipes/:recipeId/log` | `c8ffc52`, review fixes (below) |
+| 6. Bake Log | `/recipes/:recipeId/log` | `c8ffc52`, review fixes `d4eb83a`, `658fc0e` |
+| 7. Shared recipe | `/r/:shareToken`, `/r/expired` | built, in review |
 
 Also in place across the app: the theme generated from `SKIN.md` (`npm run theme`), self-hosted fonts, the App and Focus shells, SKIN's page top, the overlay sizing rule, and the shared destructive-confirmation dialog.
 
@@ -30,7 +31,8 @@ Agreed: the Discard check also covers date and scale changes; Edit focuses What 
 
 ## Next
 
-1. Prompts 7 (Shared recipe), 8 (auth and system pages), and 9 (accessibility audit).
+1. Review fixes for prompt 7 (Shared recipe), if any.
+2. Then prompts 8 (auth and system pages), and 9 (accessibility audit).
 
 ## Half-finished and stubbed
 
@@ -41,7 +43,8 @@ Nothing is half-built or uncommitted. These are deliberate stubs until the backe
 - **Import service:** takes 4.5 seconds and always produces the same Kouign-amann draft; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail.
 - **Timers:** kept in the browser, not on a server, so locked-phone alerts can't be scheduled; no notifications are sent. The chime is synthesized until a real sound is chosen.
 - **Placeholders:** the Shortcut install link, reel thumbnails.
-- **Not built yet:** `/privacy`, `/login` (real), `/forgot-password`, `/reset-password`, `/r/:shareToken`, `/r/expired`, and the final not-found and error pages (prompts 7–8).
+- **Owner name** on shared pages ("Shared by Nathan") is a constant in `lib/auth/stub.ts` until accounts exist.
+- **Not built yet:** `/privacy` (the footer links to it, so it shows not-found for now), `/login` (real), `/forgot-password`, `/reset-password`, and the final not-found and error pages (prompt 8).
 
 Known issues and follow-ups are in `BACKLOG.md`.
 

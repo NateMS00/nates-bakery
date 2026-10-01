@@ -3,7 +3,7 @@ import Link from "next/link";
 /** BONES-shell footer: one group, Privacy. SKIN app-footer. */
 export function SiteFooter() {
   return (
-    <footer className="mx-auto mt-2xl bg-canvas max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] px-(--gutter)">
+    <footer className="mx-auto mt-2xl w-full bg-canvas max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] px-(--gutter)">
       <div className="border-t border-hairline py-lg">
         <Link
           href="/privacy"

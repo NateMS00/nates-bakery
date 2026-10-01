@@ -150,7 +150,7 @@ const croissants: Recipe = {
     },
     { id: "cr-b1", date: "2025-12-14", scale: 1, whatChanged: "First try, followed the reel exactly." },
   ],
-  shareLink: null,
+  shareLink: { token: "croissant-q2t6vb", createdAt: "2026-09-21T08:40:00Z" },
   createdAt: "2025-12-10T08:00:00Z",
 };
 
@@ -186,7 +186,8 @@ const chocolateChipCookies: Recipe = {
   rating: null,
   favorite: false,
   bakeLog: [],
-  shareLink: null,
+  // Shared, with no source and no rating: the shared page's No source state.
+  shareLink: { token: "cookies-h4m8rz", createdAt: "2026-09-29T18:05:00Z" },
   createdAt: "2026-09-18T20:15:00Z",
 };
 

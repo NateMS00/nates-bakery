@@ -25,10 +25,11 @@ export function SuggestedMarker() {
   return <span className={`${markerBase} border border-hairline text-muted`}>Suggested</span>;
 }
 
-export function EstimatedMarker() {
+/** `spoken` adds words for screen readers only ("Estimated amount" on shared pages). */
+export function EstimatedMarker({ spoken }: { spoken?: string } = {}) {
   return (
     <span className={`${markerBase} bg-warning-wash text-warning`}>
-      <span aria-hidden="true">~</span> Estimated
+      <span aria-hidden="true">~</span> Estimated{spoken && <span className="sr-only"> {spoken}</span>}
     </span>
   );
 }

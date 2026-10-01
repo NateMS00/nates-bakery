@@ -32,34 +32,41 @@ export function RecipeSkeleton() {
         </div>
       </div>
 
-      <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
-        <div className="tablet:col-span-3 desktop:col-span-4">
-          <Skeleton className="h-lg w-1/3" />
-          <Skeleton className="mt-sm h-touch-min w-full rounded-md" />
-          <Skeleton className="mt-lg h-lg w-1/2 desktop:mt-xl" />
-          <ul className="mt-sm">
-            {Array.from({ length: 8 }, (_, i) => (
-              <li key={i} className="flex items-center justify-between border-b border-hairline py-md">
-                <Skeleton className={i % 3 === 0 ? "h-base w-3/5" : "h-base w-2/5"} />
-                <Skeleton className="h-base w-xl" />
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8">
-          <Skeleton className="h-lg w-1/4" />
-          <ul className="mt-sm">
-            {Array.from({ length: 4 }, (_, i) => (
-              <li key={i} className="flex gap-md py-md">
-                <Skeleton className="h-base w-base" />
-                <div className="flex flex-1 flex-col gap-sm">
-                  <Skeleton className="h-base w-full" />
-                  <Skeleton className={i % 2 ? "h-base w-1/2" : "h-base w-3/4"} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <RecipeBodySkeleton />
+    </div>
+  );
+}
+
+/** Scale row, 8 ingredient rows, and 4 steps in the Recipe page's columns (also the shared page). */
+export function RecipeBodySkeleton() {
+  return (
+    <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
+      <div className="tablet:col-span-3 desktop:col-span-4">
+        <Skeleton className="h-lg w-1/3" />
+        <Skeleton className="mt-sm h-touch-min w-full rounded-md" />
+        <Skeleton className="mt-lg h-lg w-1/2 desktop:mt-xl" />
+        <ul className="mt-sm">
+          {Array.from({ length: 8 }, (_, i) => (
+            <li key={i} className="flex items-center justify-between border-b border-hairline py-md">
+              <Skeleton className={i % 3 === 0 ? "h-base w-3/5" : "h-base w-2/5"} />
+              <Skeleton className="h-base w-xl" />
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8">
+        <Skeleton className="h-lg w-1/4" />
+        <ul className="mt-sm">
+          {Array.from({ length: 4 }, (_, i) => (
+            <li key={i} className="flex gap-md py-md">
+              <Skeleton className="h-base w-base" />
+              <div className="flex flex-1 flex-col gap-sm">
+                <Skeleton className="h-base w-full" />
+                <Skeleton className={i % 2 ? "h-base w-1/2" : "h-base w-3/4"} />
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

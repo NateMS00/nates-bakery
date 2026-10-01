@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { DRAFTS, LIBRARY_RECIPES, importedContent } from "./fixtures-library";
 import { IMPORT_MS } from "./import";
 import { RECIPES } from "./fixtures";
-import type { Draft, Recipe } from "./types";
+import { OWNER_NAME } from "@/lib/auth/stub";
+import type { Draft, Recipe, SharedRecipe } from "./types";
 
 // Fixture data held in server memory, standing in for the database until the
 // backend is chosen. Writes (saving an import, editing a recipe) change it until
@@ -64,6 +65,18 @@ async function simulatedLatency() {
 export async function getRecipe(id: string): Promise<Recipe | null> {
   await simulatedLatency();
   return (await db()).recipes.find((r) => r.id === id) ?? null;
+}
+
+/**
+ * The recipe behind a share link, stripped of private fields, or null when the token
+ * is unknown or revoked, or its recipe was deleted (all of them → /r/expired).
+ */
+export async function getSharedRecipe(token: string): Promise<SharedRecipe | null> {
+  await simulatedLatency();
+  const recipe = (await db()).recipes.find((r) => r.shareLink?.token === token);
+  if (!recipe) return null;
+  const { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating } = recipe;
+  return { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating, sharedBy: OWNER_NAME };
 }
 
 export async function getRecipes(): Promise<Recipe[]> {

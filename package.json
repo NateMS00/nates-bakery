@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "BACKERY_BACKEND=fixtures BACKERY_FEATURE_IMPORT=on next dev",
     "dev:lan": "BACKERY_BACKEND=fixtures BACKERY_FEATURE_IMPORT=on next dev -H 0.0.0.0",
+    "dev:supabase": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

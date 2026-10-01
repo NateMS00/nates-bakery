@@ -11,8 +11,9 @@ in Vercel's environment variables, never in the repo.
 - [x] Authentication → Minimum password length 12.
 - [x] Authentication → URL Configuration: Site URL `http://localhost:3000`, redirect URL `http://localhost:3000/**` (local for now).
 - [x] Reset password email: Supabase's default template (free projects with the built-in email can't edit it). The app sends `redirectTo` = `/auth/confirm` and handles the PKCE code. Branded template later: BACKLOG, custom SMTP.
-- [ ] Authentication → Users → Add user (owner, your Supabase login email), **Auto Confirm User** ticked.
-- [ ] `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (see `.env.example`).
+- [x] Authentication → Users → Add user (owner, your Supabase login email), **Auto Confirm User** ticked.
+- [x] `.env.local`: `NEXT_PUBLIC_SUPABASE_URL` (the base address, without `/rest/v1/`), `NEXT_PUBLIC_SUPABASE_ANON_KEY` (see `.env.example`).
+- [x] Locally on Supabase (`npm run dev:supabase`, 2026-10-01): live anonymous checks pass; signed out → sign in; unknown share link → /r/expired; one sign-in error message; sign in, new recipe, rating and bake survive a reload, share opens read-only in a private window, revoke → "This link no longer works"; reset email → set a new password → Password updated → sign in; the used link is refused by Supabase.
 
 ## Before the first deploy
 

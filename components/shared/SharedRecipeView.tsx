@@ -13,7 +13,7 @@ import type { SharedRecipe } from "@/lib/data/types";
 import { formatDuration, formatYield, parseScale } from "@/lib/format";
 
 // /r/:shareToken (Shared Recipe), BONES-r-detail.md: the Recipe page read-only for a
-// friend. Header (category, title, "Shared by Nathan", rating, creator, yield and
+// friend. Header (category, title, "Shared by Nate", rating, creator, yield and
 // time, Watch the original reel), then Scale, Ingredients, and Steps in the Recipe
 // page's columns. No back link, favorite, share, edit, or bake log. The friend's
 // scale lives only in their URL.

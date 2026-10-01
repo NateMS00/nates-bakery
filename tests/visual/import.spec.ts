@@ -42,7 +42,7 @@ test("focus rings", async ({ page, isMobile }) => {
 test("first import: Share from Instagram open, and opened by the Library's link", async ({ page }) => {
   await ready(page, "http://localhost:3102/import");
   await expect(page.getByRole("heading", { name: "Share from Instagram" })).toBeVisible();
-  await expect(page.getByText("In Instagram, tap Share on a reel, then Backery.")).toBeVisible();
+  await expect(page.getByText("In Instagram, tap Share on a reel, then Nate’s Bakery.")).toBeVisible();
   await shot(page, "02-first-import");
   // Library (collapsed state) links to #share-from-instagram, which opens it.
   await ready(page, "/import#share-from-instagram");
@@ -97,7 +97,7 @@ test("import failed: Enter it manually or Try another link", async ({ page }) =>
   await field(page).fill(link);
   await importButton(page).click();
   const failed = page.getByRole("alert").filter({ hasText: "private" });
-  await expect(failed).toContainText("This reel is private, so Backery can’t read it.");
+  await expect(failed).toContainText("This reel is private, so Nate’s Bakery can’t read it.");
   await expect(failed.getByRole("link", { name: "Enter it manually" })).toHaveAttribute("href", `/recipes/new?source=${encodeURIComponent(link)}`);
   await expect(importButton(page)).toBeDisabled();
   await expectTouchTargets(page);

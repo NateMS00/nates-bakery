@@ -27,7 +27,7 @@ export function ForgotPasswordForm({ expired }: { expired: boolean }) {
           Check your email
         </h2>
         <p className="mt-sm type-body-md text-body">
-          If there’s a Backery account for {state.email}, a reset link is on its way. It works once, for one hour. Open it on this device, in
+          If there’s a Nate’s Bakery account for {state.email}, a reset link is on its way. It works once, for one hour. Open it on this device, in
           this browser.
         </p>
         <TextLink href="/login" className="mt-base inline-flex min-h-touch-min items-center type-body-md">

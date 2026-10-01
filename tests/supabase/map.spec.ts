@@ -112,7 +112,7 @@ test("a shared row becomes SharedRecipe, signed by the owner, with no step links
     steps: [{ id: "s-1", groupId: null, text: "Mix.", timeMarks: [] }],
   };
   const r = sharedFromRow(shared);
-  expect(r.sharedBy).toBe("Nathan");
+  expect(r.sharedBy).toBe("Nate");
   expect(r.source).toBeUndefined();
   expect(r.steps[0].ingredientIds).toEqual([]);
   expect(Object.keys(r).sort()).toEqual(["category", "ingredientGroups", "ingredients", "rating", "sharedBy", "source", "stepGroups", "steps", "title", "totalTimeMinutes", "yield"]);

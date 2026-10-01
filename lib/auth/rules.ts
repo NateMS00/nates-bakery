@@ -5,8 +5,8 @@ export interface Session {
   email: string;
 }
 
-/** The owner's display name on shared pages ("Shared by Nathan"); one owner, no accounts yet. */
-export const OWNER_NAME = "Nathan";
+/** The owner's display name on shared pages ("Shared by Nate"); one owner, no accounts yet. */
+export const OWNER_NAME = "Nate";
 
 export const PASSWORD_MIN_LENGTH = 12;
 

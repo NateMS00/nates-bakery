@@ -6,11 +6,11 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
   return (
     <html lang="en">
       <head>
-        <title>Something went wrong · Backery</title>
+        <title>Something went wrong · Nate’s Bakery</title>
       </head>
       <body style={{ fontFamily: "system-ui, sans-serif", padding: 24, maxWidth: 600, margin: "0 auto", lineHeight: 1.5 }}>
         <h1>Something went wrong</h1>
-        <p>Backery didn’t load. Try again in a moment.</p>
+        <p>Nate’s Bakery didn’t load. Try again in a moment.</p>
         <button type="button" onClick={reset} style={{ minHeight: 48, padding: "0 24px", fontSize: 16 }}>
           Try again
         </button>

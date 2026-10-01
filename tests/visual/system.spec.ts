@@ -89,7 +89,7 @@ test.describe("signed out", () => {
     await page.getByLabel("Email").fill("someone@example.com");
     await page.getByRole("button", { name: "Send reset link" }).click();
     await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
-    await expect(page.getByText(/If there’s a Backery account for someone@example\.com, a reset link is on its way\. It works once, for one hour\. Open it on this device, in this browser\./)).toBeVisible();
+    await expect(page.getByText(/If there’s a Nate’s Bakery account for someone@example\.com, a reset link is on its way\. It works once, for one hour\. Open it on this device, in this browser\./)).toBeVisible();
     // The intro and the form are replaced by the sent state.
     await expect(page.getByText("Enter the email you sign in with")).toHaveCount(0);
     await expect(page.getByLabel("Email")).toHaveCount(0);
@@ -148,7 +148,7 @@ test.describe("signed out", () => {
   test("privacy and not-found use the public shell", async ({ page }) => {
     await ready(page, "/privacy");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy");
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(["What Backery stores", "What a share link shows", "Reels"]);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText(["What Nate’s Bakery stores", "What a share link shows", "Reels"]);
     await expectPublicShell(page);
     await expectPageTop(page);
     await shot(page, "09-privacy-signed-out", true);
@@ -192,7 +192,7 @@ test.describe("signed in", () => {
       await expect(page.getByRole("link", { name: "Go to your recipes" })).toHaveAttribute("href", "/recipes");
       await expectPageBasics(page);
       // WCAG 2.4.2: a title that says what happened, and only one.
-      await expect(page).toHaveTitle(/not found · Backery$/i);
+      await expect(page).toHaveTitle(/not found · Nate’s Bakery$/i);
       expect(await page.locator("head title").count()).toBe(1);
     }
     await expectPageTop(page);
@@ -209,7 +209,7 @@ test.describe("signed in", () => {
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading).toHaveText("Something went wrong");
     await expect(heading).toBeFocused();
-    await expect(page).toHaveTitle("Something went wrong · Backery");
+    await expect(page).toHaveTitle("Something went wrong · Nate’s Bakery");
     await expect(page.getByRole("link", { name: "Go to your recipes" })).toHaveAttribute("href", "/recipes");
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible(); // still in the App shell
     await expectPageBasics(page);

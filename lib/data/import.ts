@@ -19,9 +19,9 @@ export const IMPORT_MS = STAGE_MS * IMPORT_STAGES.length;
 export type FailReason = "private" | "deleted" | "no-recipe";
 
 export const FAIL_MESSAGES: Record<FailReason, string> = {
-  private: "This reel is private, so Backery can’t read it.",
+  private: "This reel is private, so Nate’s Bakery can’t read it.",
   deleted: "This reel has been deleted.",
-  "no-recipe": "Backery couldn’t find a recipe in this reel.",
+  "no-recipe": "Nate’s Bakery couldn’t find a recipe in this reel.",
 };
 
 export type StartResult =

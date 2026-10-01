@@ -11,19 +11,21 @@ import { AccountMenu } from "./AccountMenu";
 // so only Import shows as a link. SKIN app-header + tile-band + nav-link.
 
 const navLinkClass =
-  "inline-flex min-h-touch-min items-center border-b-3 border-transparent px-md type-button text-body transition-colors duration-(--motion-fast) ease-skin hover:border-hairline hover:text-ink focus-visible:outline-offset-2 aria-[current=page]:border-primary aria-[current=page]:text-primary";
+  "inline-flex min-h-touch-min items-center border-b-3 border-transparent px-sm tablet:px-md type-button text-body transition-colors duration-(--motion-fast) ease-skin hover:border-hairline hover:text-ink focus-visible:outline-offset-2 aria-[current=page]:border-primary aria-[current=page]:text-primary";
 
 /** `showImport`: the Import link, only while the Import feature is on (lib/features.ts). */
 export function AppHeader({ showImport }: { showImport: boolean }) {
   const pathname = usePathname();
   return (
     <header>
-      <div className="mx-auto flex min-h-3xl max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] items-center gap-sm px-(--gutter)">
+      {/* "Nate’s Bakery" stays on one line down to 320px: below tablet the gaps and the
+          Import link's side padding tighten (still 48px targets). */}
+      <div className="mx-auto flex min-h-3xl max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] items-center gap-xs px-(--gutter) tablet:gap-sm">
         <Link
           href="/recipes"
-          className="mr-auto inline-flex min-h-touch-min items-center rounded-sm type-wordmark text-primary focus-visible:outline-offset-2"
+          className="mr-auto inline-flex min-h-touch-min shrink-0 items-center rounded-sm whitespace-nowrap type-wordmark text-primary focus-visible:outline-offset-2"
         >
-          Backery
+          Nate’s Bakery
         </Link>
         <nav aria-label="Primary" className="flex items-center gap-xs">
           <Link href="/recipes" aria-current={pathname === "/recipes" ? "page" : undefined} className={cx(navLinkClass, "max-tablet:hidden")}>

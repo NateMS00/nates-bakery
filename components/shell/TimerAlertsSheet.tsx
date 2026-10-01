@@ -50,7 +50,7 @@ export function TimerAlertsSheet({
           <>
             <p>iPhone only sends alerts to apps on your Home Screen.</p>
             <ol className="mt-base flex flex-col gap-md">
-              {["Tap Share in Safari", "Choose Add to Home Screen", "Open Backery from the new icon"].map((text, i) => (
+              {["Tap Share in Safari", "Choose Add to Home Screen", "Open Nate’s Bakery from the new icon"].map((text, i) => (
                 <li key={text} className="flex items-baseline gap-md text-ink">
                   <span className="min-w-[2ch] type-amount font-bold text-primary">{i + 1}</span>
                   {text}
@@ -59,11 +59,11 @@ export function TimerAlertsSheet({
             </ol>
           </>
         )}
-        {state === "alerts-off" && <p>iPhone only sends alerts to apps on your Home Screen. Backery is there, so you can turn them on.</p>}
+        {state === "alerts-off" && <p>iPhone only sends alerts to apps on your Home Screen. Nate’s Bakery is there, so you can turn them on.</p>}
         {state === "alerts-on" && <p>Timers will alert you even when the phone is locked or another app is open.</p>}
         {state === "denied" && (
           <p>
-            To allow them, open the iPhone&rsquo;s Settings, tap Notifications, choose Backery, and turn on Allow Notifications.
+            To allow them, open the iPhone&rsquo;s Settings, tap Notifications, choose Nate’s Bakery, and turn on Allow Notifications.
             Timers still alert while Bake Mode is on screen.
           </p>
         )}

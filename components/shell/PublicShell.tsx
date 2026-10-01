@@ -18,7 +18,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <SkipLink />
       <header>
         <div className="mx-auto flex min-h-3xl max-w-[calc(var(--spacing-content-max)+2*var(--gutter))] items-center px-(--gutter)">
-          <span className="type-wordmark text-primary">Backery</span>
+          <span className="whitespace-nowrap type-wordmark text-primary">Nate’s Bakery</span>
         </div>
         <TileBand />
       </header>

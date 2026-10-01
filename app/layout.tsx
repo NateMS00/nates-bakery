@@ -5,7 +5,9 @@ import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Backery", template: "%s · Backery" },
+  title: { default: "Nate’s Bakery", template: "%s · Nate’s Bakery" },
+  // iPhone Home Screen label: short, so it isn't truncated (app/manifest.ts has the same).
+  appleWebApp: { capable: true, title: "Nate’s", statusBarStyle: "default" },
   description: "Recipes from baking reels, in grams, with a log of every bake.",
 };
 

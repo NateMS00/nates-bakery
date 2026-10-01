@@ -9,7 +9,7 @@ import { ErrorContent } from "@/components/system/ErrorContent";
 export default function RootError({ reset }: { error: Error; reset: () => void }) {
   return (
     <PublicShell>
-      <ErrorContent reset={reset} back={{ href: "/", label: "Go to Backery" }} />
+      <ErrorContent reset={reset} back={{ href: "/", label: "Go to Nate’s Bakery" }} />
     </PublicShell>
   );
 }

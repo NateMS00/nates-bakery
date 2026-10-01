@@ -340,7 +340,7 @@ function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
             Get the Shortcut
           </ExternalLink>
         </Step>
-        <Step n={2}>In Instagram, tap Share on a reel, then Backery.</Step>
+        <Step n={2}>In Instagram, tap Share on a reel, then Nate’s Bakery.</Step>
         <Step n={3}>The reel opens here and imports on its own.</Step>
       </ol>
     </section>

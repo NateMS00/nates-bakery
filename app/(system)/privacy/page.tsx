@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Privacy" };
 
 const sections: { heading: string; body: React.ReactNode }[] = [
   {
-    heading: "What Backery stores",
+    heading: "What Nate’s Bakery stores",
     body: (
       <ul className="list-disc space-y-xs pl-lg">
         <li>The owner’s email address and password, to sign in. The password is stored only as a secure hash.</li>
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">
       <h1 className="type-display-md text-ink desktop:type-display-lg">Privacy</h1>
       <p className="mt-xs type-caption text-muted">Updated 30 September 2026</p>
-      <p className="mt-base type-body-lg text-body">Backery is a personal baking app with one owner. Here is what it keeps and who can see it.</p>
+      <p className="mt-base type-body-lg text-body">Nate’s Bakery is a personal baking app with one owner. Here is what it keeps and who can see it.</p>
       {sections.map((s) => (
         <section key={s.heading} aria-labelledby={slug(s.heading)} className="mt-xl">
           <h2 id={slug(s.heading)} className="type-heading text-ink">

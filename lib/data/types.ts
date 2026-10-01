@@ -1,4 +1,4 @@
-// The Backery data model. No backend yet: fixtures in lib/data/fixtures.ts feed it.
+// The Nate’s Bakery data model. No backend yet: fixtures in lib/data/fixtures.ts feed it.
 
 export type Category =
   | "bread"

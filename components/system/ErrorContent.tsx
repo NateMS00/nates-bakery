@@ -17,7 +17,7 @@ export function ErrorContent({ reset, back }: { reset: () => void; back?: { href
   return (
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">
       {/* WCAG 2.4.2: error boundaries can't export metadata; React hoists this into <head>. */}
-      <title>Something went wrong · Backery</title>
+      <title>Something went wrong · Nate’s Bakery</title>
       <h1 ref={heading} tabIndex={-1} className="type-display-md text-ink outline-none desktop:type-display-lg">
         Something went wrong
       </h1>

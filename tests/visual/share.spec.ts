@@ -25,7 +25,7 @@ async function expectShareShell(page: Page) {
   await expect(page.locator("nav")).toHaveCount(0);
   // The wordmark is not a link; the only app link is Privacy in the footer.
   await expect(page.locator("header a")).toHaveCount(0);
-  await expect(page.locator("header")).toContainText("Backery");
+  await expect(page.locator("header")).toContainText("Nate’s Bakery");
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 }
 
@@ -33,7 +33,7 @@ test("shared recipe: first viewport, full page, and page checks (signed out)", a
   await ready(page, NATA);
   await expect(page).toHaveURL(NATA); // no sign-in redirect for friends
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pastéis de nata");
-  await expect(page.getByText("Shared by Nathan")).toBeVisible();
+  await expect(page.getByText("Shared by Nate")).toBeVisible();
   await expect(page.getByRole("img", { name: "Rated 4 out of 5" })).toBeVisible();
   await expect(page.getByText("@forno.da.rita")).toBeVisible();
   const reel = page.getByRole("link", { name: /Watch the original reel/ });
@@ -97,7 +97,7 @@ test("scale: the friend's scale lives in their URL", async ({ page }) => {
 test("no source and unrated: no reel link, creator, or stars", async ({ page }) => {
   await ready(page, "/r/cookies-h4m8rz");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Brown butter chocolate chip cookies");
-  await expect(page.getByText("Shared by Nathan")).toBeVisible();
+  await expect(page.getByText("Shared by Nate")).toBeVisible();
   await expect(page.getByRole("link", { name: /Watch the original reel/ })).toHaveCount(0);
   await expect(page.getByText(/^@/)).toHaveCount(0);
   await expect(page.getByRole("img", { name: /Rated/ })).toHaveCount(0);
@@ -161,7 +161,7 @@ test.describe("owner", () => {
     const friendPage = await friend.newPage();
     await friendPage.goto(url);
     await expect(friendPage.getByRole("heading", { level: 1 })).toHaveText("Lemon drizzle loaf");
-    await expect(friendPage.getByText("Shared by Nathan")).toBeVisible();
+    await expect(friendPage.getByText("Shared by Nate")).toBeVisible();
 
     // Revoke: the same link now goes to /r/expired.
     await dialog.getByRole("button", { name: "Revoke link" }).click();

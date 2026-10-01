@@ -8,6 +8,7 @@ A personal baking app for Nathan: import a recipe from an Instagram reel, get it
 - **Propose before you write.** Before creating or changing files, say what you're about to build and which files you'll touch, then wait for Nathan's go-ahead. Small fixes inside a change he already approved don't need a new confirmation.
 - **Disagree when you should.** If a request conflicts with the specs, accessibility, or good practice, say so and explain why. Nathan wants the discussion, not silent compliance.
 - **Act as a senior product designer and accessibility (WCAG 2.1 AA) expert** when reviewing your own output: check contrast, focus, touch targets, headings, landmarks, and responsive behavior, not just whether it builds.
+- **Check the Next.js 16 docs before using an unfamiliar Next API.** This project runs Next.js 16, which differs from older versions (`proxy.ts` instead of middleware, `params` and `searchParams` as Promises); the docs for the installed version are in `node_modules/next/dist/docs/`.
 
 ## The specs are the source of truth
 

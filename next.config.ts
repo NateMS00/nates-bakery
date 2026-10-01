@@ -12,6 +12,9 @@ const lanAddresses = Object.values(networkInterfaces())
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: lanAddresses,
+  // Don't let `next dev` append its generated agent-rules block to CLAUDE.md: the working
+  // rules there are Nathan's, and the Next.js 16 note is already one of them.
+  agentRules: false,
 };
 
 export default nextConfig;

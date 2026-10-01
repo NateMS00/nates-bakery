@@ -87,7 +87,7 @@ export function SharedRecipeView({ recipe }: { recipe: SharedRecipe }) {
 
       <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
         {/* Left column: Scale + Ingredients, sticky beside Steps from tablet up */}
-        <div className="tablet:sticky tablet:top-base tablet:col-span-3 desktop:col-span-4">
+        <div className="tablet:sticky tablet:top-base tablet:col-span-4 desktop:col-span-4">
           <section aria-labelledby="scale-heading">
             <SectionHeading id="scale-heading">Scale</SectionHeading>
             <ScaleControl scale={scale} onChange={setScale} />
@@ -97,7 +97,7 @@ export function SharedRecipeView({ recipe }: { recipe: SharedRecipe }) {
             <IngredientList groups={recipe.ingredientGroups} ingredients={recipe.ingredients} scale={scale} shared />
           </section>
         </div>
-        <section aria-labelledby="steps-heading" className="mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8">
+        <section aria-labelledby="steps-heading" className="mt-lg tablet:col-span-4 tablet:mt-0 desktop:col-span-8">
           <SectionHeading id="steps-heading">Steps</SectionHeading>
           <StepList groups={recipe.stepGroups} steps={recipe.steps} />
         </section>

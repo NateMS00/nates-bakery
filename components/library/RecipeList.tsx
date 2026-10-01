@@ -45,11 +45,22 @@ export function RecipeList({ recipes }: { recipes: Recipe[] }) {
   );
 }
 
+/**
+ * The card's name, title first, so a screen reader's links list sorts by recipe; the
+ * visible title still starts it (WCAG 2.5.3). The rest follows the card's content.
+ */
+function cardName(recipe: Recipe, baked: string) {
+  const rating = recipe.rating === null ? "not rated" : `rated ${recipe.rating} out of 5`;
+  return [recipe.title, categoryLabel(recipe.category), rating, recipe.favorite && "favorite", baked].filter(Boolean).join(", ");
+}
+
 function RecipeItem({ recipe }: { recipe: Recipe }) {
   const lastBaked = recipe.bakeLog[0]?.date;
+  const baked = lastBaked ? `Baked ${formatBakeDate(lastBaked)}` : "Not baked yet";
   return (
     <Link
       href={`/recipes/${recipe.id}`}
+      aria-label={cardName(recipe, baked)}
       className="grid gap-y-xs rounded-lg border border-hairline bg-surface-card p-base text-ink transition-colors duration-(--motion-fast) ease-skin hover:border-primary active:border-primary active:bg-primary-wash focus-visible:outline-offset-2 desktop:grid-cols-12 desktop:items-center desktop:gap-x-(--gutter)"
     >
       <span className="type-label text-primary desktop:order-2 desktop:col-span-2">{categoryLabel(recipe.category)}</span>
@@ -67,7 +78,7 @@ function RecipeItem({ recipe }: { recipe: Recipe }) {
           )}
         </span>
         <span className="ml-auto type-caption text-muted desktop:order-4 desktop:col-span-2 desktop:ml-0">
-          {lastBaked ? `Baked ${formatBakeDate(lastBaked)}` : "Not baked yet"}
+          {baked}
         </span>
       </span>
     </Link>

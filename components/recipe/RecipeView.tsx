@@ -12,7 +12,7 @@ import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StarRating } from "@/components/ui/StarRating";
-import { ExternalLink, TextLink } from "@/components/ui/TextLink";
+import { ExternalLink, TextLink, tallHitArea } from "@/components/ui/TextLink";
 import { categoryLabel } from "@/lib/data/categories";
 import { useOwnerRecipe } from "@/lib/data/useOwnerRecipe";
 import type { BakeLogEntry, Recipe } from "@/lib/data/types";
@@ -136,7 +136,9 @@ export function RecipeView({ initial }: { initial: Recipe }) {
             {recipe.source && (
               <p className="type-body-sm text-muted">
                 @{recipe.source.creatorHandle} <span aria-hidden="true">·</span>{" "}
-                <ExternalLink href={recipe.source.reelUrl}>Watch reel</ExternalLink>
+                <ExternalLink href={recipe.source.reelUrl} className={tallHitArea}>
+                  Watch reel
+                </ExternalLink>
               </p>
             )}
             <p className="mt-xs type-body-sm text-body">
@@ -170,7 +172,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
 
       <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
         {/* Left column: Scale + Ingredients, sticky beside Steps from tablet up */}
-        <div className="tablet:sticky tablet:top-base tablet:col-span-3 desktop:col-span-4">
+        <div className="tablet:sticky tablet:top-base tablet:col-span-4 desktop:col-span-4">
           <section aria-labelledby="scale-heading">
             <SectionHeading id="scale-heading">Scale</SectionHeading>
             <ScaleControl scale={scale} onChange={setScale} />
@@ -182,7 +184,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         </div>
 
         {/* Right column: Steps + Latest Bake */}
-        <div className="tablet:col-span-5 desktop:col-span-8">
+        <div className="tablet:col-span-4 desktop:col-span-8">
           <section aria-labelledby="steps-heading" className="mt-lg tablet:mt-0">
             <SectionHeading id="steps-heading">Steps</SectionHeading>
             <StepList groups={recipe.stepGroups} steps={recipe.steps} />

@@ -4,7 +4,8 @@ import { Play } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ExternalLink } from "@/components/ui/TextLink";
+import { cx } from "@/components/ui/cx";
+import { ExternalLink, tallHitArea } from "@/components/ui/TextLink";
 import type { Draft } from "@/lib/data/types";
 
 // BONES Source: reel thumbnail (portrait 9:16), creator handle, Watch reel, and the
@@ -27,7 +28,7 @@ export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draf
         <p className="type-body-sm text-muted tablet:flex tablet:flex-col tablet:gap-xs">
           <span className="text-ink">@{draft.creatorHandle}</span>
           <span aria-hidden="true" className="tablet:hidden"> · </span>
-          <ExternalLink href={draft.reelUrl} className="inline-flex min-h-touch-min items-center max-tablet:inline">
+          <ExternalLink href={draft.reelUrl} className={cx("inline-flex min-h-touch-min items-center max-tablet:inline", tallHitArea)}>
             Watch reel
           </ExternalLink>
         </p>

@@ -246,3 +246,33 @@ test("loading state", async ({ page }) => {
   await shot(page, "21-loading");
   await expect(page.getByRole("button", { name: "Start baking" })).toBeDisabled();
 });
+
+test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control fits", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await ready(page, NATA);
+  const group = page.getByRole("group", { name: "Batch size" });
+  const [track, custom, steps] = await Promise.all([
+    group.boundingBox(),
+    group.getByRole("button", { name: "Custom" }).boundingBox(),
+    page.getByRole("heading", { name: "Steps" }).boundingBox(),
+  ]);
+  expect(custom!.x + custom!.width).toBeLessThanOrEqual(track!.x + track!.width);
+  // Two equal columns: Steps starts at the middle of the content area.
+  expect(Math.abs(steps!.x - (768 / 2 + 12))).toBeLessThan(40);
+  for (const name of ["Half", "1×", "1.5×", "2×", "Custom"]) {
+    expect((await group.getByRole("button", { name, exact: true }).boundingBox())!.width).toBeGreaterThanOrEqual(48);
+  }
+  await page.evaluate(() => document.fonts.ready);
+  await shot(page, "22-tablet");
+});
+
+test("Watch reel has a 48px tap area with no visual change", async ({ page }) => {
+  await ready(page, NATA);
+  const link = page.getByRole("link", { name: /Watch reel/ });
+  const hit = await link.evaluate((a) => parseFloat(getComputedStyle(a, "::before").height));
+  expect(hit).toBeGreaterThanOrEqual(48);
+  // A tap 12px above the text still lands on the link.
+  const box = (await link.boundingBox())!;
+  const hitTarget = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest("a")?.textContent ?? null, [box.x + box.width / 2, box.y - 12 + 0]);
+  expect(hitTarget).toContain("Watch reel");
+});

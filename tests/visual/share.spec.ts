@@ -172,3 +172,13 @@ test.describe("owner", () => {
     await friend.close();
   });
 });
+
+test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control fits", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await ready(page, NATA);
+  const group = page.getByRole("group", { name: "Batch size" });
+  const [track, custom] = await Promise.all([group.boundingBox(), group.getByRole("button", { name: "Custom" }).boundingBox()]);
+  expect(custom!.x + custom!.width).toBeLessThanOrEqual(track!.x + track!.width);
+  await page.evaluate(() => document.fonts.ready);
+  await shot(page, "08-tablet");
+});

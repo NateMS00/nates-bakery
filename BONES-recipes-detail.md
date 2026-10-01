@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.3.0 · **Updated**: 2026-09-30
+> **Version**: 1.4.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -72,7 +72,7 @@ MOBILE
 ```
 
 ### Scale (SKELETON section 2)
-- **Layout**: desktop in the left column (4 cols) above Ingredients; mobile full width, one row
+- **Layout**: desktop in the left column (4 of 12 cols; 4 of 8 on tablet) above Ingredients; mobile full width, one row. Every preset keeps SKIN's 48px minimum width; the column must never be narrower than the five presets need
 - **Content**: presets ½×, 1×, 1.5×, 2×, and Custom; Custom reveals a number field in the same row (0.25× to 10×); the active value is marked
 - **Behavior**: changing the value updates `?scale=` in place (no navigation), every amount, the yield, and the Start baking label
 
@@ -93,7 +93,7 @@ MOBILE
 ```
 
 ### Ingredients (SKELETON section 3)
-- **Layout**: desktop left column (4 cols), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width
+- **Layout**: desktop left column (4 of 12 cols; 4 of 8 on tablet), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width
 - **Content**: one row per ingredient: name on the left (wraps to at most 2 lines, then truncates), scaled amount in grams on the right (aligned on a shared right edge so numbers line up); an Estimated or Converted marker under the name; tapping a Converted marker reveals the original stated amount ("was 1 cup") on the line under it. When the recipe has component groups (Crust, Filling, Frosting…), each group gets a heading and a medium gap before it, in the recipe's order. No limit on rows or groups: everything shows
 - **Behavior**: amounts under 10 g show one decimal only when it isn't zero ("3.5 g", but "8 g", never "8.0 g"); "to taste" ingredients show that text instead of an amount
 
@@ -124,7 +124,7 @@ MOBILE
 ```
 
 ### Steps (SKELETON section 4)
-- **Layout**: desktop right column (8 cols); mobile full width below Ingredients
+- **Layout**: desktop right column (8 of 12 cols; 4 of 8 on tablet, about 340px at 768, still a comfortable reading width); mobile full width below Ingredients
 - **Content**: numbered steps in order, full text, no truncation; times detected in the text ("25 minutes") are marked inline but are not interactive here (they become timers in Bake Mode). When the recipe has step groups (Crust, Filling, Assembly, Baking…), each gets a heading; numbering continues across groups (1–12, not 1–4 per group), so "step 7" means one thing everywhere, including Bake Mode's `?step=`
 - **Behavior**: none
 
@@ -221,7 +221,7 @@ MOBILE
 - **Assumed**: Scale presets ½×, 1×, 1.5×, 2× plus Custom, limited to 0.25× to 10×.
 - **Assumed**: Grams rounded to whole numbers, with one decimal under 10 g (yeast, salt, baking soda, where a gram matters), shown only when it isn't zero: "3.5 g", "8 g".
 - **Assumed**: The original stated amount for Converted items is revealed on tap, not always visible, to keep rows short on a phone.
-- **Assumed**: Ingredients stick beside Steps on desktop and tablet (tablet uses the same split on 8 columns: 3 and 5).
+- **Assumed**: Ingredients stick beside Steps on desktop and tablet. Tablet splits its 8 columns 4 and 4, not 3 and 5: at 3 columns (about 255px at 768) the Scale presets overflowed and "1×" fell under 48px (accessibility audit). Stacking everything on tablet was rejected, because a propped-up iPad is exactly when grams should sit beside the step.
 - **Assumed**: Start baking moves from a sticky bottom bar (mobile) to the Header (desktop). DOM order puts it in the Header on both; on mobile it is visually pinned to the bottom.
 - **Assumed**: A "Link copied" confirmation inside the Share dialog (not in SKELETON).
 - **Open**: Scaling by pan size or servings (SKELETON open question). If added, Scale grows a second mode; the current row is drawn to allow it.
@@ -231,6 +231,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.0 (2026-09-30): Tablet split is 4 + 4 columns (Scale and Ingredients / Steps), after the accessibility audit found the Scale control overflowing at 3 columns.
 - 1.3.0 (2026-09-30): After the first build review: overlays sized to their content with a close X in the header; large stars in the Rating prompt; no trailing ".0" on amounts.
 - 1.2.1 (2026-09-29): Desktop header actions in one row beside the title (Favorite, Share, Edit, Start baking), after the visual review.
 - 1.2.0 (2026-09-29): Added the category label to the Header (SKELETON 1.2.0).

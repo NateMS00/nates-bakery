@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–8 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 400 checks pass.
+Prompts 1–9 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 416 checks pass.
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -45,9 +45,19 @@ Recorded in BONES-system.md 1.0.0 and BONES-shell.md 1.5.0 (both by Nathan); the
 - A signed-in owner opening `/login?next=` goes to that same-site path, not always `/recipes`.
 - Tests: the password is cleared after a wrong sign-in; the footer sits at the bottom of Not found.
 
+## Prompt 9: accessibility audit (2026-09-30)
+
+Audit tooling in `playwright.audit.config.ts` (`npx playwright test --config playwright.audit.config.ts`; results in `audit-results/`, not committed). axe reports no violations on any page. Fixed after Nathan's decisions:
+
+- Tablet (768–1279): Scale and Ingredients take 4 of 8 columns and Steps the other 4, on the Recipe and shared pages (BONES-recipes-detail 1.4.0, BONES-r-detail 1.1.0); every Scale preset is at least 48px wide.
+- "Watch reel" (Recipe header, Review Import's Source) has a 48px tap area with no visual change.
+- Library cards are named title first ("Fudgy brownies, Cookie & bar, rated 5 out of 5, favorite, Baked Mon 28 Sep").
+- Accepted: truncated text under the text-spacing test. No action: the Timer alerts sheet's heading order.
+- BACKLOG: the Privacy promises review, and the flaky editor row-menu test.
+
 ## Next
 
-1. Prompt 9 (accessibility and responsive audit): the audit is done and the trivial fixes are in; the open findings wait for Nathan's decisions (Scale control at tablet width, Watch reel target, Library link names). Re-run with `npx playwright test --config playwright.audit.config.ts`; results land in `audit-results/` (not committed).
+1. All nine build prompts are done. Next is the backend decision (PROMPTS.md "Later: backend"), and the BACKLOG items.
 
 ## Half-finished and stubbed
 

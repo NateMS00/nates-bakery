@@ -41,7 +41,7 @@ export function RecipeSkeleton() {
 export function RecipeBodySkeleton() {
   return (
     <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
-      <div className="tablet:col-span-3 desktop:col-span-4">
+      <div className="tablet:col-span-4 desktop:col-span-4">
         <Skeleton className="h-lg w-1/3" />
         <Skeleton className="mt-sm h-touch-min w-full rounded-md" />
         <Skeleton className="mt-lg h-lg w-1/2 desktop:mt-xl" />
@@ -54,7 +54,7 @@ export function RecipeBodySkeleton() {
           ))}
         </ul>
       </div>
-      <div className="mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8">
+      <div className="mt-lg tablet:col-span-4 tablet:mt-0 desktop:col-span-8">
         <Skeleton className="h-lg w-1/4" />
         <ul className="mt-sm">
           {Array.from({ length: 4 }, (_, i) => (

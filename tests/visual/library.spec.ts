@@ -222,3 +222,9 @@ test("loading", async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
   await shot(page, "10-loading");
 });
+
+test("recipe links are named title first", async ({ page }) => {
+  await ready(page, "/recipes");
+  await expect(items(page).first().getByRole("link")).toHaveAccessibleName("Fudgy brownies, Cookie & bar, rated 5 out of 5, favorite, Baked Mon 28 Sep");
+  await expect(page.getByRole("link", { name: "Lemon bars, Cookie & bar, not rated, Not baked yet" })).toBeVisible();
+});

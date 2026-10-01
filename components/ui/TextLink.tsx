@@ -7,6 +7,13 @@ import { cx } from "./cx";
 export const textLinkClass =
   "rounded-sm text-primary underline decoration-1 underline-offset-3 hover:decoration-2 active:text-primary-active focus-visible:outline-offset-2";
 
+/**
+ * A 48px-tall tap area centered on an inline link, with no visual change (SKIN rule 8),
+ * for links that stand alone in a line of text, like "Watch reel".
+ */
+export const tallHitArea =
+  "relative before:absolute before:inset-x-0 before:top-1/2 before:h-touch-min before:-translate-y-1/2 before:content-['']";
+
 export function TextLink({ className, ...props }: ComponentProps<typeof Link>) {
   return <Link className={cx(textLinkClass, className)} {...props} />;
 }

@@ -1,10 +1,10 @@
 # BONES: `/r/:shareToken` (Shared Recipe)
 
-> **Source**: SKELETON.md v1.3.0, `/r/:shareToken`
+> **Source**: SKELETON.md v1.3.2, `/r/:shareToken`
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.0.0 · **Updated**: 2026-09-29
+> **Version**: 1.1.0 · **Updated**: 2026-09-30
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -70,7 +70,7 @@ MOBILE
 
 ### Ingredients (SKELETON section 3)
 - **Layout and content**: as in BONES-recipes-detail.md, with one difference: only the Estimated marker shows (labeled "Estimated amount"), so the friend knows which amounts are guesses; the Converted marker and its "was 1 cup" reveal are not shown
-- **Behavior**: sticky beside Steps on desktop and tablet, as on the Recipe page
+- **Behavior**: sticky beside Steps on desktop and tablet, as on the Recipe page, with the same column split: 4 of 12 on desktop and 4 of 8 on tablet (Steps takes the other 8 or 4), so the Scale presets never overflow
 
 ### Steps (SKELETON section 4)
 - **Layout and content**: as in BONES-recipes-detail.md: numbered continuously across groups, full text, detected times marked but not interactive
@@ -123,4 +123,5 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.0 (2026-09-30): Tablet split is 4 + 4 columns, matching BONES-recipes-detail 1.4.0 (accessibility audit).
 - 1.0.0 (2026-09-29): Initial wireframe.

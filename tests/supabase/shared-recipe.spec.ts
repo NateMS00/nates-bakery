@@ -110,3 +110,31 @@ test.describe("live", () => {
     }
   });
 });
+
+// ── Live: the database's own catalog ──
+// Every table in public must have row-level security on, so a later migration can't
+// add an unprotected table. The public key can't read the catalog (by design), so this
+// connects directly: BACKERY_TEST_DATABASE_URL is the connection string from the
+// Supabase dashboard (Connect → Session pooler). It holds the database password: keep
+// it in .env.local, never in the repo.
+
+test.describe("live catalog", () => {
+  const databaseUrl = process.env.BACKERY_TEST_DATABASE_URL;
+  test.skip(!databaseUrl, "set BACKERY_TEST_DATABASE_URL to run");
+
+  test("every table in public has row-level security on", async () => {
+    const { default: postgres } = await import("postgres");
+    const sql = postgres(databaseUrl!, { ssl: "require", max: 1, idle_timeout: 5 });
+    try {
+      const rows = await sql<{ relname: string; relrowsecurity: boolean }[]>`
+        select c.relname, c.relrowsecurity
+        from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relkind in ('r', 'p')
+        order by 1`;
+      expect(rows.length, "tables in public").toBeGreaterThan(0);
+      expect(rows.filter((r) => !r.relrowsecurity).map((r) => r.relname), "tables without RLS").toEqual([]);
+    } finally {
+      await sql.end();
+    }
+  });
+});

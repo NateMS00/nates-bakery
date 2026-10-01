@@ -42,6 +42,11 @@ export const fixturesAuth: AuthBackend = {
     console.info(`[stub] Password reset link for ${email}: /reset-password?token=reset-${randomUUID()}`);
   },
 
+  // Fixture reset links carry their token straight to /reset-password.
+  async confirmEmailLink() {
+    return false;
+  },
+
   async resetLinkIsValid(token) {
     return tokenIsValid(token);
   },

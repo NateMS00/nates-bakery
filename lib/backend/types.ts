@@ -49,6 +49,8 @@ export interface AuthBackend {
   signOut(): Promise<void>;
   /** Sends a reset link if the address has an account; says nothing either way. */
   requestPasswordReset(email: string): Promise<void>;
+  /** /auth/confirm: exchanges an emailed link's one-time token; false if used or expired. */
+  confirmEmailLink(tokenHash: string | null, type: string | null): Promise<boolean>;
   /** Whether the current reset link can still set a password (single use). */
   resetLinkIsValid(token: string | undefined): Promise<boolean>;
   /** Sets the new password and uses up the link; "expired" if it was already used. */

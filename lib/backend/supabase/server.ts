@@ -8,8 +8,10 @@ import { supabaseEnv } from "./env";
 // (which runs first) or by a server action, so a failed write here is safe to ignore.
 
 export async function supabaseServer() {
-  const { url, key } = supabaseEnv();
+  // Cookies first: it marks the page as per-request, so a page that only checks the
+  // session (Not found) isn't rendered at build time, when there's no request or env.
   const store = await cookies();
+  const { url, key } = supabaseEnv();
   return createServerClient(url, key, {
     cookies: {
       getAll: () => store.getAll(),

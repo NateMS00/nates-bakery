@@ -58,6 +58,7 @@ test.describe("signed out", () => {
     await expect(error).toBeVisible();
     await expect(page.locator(":focus")).toContainText("Email or password is incorrect.");
     await expect(page.getByLabel("Email")).toHaveValue(EMAIL);
+    await expect(page.getByLabel("Password")).toHaveValue("");
     await shot(page, "02-login-error");
 
     await page.getByLabel("Password").fill(PASSWORD);
@@ -88,7 +89,11 @@ test.describe("signed out", () => {
     await page.getByLabel("Email").fill("someone@example.com");
     await page.getByRole("button", { name: "Send reset link" }).click();
     await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
-    await expect(page.getByText(/If someone@example\.com belongs to the owner account/)).toBeVisible();
+    await expect(page.getByText(/If there’s a Backery account for someone@example\.com, a reset link is on its way/)).toBeVisible();
+    // The intro and the form are replaced by the sent state.
+    await expect(page.getByText("Enter the email you sign in with")).toHaveCount(0);
+    await expect(page.getByLabel("Email")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Back to sign in" })).toBeVisible();
     await shot(page, "04-forgot-sent");
   });
 
@@ -144,15 +149,19 @@ test.describe("signed out", () => {
     await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
     await expectPublicShell(page);
     await shot(page, "10-not-found-signed-out");
+    const footerBottom = await page.locator("footer").evaluate((f) => f.getBoundingClientRect().bottom);
+    expect(Math.abs(footerBottom - page.viewportSize()!.height)).toBeLessThan(2);
   });
 });
 
 test.describe("signed in", () => {
-  test("auth pages send the owner to /recipes", async ({ page }) => {
-    for (const path of ["/login", "/forgot-password", "/reset-password?token=reset-x"]) {
+  test("auth pages send the owner to ?next= or /recipes", async ({ page }) => {
+    for (const path of ["/login", "/forgot-password", "/reset-password?token=reset-x", "/login?next=//evil.example"]) {
       await page.goto(path);
-      await page.waitForURL(/\/recipes$/);
+      await page.waitForURL(/localhost:3100\/recipes$/);
     }
+    await page.goto("/login?next=%2Fimport");
+    await page.waitForURL(/\/import$/);
   });
 
   test("privacy in the App shell; reached from the footer", async ({ page }) => {
@@ -177,6 +186,9 @@ test.describe("signed in", () => {
     await expectPageTop(page);
     await expectTouchTargets(page);
     await shot(page, "13-not-found");
+    // Footer at the bottom on a short page (BONES-system), in the App shell too.
+    const footerBottom = await page.locator("footer").evaluate((f) => f.getBoundingClientRect().bottom);
+    expect(Math.abs(footerBottom - page.viewportSize()!.height)).toBeLessThan(2);
   });
 
   test("error: Try again reloads the page once the failure clears", async ({ page, context }) => {

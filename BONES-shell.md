@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.4.0 · **Updated**: 2026-09-30
+> **Version**: 1.5.0 · **Updated**: 2026-09-30
 
 ---
 
@@ -76,7 +76,7 @@ DESKTOP (alerts off)
 
 ## Share variant
 
-Used by `/r/:shareToken` and `/r/expired`, for friends without an account.
+Used by `/r/:shareToken` and `/r/expired`, for friends without an account; by the auth pages (`/login`, `/forgot-password`, `/reset-password`); and by Privacy, Not found and Error when no one is signed in (signed in, those three use the App variant). Pages and their states: BONES-system.md.
 
 - **Header**: the logo only, not a link (SKELETON allows no links into the owner area from shared pages); no navigation, no account menu; scrolls with the page.
 - **Mobile navigation**: none.
@@ -107,6 +107,12 @@ MOBILE
 
 ---
 
+## Footer position (all variants)
+
+On a page shorter than the viewport, `main` grows to fill the remaining height, so the footer always sits at the bottom of the screen, never mid-screen with empty space below it.
+
+---
+
 ## Overlay sizing (all pages)
 
 Viewport shares given in page BONES files ("about a third", "about half") are **maximum heights**, not fixed sizes: every sheet and modal fits its content and never leaves empty space below its last element, up to 90% of the viewport, after which its body scrolls. Every sheet and modal has a header row with its title and a close X (icon button) at the end; there is no separate Close button at the bottom. Exceptions that keep their stated height: overlays that are full-screen forms (Bake Log's entry form on mobile) and sheets with a scrolling list and a footer pinned to the bottom (Library's Filters sheet, the Ingredients used picker).
@@ -134,6 +140,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.5.0 (2026-09-30): Share variant also used by the auth pages, and by Privacy, Not found and Error when signed out (BONES-system.md); footer kept at the bottom on short pages.
 - 1.4.0 (2026-09-30): Added the Destructive confirmations rule for every page.
 - 1.3.0 (2026-09-30): Added the Overlay sizing rule (fit to content, close X in the header) for every page; Timer alerts sheet follows it.
 - 1.2.0 (2026-09-29): Added the Share variant for shared recipe pages.

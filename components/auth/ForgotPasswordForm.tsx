@@ -2,11 +2,14 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
+import { Notice } from "@/components/ui/Notice";
 import { TextField } from "@/components/ui/TextField";
 import { TextLink } from "@/components/ui/TextLink";
 import { requestPasswordReset, type ResetRequestState } from "@/lib/auth/actions";
 
-export function ForgotPasswordForm() {
+// BONES-system /forgot-password: intro, the Link expired notice, and the form; sending
+// replaces all three with the sent state, and focus moves to its heading.
+export function ForgotPasswordForm({ expired }: { expired: boolean }) {
   const [state, action, pending] = useActionState<ResetRequestState, FormData>(requestPasswordReset, { email: "" });
   const email = useRef<HTMLInputElement>(null);
   const sent = useRef<HTMLHeadingElement>(null);
@@ -24,7 +27,7 @@ export function ForgotPasswordForm() {
           Check your email
         </h2>
         <p className="mt-sm type-body-md text-body">
-          If {state.email} belongs to the owner account, a reset link is on its way. It works once, for one hour.
+          If there’s a Backery account for {state.email}, a reset link is on its way. It works once, for one hour.
         </p>
         <TextLink href="/login" className="mt-base inline-flex min-h-touch-min items-center type-body-md">
           Back to sign in
@@ -34,27 +37,35 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={action} noValidate className="mt-lg flex flex-col gap-base">
-      <TextField
-        ref={email}
-        id="reset-email"
-        name="email"
-        label="Email"
-        type="email"
-        autoComplete="username"
-        inputMode="email"
-        autoCapitalize="none"
-        spellCheck={false}
-        defaultValue={state.email}
-        key={`email-${state.email}`}
-        error={state.error}
-      />
-      <Button type="submit" variant="primary" aria-busy={pending || undefined} className="mt-sm w-full">
-        {pending ? "Sending…" : "Send reset link"}
-      </Button>
-      <TextLink href="/login" className="inline-flex min-h-touch-min items-center self-start type-body-md">
-        Back to sign in
-      </TextLink>
-    </form>
+    <>
+      <p className="mt-sm type-body-md text-body">Enter the email you sign in with, and we’ll send you a link to set a new password.</p>
+      {expired && (
+        <div role="status" className="mt-base">
+          <Notice tone="warning">That reset link has expired or was already used. Send a new one below.</Notice>
+        </div>
+      )}
+      <form action={action} noValidate className="mt-lg flex flex-col gap-base">
+        <TextField
+          ref={email}
+          id="reset-email"
+          name="email"
+          label="Email"
+          type="email"
+          autoComplete="username"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          defaultValue={state.email}
+          key={`email-${state.email}`}
+          error={state.error}
+        />
+        <Button type="submit" variant="primary" aria-busy={pending || undefined} className="mt-sm w-full">
+          {pending ? "Sending…" : "Send reset link"}
+        </Button>
+        <TextLink href="/login" className="inline-flex min-h-touch-min items-center self-start type-body-md">
+          Back to sign in
+        </TextLink>
+      </form>
+    </>
   );
 }

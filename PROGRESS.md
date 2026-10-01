@@ -4,7 +4,7 @@ Where the build stands, for picking it up again. Updated 2026-09-30.
 
 ## Done
 
-Prompts 1–7 from `PROMPTS.md` are built, reviewed, and committed; prompt 8 is built and waiting for review. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 400 checks pass.
+Prompts 1–8 from `PROMPTS.md` are built, reviewed, and committed. Each has a Playwright spec in `tests/visual/` that renders it at 390px and 1440px in light and dark; all 400 checks pass.
 
 | Prompt | Route | Commits |
 |---|---|---|
@@ -15,7 +15,7 @@ Prompts 1–7 from `PROMPTS.md` are built, reviewed, and committed; prompt 8 is 
 | 5. Bake Mode | `/recipes/:recipeId/bake` | `38dae5b`, review fixes `bcf1c5a`, timer sort `d7bc884` |
 | 6. Bake Log | `/recipes/:recipeId/log` | `c8ffc52`, review fixes `d4eb83a`, `658fc0e` |
 | 7. Shared recipe | `/r/:shareToken`, `/r/expired` | `02ca899` |
-| 8. Auth and system pages | `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error | built, in review |
+| 8. Auth and system pages | `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error | `d869180`, review fixes (below) |
 
 Also in place across the app: the theme generated from `SKIN.md` (`npm run theme`), self-hosted fonts, the App and Focus shells, SKIN's page top, the overlay sizing rule, and the shared destructive-confirmation dialog.
 
@@ -35,10 +35,19 @@ Agreed: the Discard check also covers date and scale changes; Edit focuses What 
 - `time-mark` is bold in the body text colour with no underline (SKIN.md update), on the Recipe page, the shared page, and in Bake Mode's step text; Bake Mode's timer buttons are unchanged.
 - BACKLOG: Open Graph link preview for shared recipes.
 
+## Prompt 8 review (2026-09-30)
+
+Recorded in BONES-system.md 1.0.0 and BONES-shell.md 1.5.0 (both by Nathan); the build was checked against them:
+
+- Footer at the bottom of short pages in the App shell too (the public shell already did).
+- Forgot password: the sent state replaces the intro, the notice, and the form; new copy ("If there's a Backery account for …").
+- Privacy: Reels says the caption and audio go to a transcription and extraction service.
+- A signed-in owner opening `/login?next=` goes to that same-site path, not always `/recipes`.
+- Tests: the password is cleared after a wrong sign-in; the footer sits at the bottom of Not found.
+
 ## Next
 
-1. Review fixes for prompt 8 (auth and system pages), if any.
-2. Then prompt 9 (accessibility and responsive audit).
+1. Prompt 9 (accessibility and responsive audit): findings first, fixes after review.
 
 ## Half-finished and stubbed
 

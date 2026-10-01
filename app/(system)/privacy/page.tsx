@@ -35,8 +35,8 @@ const sections: { heading: string; body: React.ReactNode }[] = [
     heading: "Reels",
     body: (
       <p>
-        When you import a reel, its caption and spoken words are read to extract the recipe. The video itself isn’t kept; the recipe links back to
-        the original on Instagram.
+        When you import a reel, its caption and audio are sent to a transcription and extraction service to read the recipe. The video itself
+        isn’t kept; the recipe links back to the original on Instagram.
       </p>
     ),
   },

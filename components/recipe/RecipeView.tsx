@@ -143,8 +143,8 @@ export function RecipeView({ initial }: { initial: Recipe }) {
               {formatYield(recipe.yield, scale)}
               {recipe.totalTimeMinutes > 0 && (
                 <>
-                  {" "}
-                  <span aria-hidden="true">·</span> <span className="sr-only">, total time </span>
+                  <span aria-hidden="true"> · </span>
+                  <span className="sr-only">, total time </span>
                   {formatDuration(recipe.totalTimeMinutes)}
                 </>
               )}

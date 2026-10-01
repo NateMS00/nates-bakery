@@ -222,7 +222,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                 <Notice
                   tone="warning"
                   action={
-                    <Button variant="text" onClick={() => setDismissed(new Set([...dismissed, "estimates"]))} className="-my-md -ml-sm">
+                    <Button variant="text" onClick={() => setDismissed(new Set([...dismissed, "estimates"]))} aria-label="Dismiss estimates notice" className="-my-md -ml-sm">
                       Dismiss
                     </Button>
                   }
@@ -240,6 +240,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                       </Button>
                       <Button
                         variant="text"
+                        aria-label="Dismiss timer alerts notice"
                         onClick={() => {
                           setCardDismissed(true);
                           try {

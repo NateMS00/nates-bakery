@@ -7,7 +7,7 @@ export function SiteFooter() {
       <div className="border-t border-hairline py-lg">
         <Link
           href="/privacy"
-          className="inline-flex min-h-touch-min items-center rounded-sm type-caption text-muted underline decoration-1 underline-offset-3 hover:decoration-2 focus-visible:outline-offset-2"
+          className="inline-flex min-h-touch-min min-w-touch-min items-center rounded-sm type-caption text-muted underline decoration-1 underline-offset-3 hover:decoration-2 focus-visible:outline-offset-2"
         >
           Privacy
         </Link>

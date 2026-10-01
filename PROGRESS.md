@@ -47,7 +47,7 @@ Recorded in BONES-system.md 1.0.0 and BONES-shell.md 1.5.0 (both by Nathan); the
 
 ## Next
 
-1. Prompt 9 (accessibility and responsive audit): findings first, fixes after review.
+1. Prompt 9 (accessibility and responsive audit): the audit is done and the trivial fixes are in; the open findings wait for Nathan's decisions (Scale control at tablet width, Watch reel target, Library link names). Re-run with `npx playwright test --config playwright.audit.config.ts`; results land in `audit-results/` (not committed).
 
 ## Half-finished and stubbed
 

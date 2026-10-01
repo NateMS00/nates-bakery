@@ -5,6 +5,9 @@
 export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
   return (
     <html lang="en">
+      <head>
+        <title>Something went wrong · Backery</title>
+      </head>
       <body style={{ fontFamily: "system-ui, sans-serif", padding: 24, maxWidth: 600, margin: "0 auto", lineHeight: 1.5 }}>
         <h1>Something went wrong</h1>
         <p>Backery didn’t load. Try again in a moment.</p>

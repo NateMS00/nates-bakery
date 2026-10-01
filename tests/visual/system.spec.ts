@@ -182,6 +182,9 @@ test.describe("signed in", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page not found");
       await expect(page.getByRole("link", { name: "Go to your recipes" })).toHaveAttribute("href", "/recipes");
       await expectPageBasics(page);
+      // WCAG 2.4.2: a title that says what happened, and only one.
+      await expect(page).toHaveTitle(/not found · Backery$/i);
+      expect(await page.locator("head title").count()).toBe(1);
     }
     await expectPageTop(page);
     await expectTouchTargets(page);
@@ -197,6 +200,7 @@ test.describe("signed in", () => {
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading).toHaveText("Something went wrong");
     await expect(heading).toBeFocused();
+    await expect(page).toHaveTitle("Something went wrong · Backery");
     await expect(page.getByRole("link", { name: "Go to your recipes" })).toHaveAttribute("href", "/recipes");
     await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible(); // still in the App shell
     await expectPageBasics(page);

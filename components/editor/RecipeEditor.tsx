@@ -482,7 +482,7 @@ function StepRow({ number, step, state, setState, onDelete }: { number: number; 
                 <span className="text-muted">No ingredients</span>
               )}
             </p>
-            <Button ref={edit} variant="text" aria-haspopup="dialog" aria-expanded={picking} onClick={() => setPicking((v) => !v)} className="shrink-0">
+            <Button ref={edit} variant="text" aria-haspopup="dialog" aria-expanded={picking} onClick={() => setPicking((v) => !v)} className="min-w-touch-min shrink-0">
               Edit<span className="sr-only"> ingredients for step {number}</span>
             </Button>
             <IngredientsUsedPicker

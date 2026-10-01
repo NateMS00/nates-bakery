@@ -77,6 +77,8 @@ function DraftRow({ draft }: { draft: Draft }) {
         <span aria-hidden="true" className="tablet:hidden">
           {" · "}
         </span>
+        {/* The dot is visual only; screen readers get a comma, so the handle and status don't run together. */}
+        <span className="sr-only">, </span>
         <span className="tablet:text-right">{status}</span>
       </span>
     </>

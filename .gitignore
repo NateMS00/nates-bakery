@@ -33,3 +33,5 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 /screenshots/
+/audit-results/
+/test-results-audit/

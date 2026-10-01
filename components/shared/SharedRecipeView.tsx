@@ -62,8 +62,8 @@ export function SharedRecipeView({ recipe }: { recipe: SharedRecipe }) {
               {formatYield(recipe.yield, scale)}
               {time && (
                 <>
-                  {" "}
-                  <span aria-hidden="true">·</span> <span className="sr-only">, total time </span>
+                  <span aria-hidden="true"> · </span>
+                  <span className="sr-only">, total time </span>
                   {time}
                 </>
               )}

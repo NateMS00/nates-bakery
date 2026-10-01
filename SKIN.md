@@ -360,6 +360,7 @@ components:
     typography: "{typography.button}"
     minHeight: "{sizing.touch-min}"
     padding: "0 {spacing.md}"
+    paddingMobile: "0 {spacing.sm}"
     borderBottom: "3px solid transparent"
   nav-link-hover:
     textColor: "{colors.ink}"
@@ -1170,7 +1171,7 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`back-link`** — The "‹ Library" / "‹ Recipe title" link at the top of a page: bold cobalt `{typography.button}` with an `{sizing.icon-sm}` chevron, no underline at rest, because the chevron and position already make it unmistakably navigation (WCAG only requires the underline for links inside running text). Its hit area is the full `{sizing.touch-min}` height. States: hover underlines at 3px offset; active `{colors.primary-active}` and underlined; focus underlined plus the 3px ring; disabled grey.
 
-**`nav-link`** — The shell's Library and Import links: `{colors.body}` `{typography.button}` with a 3px bottom bar. States: hover darkens to ink and shows a hairline bar; active (current page) turns cobalt with a cobalt bar, and also carries `aria-current="page"`; focus 3px ring; disabled grey.
+**`nav-link`** — The shell's Library and Import links: `{colors.body}` `{typography.button}` with a 3px bottom bar. States: hover darkens to ink and shows a hairline bar; active (current page) turns cobalt with a cobalt bar, and also carries `aria-current="page"`; focus 3px ring; disabled grey. Below 768px its side padding drops to `{spacing.sm}` (8px) and the header items sit 4px apart, so "Nate’s Bakery", Import and the account menu fit on one line at 320px; the 48px tap height never shrinks, and the wordmark never wraps.
 
 **`input`** — Glazed card fill, 1px `{colors.border}` edge (not hairline: it must meet 3:1), `{rounded.md}`, `{sizing.control-height}` tall, `{typography.body-md}`; labels always visible above the field in `{typography.label}` or `{typography.body-sm}` bold, never placeholder-only. States: hover ink border; active cobalt border; focus cobalt border plus 3px ring at 1px offset; disabled grey glaze; error 2px `{colors.error}` border with the message directly below in `{colors.error}` `{typography.body-sm}`, linked with `aria-describedby`.
 

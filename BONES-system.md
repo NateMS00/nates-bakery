@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.3.2: `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error; FLOW-04
 > **Primary Device**: mobile for the auth pages, because a sign-in usually interrupts something started on the iPhone (an import from Instagram's share menu, a link opened from Messages); the system pages have no single primary device
 > **Shell**: BONES-shell.md. Auth pages use the Share variant (public shell). Privacy, Not found and Error use the App variant when signed in and the Share variant otherwise, so a guest or friend never sees owner navigation
-> **Version**: 1.1.0 · **Updated**: 2026-10-01
+> **Version**: 1.1.1 · **Updated**: 2026-10-01
 > **Note**: Written after the build (prompt 8) to record the layout as reviewed and approved, so later changes and the accessibility audit have a spec to check against.
 
 ---
@@ -82,7 +82,7 @@ MAIN
 | State | Trigger | Layout change |
 |---|---|---|
 | Sent | Send reset link with a valid email | Intro and form are removed. H2 "Check your email" and "If there's a Backery account for <email>, a reset link is on its way. It works once, for one hour. Open it on this device, in this browser." The same answer whether or not the email has an account. "Back to sign in" stays |
-| Link expired | Arrived from a reset link that expired, was already used, was opened in a different browser, or came back from Supabase with an error (FLOW-04) | Notice above the form: "That reset link has expired, was already used, or was opened in a different browser." Never an error page |
+| Link expired | Arrived from a reset link that expired, was already used, was opened in a different browser, or came back from Supabase with an error (FLOW-04) | Notice above the form: "That reset link has expired, was already used, or was opened in a different browser. Send a new one below." Never an error page |
 | Invalid email | Send with an empty or malformed email | Field error; focus stays in the field |
 
 ---
@@ -181,12 +181,13 @@ MAIN
 - **Assumed**: Reset links work once and expire after one hour.
 - **Constraint**: The reset email uses Supabase's default template, because new free projects on Supabase's built-in email can't customize templates (Supabase changelog, June 2026). Its link only works in the browser that requested it, which is why the sent message and the Link expired notice mention the browser. A custom SMTP service with a branded email is in the backlog and would lift this.
 - **Assumed**: Only same-site `?next=` paths are followed after sign-in.
-- **Open**: Sign-in still runs on stub credentials until the backend is chosen (SKELETON open question on the backend).
+- **Assumed**: Sign-in uses Supabase Auth with one owner account and sign-ups turned off. The stub credentials exist only in the fixtures backend for development and tests.
 - **Open**: Friend accounts (SKELETON option B) would add a sign-up link here.
 
 ---
 
 ## CHANGE LOG
 
+- 1.1.1 (2026-10-01): Restored "Send a new one below." in the Link expired notice; sign-in now recorded as Supabase Auth.
 - 1.1.0 (2026-10-01): Reset flow on Supabase's default email: sent message adds "Open it on this device, in this browser."; Link expired notice covers links opened in a different browser; constraint recorded.
 - 1.0.0 (2026-09-30): Recorded from the prompt 8 build and review: shell per page, the auth column, sign-in errors without account enumeration, safe `?next=`, the sent state replacing the intro, one password field, autocomplete hints, the footer kept at the bottom on short pages, Privacy sections, Not found and Error ways out.

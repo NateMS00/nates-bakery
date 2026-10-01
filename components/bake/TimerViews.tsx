@@ -12,6 +12,14 @@ import { formatRemaining, remainingMs, type Timer } from "./useTimers";
 // mobile a compact strip pinned above Step nav (2 rows, then "+n more" expands it
 // upward). SKIN timer-row, and timer-row-done once it reaches zero.
 
+/**
+ * Soonest to finish first (finished ones, at 00:00, on top), so the timers about to go
+ * off are always visible and long ones (a 12 h proof) sink under "+n more".
+ */
+export function byRemaining(timers: Timer[], now: number): Timer[] {
+  return [...timers].sort((a, b) => remainingMs(a, now) - remainingMs(b, now) || a.id.localeCompare(b.id));
+}
+
 type Actions = { onPause: (id: string) => void; onResume: (id: string) => void; onClear: (id: string) => void };
 
 function Controls({ timer, onPause, onResume, onClear }: { timer: Timer } & Actions) {
@@ -55,7 +63,7 @@ export function TimersPanel({ timers, now, ...actions }: { timers: Timer[]; now:
     <section aria-labelledby="timers-heading">
       <SectionHeading id="timers-heading">Timers</SectionHeading>
       <ul role="list" className="mt-sm flex flex-col gap-sm">
-        {timers.map((t) => (
+        {byRemaining(timers, now).map((t) => (
           <li
             key={t.id}
             className={cx("rounded-lg border px-base py-md", t.finishedAt ? "border-warning bg-warning-wash" : "border-hairline bg-surface-card")}
@@ -78,7 +86,8 @@ const STRIP_ROWS = 2;
 export function TimerStrip({ timers, now, ...actions }: { timers: Timer[]; now: number } & Actions) {
   const [expanded, setExpanded] = useState(false);
   if (!timers.length) return null;
-  const shown = expanded ? timers : timers.slice(0, STRIP_ROWS);
+  const sorted = byRemaining(timers, now);
+  const shown = expanded ? sorted : sorted.slice(0, STRIP_ROWS);
   return (
     <section aria-label="Timers" className="border-b border-hairline px-(--gutter)">
       <ul role="list">

@@ -148,7 +148,12 @@ test("several timers: the mobile strip shows 2, then +n more", async ({ page }) 
   await page.getByRole("button", { name: "Next step" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
   await page.getByRole("button", { name: "Start 30 min timer" }).click();
+  // Soonest first: 6 min, then 30 min; the 12 h proof sinks to the end.
+  const order = page.getByRole("button", { name: /^Pause timer/ }).filter({ visible: true });
+  await expect(order.first()).toHaveAccessibleName("Pause timer, Step\u00a02 · Dough · 6\u00a0min");
+  await expect(order.nth(1)).toHaveAccessibleName("Pause timer, Step\u00a04 · Butter block");
   if (mobile()) {
+    await expect(order).toHaveCount(2); // the 12 h timer is under "+1 more"
     const more = page.getByRole("button", { name: "+1 more" });
     await expect(more).toBeVisible();
     // Two timers take at most about a sixth of the screen.

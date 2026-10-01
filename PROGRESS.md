@@ -18,7 +18,7 @@ Also in place across the app: the theme generated from `SKIN.md` (`npm run theme
 
 ## Next
 
-1. **Sort timers by time remaining** in Bake Mode, soonest to finish first (the mobile strip and the desktop Timers panel). Not started.
+1. ~~Sort timers by time remaining~~ (done).
 2. **Prompt 6: Bake Log** (`/recipes/:recipeId/log`). Bake Mode's Finish already goes to `/recipes/:recipeId/log?new=1&scale=`, and the Recipe page links to the log; both show not-found until it's built.
 3. Then prompts 7 (Shared recipe), 8 (auth and system pages), and 9 (accessibility audit).
 

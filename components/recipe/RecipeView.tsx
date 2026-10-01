@@ -226,7 +226,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
                       )}
                     </dl>
                   ) : (
-                    <TextLink href={logHref} className="mt-xs inline-flex min-h-touch-min items-center type-body-md">
+                    <TextLink href={`${logHref}?edit=${encodeURIComponent(latest.id)}`} className="mt-xs inline-flex min-h-touch-min items-center type-body-md">
                       Add notes
                     </TextLink>
                   )}

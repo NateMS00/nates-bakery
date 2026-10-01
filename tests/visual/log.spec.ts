@@ -32,7 +32,7 @@ test("entries: first viewport, full list, and page checks", async ({ page }) => 
   // An entry with no notes: "No notes · Add notes".
   const last = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: /30 Aug/ }) });
   await expect(last).toContainText("No notes");
-  await expect(last.getByRole("button", { name: "Add notes, Sun 30 Aug bake" })).toBeVisible();
+  await expect(last.getByRole("link", { name: "Add notes, Sun 30 Aug bake" })).toHaveAttribute("href", "/recipes/pasteis-de-nata/log?edit=nata-b1");
   await shot(page, "01-entries");
   await shot(page, "02-entries-full", true);
 
@@ -201,22 +201,73 @@ test("discard changes: asks inside the form when there's typed text", async ({ p
   await expect(open).toBeFocused();
 });
 
-test("edit: Add notes opens the entry in the form; no rating prompt", async ({ page }) => {
+test("edit: Add notes opens the entry's form at ?edit=; no rating prompt", async ({ page }) => {
   await ready(page, NATA);
-  await page.getByRole("button", { name: "Add notes, Sun 30 Aug bake" }).click();
+  const before = await page.evaluate(() => history.length);
+  await page.getByRole("link", { name: "Add notes, Sun 30 Aug bake" }).click();
+  await expect(page).toHaveURL(/\/log\?edit=nata-b1$/);
   const dialog = form(page, "Edit bake");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("Date")).toHaveValue("2026-08-30");
   await expect(dialog.getByLabel("Scale")).toHaveValue("0.5");
+  await expect(dialog.getByLabel("What changed")).toBeFocused();
+  await page.waitForTimeout(350);
+  await shot(page, "13-add-notes-form");
+
+  // Closing without changes removes the param, replacing the history entry.
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/log$/);
+  expect(await page.evaluate(() => history.length)).toBe(before);
+  await expect(page.getByRole("link", { name: "Add notes, Sun 30 Aug bake" })).toBeFocused();
+
+  await page.getByRole("link", { name: "Add notes, Sun 30 Aug bake" }).click();
   await dialog.getByLabel("How it turned out").fill("Half batch: six tarts, all gone by lunch.");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/log$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const entry = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: /30 Aug/ }) });
   await expect(entry).toContainText("Half batch: six tarts");
-  // The Add notes button is gone, so focus goes to the entry's heading.
+  // The Add notes link is gone, so focus goes to the entry's heading.
   await expect(entry.getByRole("heading")).toBeFocused();
   await expect(page.getByRole("status").filter({ hasText: "Bake saved" })).toBeAttached();
+});
+
+test("edit: the entry menu's Edit, a direct ?edit= link, and an unknown id", async ({ page }) => {
+  await ready(page, NATA);
+  const menu = page.getByRole("button", { name: "More actions, Sat 12 Sep bake" });
+  await menu.click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await expect(page).toHaveURL(/\?edit=nata-b2$/);
+  await expect(form(page, "Edit bake").getByLabel("How it turned out")).toHaveValue("Pale tops. Oven wasn't hot enough.");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/log$/);
+  await expect(menu).toBeFocused();
+
+  // A link straight to the form survives a refresh; closing returns focus to the entry.
+  await ready(page, `${NATA}?edit=nata-b2`);
+  await expect(form(page, "Edit bake")).toBeVisible();
+  await expect(form(page, "Edit bake").getByLabel("What changed")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Sat 12 Sep" })).toBeFocused();
+
+  // Unknown id: the log, no form, no error, and the URL corrected.
+  await ready(page, `${NATA}?edit=no-such-bake`);
+  await expect(page).toHaveURL(/\/log$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bake log");
+  await expect(page.getByText("3 bakes")).toBeVisible();
+});
+
+test("edit: Add notes on the Recipe page opens the latest bake's form", async ({ page }) => {
+  await ready(page, "/recipes/lemon-drizzle-loaf");
+  await page.getByRole("link", { name: "Add notes" }).click();
+  await expect(page).toHaveURL(/\/recipes\/lemon-drizzle-loaf\/log\?edit=l-b1$/);
+  const dialog = form(page, "Edit bake");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Date")).toHaveValue("2026-09-05");
+  await expect(dialog.getByLabel("What changed")).toBeFocused();
 });
 
 test("delete: confirmation, then focus on the next entry", async ({ page }) => {

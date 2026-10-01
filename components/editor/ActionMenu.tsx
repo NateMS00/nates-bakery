@@ -14,7 +14,8 @@ import { TABLET_UP, useMediaQuery } from "@/components/ui/useMediaQuery";
 
 export interface MenuAction {
   label: string;
-  onSelect?: () => void;
+  /** Gets the menu's button, for an overlay that should return focus to it (the mobile sheet is still closing). */
+  onSelect?: (trigger: HTMLButtonElement | null) => void;
   destructive?: boolean;
   disabled?: boolean;
   /** Opens a second list instead of acting (Move to group). */
@@ -43,7 +44,7 @@ export function ActionMenu({ label, title, items }: { label: string; title: stri
     }
     close();
     button.current?.focus();
-    action.onSelect?.();
+    action.onSelect?.(button.current);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {

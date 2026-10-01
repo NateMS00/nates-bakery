@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionMenu } from "@/components/editor/ActionMenu";
 import { RatingPrompt } from "@/components/recipe/RatingPrompt";
 import { BackLink } from "@/components/ui/BackLink";
@@ -20,7 +20,9 @@ import { EntryForm, entryValues, type EntryValues } from "./EntryForm";
 // /recipes/:recipeId/log (Bake Log), BONES-recipes-log.md. One centered reading
 // column (8 of 12 cols on desktop): Page header, then Entries, newest first, 20 at a
 // time. Log a bake is in the header from tablet up and a sticky bar on mobile; it
-// opens the entry form at ?new=1, which Bake Mode's Finish also links to.
+// opens the entry form at ?new=1, which Bake Mode's Finish also links to. Edit and
+// Add notes open an entry's form at ?edit=<entryId> (SKELETON 1.3.2); an unknown id
+// just drops the param. Opening and closing the form replace the history entry.
 
 const PAGE = 20;
 
@@ -34,22 +36,40 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isNew = searchParams.get("new") === "1";
+  const editId = searchParams.get("edit");
   const { scale: bakedScale } = parseScale(searchParams.get("scale") ?? undefined);
 
-  const [editing, setEditing] = useState<BakeLogEntry | null>(null);
-  const [session, setSession] = useState(0);
-  const [lastNewUrl, setLastNewUrl] = useState(false);
-  // ?new=1 arriving (from Log a bake or Bake Mode's Finish) starts a fresh form.
-  if (isNew !== lastNewUrl) {
-    setLastNewUrl(isNew);
-    if (isNew) {
-      setEditing(null);
-      setSession((s) => s + 1);
-    }
-  }
-  const form: FormState | null = editing ? { mode: "edit", entry: editing } : isNew ? { mode: "new" } : null;
+  const entries = recipe.bakeLog;
+  const editEntry = editId ? (entries.find((e) => e.id === editId) ?? null) : null;
+  const formKey = editEntry ? `edit:${editEntry.id}` : isNew ? "new" : null;
 
   const [shown, setShown] = useState(PAGE);
+  const [session, setSession] = useState(0);
+  const [lastKey, setLastKey] = useState<string | null>(null);
+  // Closed at once on Save or Cancel, before the URL catches up.
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  // The last entry opened for editing, kept after the form closes for focus to return to.
+  const [editedId, setEditedId] = useState<string | null>(null);
+  // A form arriving in the URL starts fresh; an edited entry is brought onto the page.
+  if (formKey !== lastKey) {
+    setLastKey(formKey);
+    setDismissed(null);
+    if (formKey) setSession((n) => n + 1);
+    if (formKey === "new") setEditedId(null);
+    if (editEntry) {
+      setEditedId(editEntry.id);
+      const index = entries.indexOf(editEntry);
+      if (index >= shown) setShown(Math.ceil((index + 1) / PAGE) * PAGE);
+    }
+  }
+  const form: FormState | null =
+    formKey === null || formKey === dismissed ? null : editEntry ? { mode: "edit", entry: editEntry } : { mode: "new" };
+
+  // An unknown entry id: show the log without the form and correct the URL, no error.
+  useEffect(() => {
+    if (editId && !editEntry) router.replace(pathname, { scroll: false });
+  }, [editId, editEntry, pathname, router]);
+
   const [deleting, setDeleting] = useState<BakeLogEntry | null>(null);
   const [rateAfterClose, setRateAfterClose] = useState(false);
   const [ratingOpen, setRatingOpen] = useState(false);
@@ -60,12 +80,10 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   const list = useRef<HTMLUListElement>(null);
   const logButton = useRef<HTMLAnchorElement>(null);
   const h1 = useRef<HTMLHeadingElement>(null);
-  /** Where focus returns after the form, decided when it opens (Edit: its opener, or the entry if the opener is gone). */
-  const formReturn = useRef<{ opener: HTMLElement | null; entryId: string } | null>(null);
+  /** What opened the form (Log a bake, Add notes, an entry menu), for focus to return to. */
+  const formOpener = useRef<HTMLElement | null>(null);
   /** Set once a bake is deleted: the heading to focus next, or null for the H1 (the log is empty). */
   const afterDelete = useRef<{ id: string | null } | null>(null);
-
-  const entries = recipe.bakeLog;
 
   /** Polite status message; cleared first so the same words are announced again. */
   function announce(message: string) {
@@ -74,14 +92,16 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   }
 
   function closeForm() {
-    setEditing(null);
-    if (isNew) router.replace(pathname, { scroll: false });
+    setDismissed(formKey);
+    router.replace(pathname, { scroll: false });
   }
 
-  function openEdit(entry: BakeLogEntry) {
-    formReturn.current = { opener: document.activeElement as HTMLElement | null, entryId: entry.id };
-    setEditing(entry);
-    setSession((s) => s + 1);
+  const editHref = (entry: BakeLogEntry) => `${pathname}?edit=${encodeURIComponent(entry.id)}`;
+
+  /** Entry menu > Edit: focus returns to the menu's button. */
+  function openEdit(entry: BakeLogEntry, trigger: HTMLElement | null) {
+    formOpener.current = trigger;
+    router.replace(editHref(entry), { scroll: false });
   }
 
   async function saveNew(fields: BakeFields) {
@@ -151,7 +171,15 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
             data-action-bar
             className="fixed inset-x-0 bottom-0 z-20 bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:shrink-0 tablet:bg-transparent tablet:p-0 tablet:shadow-none"
           >
-            <ButtonLink ref={logButton} href={`${pathname}?new=1`} replace scroll={false} variant="primary" className="w-full tablet:w-auto">
+            <ButtonLink
+              ref={logButton}
+              href={`${pathname}?new=1`}
+              replace
+              scroll={false}
+              variant="primary"
+              className="w-full tablet:w-auto"
+              onClick={(e) => (formOpener.current = e.currentTarget)}
+            >
               Log a bake
             </ButtonLink>
           </div>
@@ -174,7 +202,9 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
                   entry={entry}
                   highlighted={entry.id === highlightId}
                   onHighlightEnd={() => setHighlightId(null)}
-                  onEdit={() => openEdit(entry)}
+                  editHref={editHref(entry)}
+                  onEdit={(trigger) => openEdit(entry, trigger)}
+                  onAddNotes={(link) => (formOpener.current = link)}
                   onDelete={() => setDeleting(entry)}
                 />
               </li>
@@ -200,10 +230,12 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
         onSave={(fields) => (form?.mode === "edit" ? saveEdit(form.entry, fields) : saveNew(fields))}
         onClose={closeForm}
         returnFocus={() => {
-          const edited = formReturn.current;
-          formReturn.current = null;
-          if (edited) return edited.opener?.isConnected ? edited.opener : document.getElementById(headingId(edited.entryId));
-          return logButton.current;
+          // The opener; if it's gone (Add notes disappears once there are notes) or the
+          // form came from the URL, the edited entry's heading, else Log a bake.
+          const opener = formOpener.current;
+          formOpener.current = null;
+          if (opener?.isConnected) return opener;
+          return (editedId && document.getElementById(headingId(editedId))) || logButton.current;
         }}
         onAfterClose={() => {
           if (!rateAfterClose) return;
@@ -257,13 +289,17 @@ function Entry({
   entry,
   highlighted,
   onHighlightEnd,
+  editHref,
   onEdit,
+  onAddNotes,
   onDelete,
 }: {
   entry: BakeLogEntry;
   highlighted: boolean;
   onHighlightEnd: () => void;
-  onEdit: () => void;
+  editHref: string;
+  onEdit: (trigger: HTMLElement | null) => void;
+  onAddNotes: (link: HTMLAnchorElement) => void;
   onDelete: () => void;
 }) {
   const date = formatBakeDate(entry.date);
@@ -311,9 +347,17 @@ function Entry({
       ) : (
         <p className="flex flex-wrap items-center gap-x-sm type-body-md text-muted">
           No notes <span aria-hidden="true">·</span>
-          <Button variant="text" onClick={onEdit} aria-label={`Add notes, ${date} bake`} className="-ml-sm">
+          <ButtonLink
+            href={editHref}
+            replace
+            scroll={false}
+            variant="text"
+            onClick={(e) => onAddNotes(e.currentTarget)}
+            aria-label={`Add notes, ${date} bake`}
+            className="-ml-sm"
+          >
             Add notes
-          </Button>
+          </ButtonLink>
         </p>
       )}
     </Card>

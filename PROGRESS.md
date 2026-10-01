@@ -55,6 +55,17 @@ Audit tooling in `playwright.audit.config.ts` (`npx playwright test --config pla
 - Accepted: truncated text under the text-spacing test. No action: the Timer alerts sheet's heading order.
 - BACKLOG: the Privacy promises review, and the flaky editor row-menu test.
 
+## Phase 1 online (2026-10-01)
+
+Live at **https://nates-bakery.vercel.app** (private repo `NateMS00/nates-bakery`, Vercel Hobby, functions in Portland `pdx1`; Supabase West US, Oregon). See `DEPLOY.md`.
+
+- App renamed **Nate’s Bakery** (specs and code); shared pages read "Shared by Nate".
+- `lib/backend`: one switch for data and auth. `BACKERY_BACKEND=fixtures` (dev, Playwright) or Supabase (production; fixtures are refused on Vercel production).
+- Supabase: `supabase/migrations/0001_init.sql` (tables, owner-only RLS, `save_recipe`, `shared_recipe` for anonymous visitors), checked by `supabase/checks/0001_verify.sql` (19/19) and `tests/supabase` (PGlite + live anonymous checks).
+- Supabase Auth: one owner, sign-ups off, minimum password 12; reset through Supabase's default email (PKCE code to `/auth/confirm`, single use, same browser).
+- Import is off in production (`BACKERY_FEATURE_IMPORT`), with New recipe as the Library's primary action.
+- Smoke-tested live: sign in, recipe, rating, sharing (read-only, "Shared by Nate"), revoke, password reset. Not yet: Add to Home Screen on the iPhone.
+
 ## Next
 
 1. All nine build prompts are done. Next is the backend decision (PROMPTS.md "Later: backend"), and the BACKLOG items.
@@ -63,13 +74,13 @@ Audit tooling in `playwright.audit.config.ts` (`npx playwright test --config pla
 
 Nothing is half-built or uncommitted. These are deliberate stubs until the backend is chosen:
 
-- **Data:** fixtures in server memory (`lib/data/recipes.ts`); changes last until the server restarts. Favorite, rating, bakes, and share links are saved through server actions (`lib/data/actions.ts`), so the Recipe page, Library, and Bake Log agree.
-- **Auth:** a cookie-based stub session in `proxy.ts`. The Sign In pages are final, but their actions run on `lib/auth/stub.ts`: sign in as `owner@backery.local` / `backery-owner`; reset "emails" are written to the server log, and any token starting `reset-` works once.
+- **Data and auth in development and tests:** the fixtures backend (`lib/backend/fixtures`): in-memory fixtures and a stub owner session (`owner@backery.local` / `backery-owner`; reset "emails" go to the server log). Production uses Supabase.
 - **Import service:** takes 4.5 seconds and always produces the same Kouign-amann draft; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail.
 - **Timers:** kept in the browser, not on a server, so locked-phone alerts can't be scheduled; no notifications are sent. The chime is synthesized until a real sound is chosen.
 - **Placeholders:** the Shortcut install link, reel thumbnails.
-- **Owner name** on shared pages ("Shared by Nathan") is a constant in `lib/auth/stub.ts` until accounts exist.
-- **Privacy copy** is a draft for Nathan; its promises (password stored only as a hash, no tracking cookies, reels not kept) must hold when the backend is chosen.
+- **Owner name** on shared pages ("Shared by Nate") is a constant in `lib/auth/rules.ts` until accounts exist.
+- **Privacy copy** is a draft for Nathan to review before launch (BACKLOG).
+- **Import** isn't connected to Supabase; it runs only on fixtures with `BACKERY_FEATURE_IMPORT=on`.
 - **Fault injection:** the `backery_stub_fail_saves` and `backery_stub_fail_loads` cookies make saves or loads fail, for the error states.
 
 Known issues and follow-ups are in `BACKLOG.md`.

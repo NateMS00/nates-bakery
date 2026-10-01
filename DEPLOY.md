@@ -22,13 +22,15 @@ in Vercel's environment variables, never in the repo.
 
 ## Vercel
 
-- [ ] Import the GitHub repository.
-- [ ] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Production). Not `BACKERY_BACKEND`, not `BACKERY_FEATURE_IMPORT`.
+- [x] Import the GitHub repository. (The import created no deployment; an empty commit to `main` started the first one.)
+- [x] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (all environments; previews share the Supabase project for now). Not `BACKERY_BACKEND`, not `BACKERY_FEATURE_IMPORT`.
 - [x] Functions region: Portland (`pdx1`), next to the Supabase project, set in `vercel.json` (applies from the first deploy).
-- [ ] Deploy.
+- [x] Deploy: **https://nates-bakery.vercel.app** (2026-10-01). Deployment-specific `…-nate-bcff.vercel.app` addresses sit behind Vercel's login.
 
 ## After the first deploy
 
-- [ ] **Supabase → URL Configuration: update the Site URL and redirect URLs to the Vercel address** (`https://…vercel.app` and `https://…vercel.app/**`). Reset links come back to `/auth/confirm` on the address that asked; Supabase only allows addresses in this list.
-- [ ] Smoke check on the live site: signed out, every table read is denied; sign in; create a recipe; share it and open `/r/…` in a private window; forgot password → the emailed link → set a new password (works once) → sign in.
-- [ ] Run the live database tests: `npx playwright test --config playwright.supabase.config.ts` with the test variables set.
+- [x] **Supabase → URL Configuration: update the Site URL and redirect URLs to the Vercel address** (`https://…vercel.app` and `https://…vercel.app/**`). Reset links come back to `/auth/confirm` on the address that asked; Supabase only allows addresses in this list.
+- [x] Smoke check on the live site (2026-10-01): signed out → sign in, `/import` hidden, bad reset code → notice, functions in pdx1, manifest "Nate’s Bakery"/"Nate’s"; signed in: recipe, rating, share read-only ("Shared by Nate"), revoke, password reset through the live address.
+- [ ] Add to Home Screen on the iPhone (label "Nate’s").
+- [x] Live database tests, anonymous checks (tables denied, `save_recipe` denied, unknown token) pass.
+- [ ] Live shared-recipe field check (needs `BACKERY_TEST_SHARE_TOKEN`) and live catalog RLS check (needs `BACKERY_TEST_DATABASE_URL`).

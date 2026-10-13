@@ -34,3 +34,11 @@ in Vercel's environment variables, never in the repo.
 - [ ] Add to Home Screen on the iPhone (label "Nate’s").
 - [x] Live database tests, anonymous checks (tables denied, `save_recipe` denied, unknown token) pass.
 - [ ] Live shared-recipe field check (needs `BACKERY_TEST_SHARE_TOKEN`) and live catalog RLS check (needs `BACKERY_TEST_DATABASE_URL`).
+
+## Keep-alive (free Supabase projects pause after 7 days without activity)
+
+`.github/workflows/supabase-keepalive.yml` runs on GitHub Actions at 09:17 UTC on days 1, 4, 7, … of each month (never more than 3 days apart): one anonymous call to `shared_recipe` with a made-up token, public key only, which returns `null`. Anything but HTTP 200 and `null` fails the run.
+
+- [ ] Repo secrets (Settings → Secrets and variables → Actions): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (the public values, as in Vercel).
+- [ ] First run started by hand (Actions → Supabase keep-alive → Run workflow) passes.
+- Failures: GitHub emails the repo owner about failed scheduled runs (Settings → Notifications → Actions, on by default); run history is under the Actions tab. If Supabase pauses anyway, resume it in the dashboard, then start a run by hand.

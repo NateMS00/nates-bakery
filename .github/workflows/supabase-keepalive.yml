@@ -1,0 +1,44 @@
+# Keeps the free Supabase project from pausing (it pauses after 7 days without activity).
+# Every 3 days: one call to shared_recipe with a made-up token, as an anonymous visitor,
+# with the public key only. It returns null, so nothing private is read. The run fails
+# (and GitHub emails the repo owner) unless the answer is HTTP 200 and null: a paused
+# project, a wrong address, or a wrong key all fail it.
+# Secrets (repo → Settings → Secrets and variables → Actions): NEXT_PUBLIC_SUPABASE_URL,
+# NEXT_PUBLIC_SUPABASE_ANON_KEY, the same public values as in Vercel.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # 09:17 UTC on days 1, 4, 7, … of the month: never more than 3 days apart.
+    - cron: "17 9 */3 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Read shared_recipe with an unknown token
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Set the NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY repo secrets"
+            exit 1
+          fi
+          status=$(curl -sS -o body.txt -w '%{http_code}' --retry 2 --retry-all-errors --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/shared_recipe" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"p_token":"keepalive-unknown-token-0"}')
+          body=$(cat body.txt)
+          echo "HTTP $status: $body"
+          if [ "$status" != "200" ] || [ "$body" != "null" ]; then
+            echo "::error::Supabase answered HTTP $status (expected 200 and null): paused project, wrong address, or wrong key?"
+            exit 1
+          fi

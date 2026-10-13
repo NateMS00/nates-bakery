@@ -1,6 +1,6 @@
 # Progress
 
-Where the build stands, for picking it up again. Updated 2026-09-30.
+Where the build stands, for picking it up again. Updated 2026-10-13.
 
 ## Done
 
@@ -68,7 +68,13 @@ Live at **https://nates-bakery.vercel.app** (private repo `NateMS00/nates-bakery
 
 ## Next
 
-1. All nine build prompts are done. Next is the backend decision (PROMPTS.md "Later: backend"), and the BACKLOG items.
+Priority order (Nathan, 2026-10-13):
+
+1. Reel import (connect the import service; Import is off in production until then).
+2. Timer alerts (locked-phone notifications for Bake Mode timers).
+3. App icons for the Home Screen (BACKLOG).
+
+The other BACKLOG items come after these.
 
 ## Half-finished and stubbed
 

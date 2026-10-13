@@ -94,10 +94,12 @@ Known issues and follow-ups are in `BACKLOG.md`.
 ## iPhone testing (2026-09-30)
 
 - `npm run dev:lan` serves the dev server on the local network (`next.config.ts` allows this machine's own LAN addresses); open `http://<Mac's IP>:3000` in Safari. Plain HTTP, so wake lock, clipboard read, and notifications are unavailable on the phone.
-- Everything pinned to the bottom (sheets, action bars, Bake Mode's step nav and timer strip, the full-screen log form) follows the visual viewport through `components/system/ViewportVars.tsx` and the `pin-bottom` utility, so it stays above Safari's toolbar and the keyboard. Tested in Chrome with a simulated visual viewport (`tests/visual/viewport.spec.ts`); WebKit isn't available on macOS 12.
+- Everything pinned to the bottom (sheets, action bars, Bake Mode's step nav and timer strip, the full-screen log form) follows the visual viewport through `components/system/ViewportVars.tsx` and the `pin-bottom` utility, so it stays above Safari's toolbar and the keyboard. Tested with a simulated visual viewport (`tests/visual/viewport.spec.ts`) in Chromium and, since 2026-10-13, in WebKit (`mobile-webkit`).
 - `suppressHydrationWarning` on `<html>` and the text inputs, for attributes Chrome for iOS injects before hydration.
 - Confirmed in Safari on the iPhone (2026-10-01), after a debug readout found the causes: sheets use `height: auto` on phones (Safari sized `fit-content` from the insets and clipped them to 118px); the full-screen log form fills the strip around Safari's address pill above the keyboard; the focused field is re-scrolled into view while the keyboard opens, with the footer's height as scroll padding; focus rings show for keyboard use only (`components/system/InputModality.tsx`), while focus still moves as BONES-shell asks; row menu sheets start on their first action.
 
 ## Running it
 
-Node 20 through nvm (the system Node is 14): `nvm use`, then `npm run dev`. Checks: `npm run typecheck`, `npm run lint`, `npm run build`, then `npx playwright test` (it uses the installed Google Chrome, because Playwright no longer ships Chromium for macOS 12). Screenshots land in `screenshots/`, which isn't committed.
+Node 24 (LTS) through nvm, matching Vercel's 24.x: `nvm use` (reads `.nvmrc`), `npm ci`, then `npm run dev`. Playwright's browsers once per machine: `npx playwright install chromium webkit`. Checks: `npm run typecheck`, `npm run lint`, `npm run build`, then `npx playwright test`. Screenshots land in `screenshots/`, which isn't committed.
+
+The suite runs in Playwright's own Chromium (`mobile-light`, `mobile-dark`, `desktop-light`, `desktop-dark`) and in WebKit at iPhone size (`mobile-webkit`: iPhone 13 user agent, 390×844, light), so Safari-style bugs show up; `--project mobile-webkit` runs WebKit alone. First WebKit run (2026-10-13): 103 passed, 10 failed, 9 skipped, not fixed yet; the Chromium projects: 450 passed, 38 skipped.

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture } from "./helpers";
+import { capture, phoneWebKit } from "./helpers";
 
 // Bottom-pinned UI follows the visible area (components/system/ViewportVars.tsx), not the
 // layout viewport. Chrome can't show Safari's toolbar or a real keyboard, so these tests
@@ -180,8 +180,11 @@ test("after a tap, focus moves into and out of sheets without a ring; Tab brings
   const sheet = page.getByRole("dialog", { name: "How was it?" });
   await expect(sheet.getByRole("radio", { name: "Rate 1 out of 5" })).toBeFocused();
   expect(await ring(page)).toEqual({ name: "Rate 1 out of 5", outline: "none" });
-  await page.keyboard.press("Tab");
-  expect((await ring(page)).outline).toBe("3px");
+  if (!phoneWebKit()) {
+    // Keyboard Tab doesn't reach buttons in iPhone-sized WebKit (helpers.ts).
+    await page.keyboard.press("Tab");
+    expect((await ring(page)).outline).toBe("3px");
+  }
   await sheet.getByRole("button", { name: "Skip" }).tap();
   await expect(mark).toBeFocused();
   expect(await ring(page)).toEqual({ name: "Mark as baked", outline: "none" });

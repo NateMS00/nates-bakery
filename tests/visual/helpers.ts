@@ -74,8 +74,26 @@ export async function expectFitsContent(page: Page, name: string) {
   expect(ratio).toBeLessThanOrEqual(0.9);
 }
 
+/**
+ * The iPhone-sized WebKit project (mobile-webkit). Its Tab only visits form fields, as
+ * in Safari without "Press Tab to highlight each item", so keyboard Tab checks don't
+ * apply there; and a click doesn't focus the button it lands on.
+ */
+export const phoneWebKit = () => {
+  const { browserName, isMobile } = test.info().project.use;
+  return browserName === "webkit" && Boolean(isMobile);
+};
+
+/**
+ * Waits for the fonts in use. WebKit's document.fonts.ready also waits for a streamed
+ * page to finish, which would wait past a Loading state.
+ */
+export const fontsLoaded = (page: Page) =>
+  page.evaluate(() => Promise.all([...document.fonts].filter((f) => f.status === "loading").map((f) => f.loaded)));
+
 /** Tabs through `stops` elements after the skip link; each must show a 3px outline (its own or its field wrapper's). */
 export async function expectFocusRings(page: Page, stops: number) {
+  if (phoneWebKit()) return; // keyboard Tab checks run in the Chromium projects
   await page.keyboard.press("Tab"); // skip link
   for (let i = 0; i < stops; i++) {
     await page.keyboard.press("Tab");

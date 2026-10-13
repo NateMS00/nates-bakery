@@ -254,6 +254,9 @@ test("exit: straight out without timers; confirmation with a timer running", asy
   await exit.click();
   await page.getByRole("dialog", { name: "Stop timers and leave?" }).getByRole("button", { name: "Leave" }).click();
   await page.waitForURL(/\/recipes\/pasteis-de-nata\?scale=1\.5$/);
+  // The URL changes before the Recipe page renders; WebKit lets the rest of that
+  // client-side navigation interrupt a page.goto started too soon.
+  await page.getByRole("link", { name: "Start baking" }).waitFor();
   // Timers stopped: coming back shows none.
   await open(page, NATA);
   await expect(page.getByRole("button", { name: "Start 15 min timer" })).toBeEnabled();

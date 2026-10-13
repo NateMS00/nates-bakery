@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
+import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, phoneWebKit, ready } from "./helpers";
 
 // /import/:draftId (Review Import), /recipes/new, and /recipes/:recipeId/edit: the
 // shared Recipe Editor, BONES-import-detail.md. Each test gets its own copy of the
@@ -62,7 +62,8 @@ test("transcript: Read more expands in place, Show less collapses", async ({ pag
   await toggle.click();
   const less = page.getByRole("button", { name: "Show less" });
   await expect(less).toHaveAttribute("aria-expanded", "true");
-  await expect(less).toBeFocused(); // expanding doesn't move focus
+  // Expanding doesn't move focus. (In WebKit the click doesn't focus the button to begin with.)
+  if (!phoneWebKit()) await expect(less).toBeFocused();
   await expect(page.getByText("Spoken:")).toBeVisible();
   await page.locator("#source-heading").scrollIntoViewIfNeeded();
   await shot(page, "03-transcript-expanded");

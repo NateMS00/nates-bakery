@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
+import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouchTargets, fontsLoaded, phoneWebKit, ready } from "./helpers";
 
 // /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md, plus the
 // Definition of Done checks from CLAUDE.md. Screenshots land in screenshots/recipe/.
@@ -98,8 +98,9 @@ test("converted marker reveals the original amount", async ({ page }) => {
   await shot(page, "07-converted-open");
 });
 
-test("share dialog: copy, revoke, create", async ({ page, context, isMobile }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("share dialog: copy, revoke, create", async ({ page, context, isMobile, browserName }) => {
+  // WebKit has no clipboard-write permission to grant, and Copy works there without one.
+  if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await ready(page, NATA);
   const share = page.getByRole("button", { name: "Share" });
   await share.click();
@@ -242,9 +243,10 @@ test("not found for an unknown recipe", async ({ page }) => {
 test("loading state", async ({ page }) => {
   await page.goto(`http://localhost:3101${NATA}`, { waitUntil: "commit" });
   await page.getByText("Loading recipe").waitFor({ state: "attached" });
-  await page.evaluate(() => document.fonts.ready);
-  await shot(page, "21-loading");
+  await fontsLoaded(page);
   await expect(page.getByRole("button", { name: "Start baking" })).toBeDisabled();
+  // WebKit's screenshots wait for a streamed page to finish, so they'd show the recipe.
+  if (!phoneWebKit()) await shot(page, "21-loading");
 });
 
 test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control fits", async ({ page }) => {

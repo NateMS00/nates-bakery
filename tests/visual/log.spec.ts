@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
+import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, fontsLoaded, phoneWebKit, ready } from "./helpers";
 
 // /recipes/:recipeId/log (Bake Log), BONES-recipes-log.md: entries, Show more, empty,
 // loading, not found, the entry form (new and edit), Discard changes, Delete
@@ -78,11 +78,12 @@ test("empty state", async ({ page }) => {
 test("loading: header and 3 placeholder entries", async ({ page }) => {
   await page.goto(`http://localhost:3101${NATA}`, { waitUntil: "commit" });
   await page.getByText("Loading bakes").waitFor({ state: "attached" });
-  await page.evaluate(() => document.fonts.ready);
+  await fontsLoaded(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bake log");
   await expect(page.locator("main li")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Log a bake" })).toBeDisabled();
-  await shot(page, "04-loading");
+  // WebKit's screenshots wait for a streamed page to finish, so they'd show the entries.
+  if (!phoneWebKit()) await shot(page, "04-loading");
   await expect(page.getByText("3 bakes")).toBeVisible({ timeout: 15_000 });
 });
 
@@ -251,6 +252,8 @@ test("edit: the entry menu's Edit, a direct ?edit= link, and an unknown id", asy
   await expect(form(page, "Edit bake").getByLabel("What changed")).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Sat 12 Sep" })).toBeFocused();
+  // Closing replaces the URL; WebKit lets that interrupt a page.goto started too soon.
+  await expect(page).toHaveURL(/\/log$/);
 
   // Unknown id: the log, no form, no error, and the URL corrected.
   await ready(page, `${NATA}?edit=no-such-bake`);

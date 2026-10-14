@@ -15,6 +15,8 @@ export interface EditorIngredient {
   status: Exclude<AmountStatus, "to-taste">;
   /** The stated amount before conversion ("1 cup"). */
   original?: string;
+  /** Optional remark about the ingredient (Add note / Edit note in the row menu). */
+  note?: string;
 }
 
 export interface EditorStep {
@@ -181,6 +183,7 @@ export function fromRecipe(r: Recipe): EditorState {
       toTaste: i.status === "to-taste",
       status: i.status === "to-taste" ? "confirmed" : i.status,
       original: i.original,
+      note: i.note,
     })),
     steps: r.steps.map((s) => ({ id: s.id, groupId: s.groupId, text: s.text, ingredientIds: s.ingredientIds })),
   };
@@ -216,6 +219,7 @@ export function toRecipeContent(state: EditorState): Omit<Recipe, "id" | "rating
       grams: i.toTaste ? null : parseGrams(i.amount),
       status: i.toTaste ? "to-taste" : i.status,
       original: i.status === "converted" ? i.original : undefined,
+      note: i.note?.trim() || undefined,
     })),
     steps: state.steps
       .filter((s) => s.text.trim())

@@ -58,6 +58,7 @@ test("shared recipe: first viewport, full page, and page checks (signed out)", a
   // Nothing private reaches the browser.
   const html = await page.content();
   expect(html).not.toContain("Rolled the log tighter"); // a bake log note
+  expect(html).not.toContain("the brighter the custard"); // an ingredient note
   expect(html).not.toContain("pasteis-de-nata"); // the owner's recipe URL
 
   // Only the Estimated marker, read as "Estimated amount"; no Converted marker.

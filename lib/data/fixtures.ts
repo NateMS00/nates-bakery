@@ -10,7 +10,7 @@ function ing(
   groupId: string | null,
   name: string,
   grams: number | null,
-  extra: Partial<Pick<Ingredient, "status" | "original">> = {},
+  extra: Partial<Pick<Ingredient, "status" | "original" | "note">> = {},
 ): Ingredient {
   return {
     id,
@@ -19,6 +19,7 @@ function ing(
     grams,
     status: extra.status ?? (grams === null ? "to-taste" : "confirmed"),
     original: extra.original,
+    note: extra.note,
   };
 }
 
@@ -57,7 +58,7 @@ const pasteisDeNata: Recipe = {
     ing("c-flour", "ig-custard", "Plain flour", 30),
     ing("c-sugar", "ig-custard", "Caster sugar", 250, { status: "converted", original: "1¼ cups" }),
     ing("c-water", "ig-custard", "Water", 160),
-    ing("c-yolks", "ig-custard", "Egg yolks", 108, { status: "estimated" }),
+    ing("c-yolks", "ig-custard", "Egg yolks", 108, { status: "estimated", note: "Creator: the fresher the eggs, the brighter the custard" }),
     ing("c-aromatics", "ig-custard", "Cinnamon stick and lemon peel", null),
   ],
   steps: [

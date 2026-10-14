@@ -7,7 +7,8 @@ import { formatGrams } from "@/lib/format";
 import type { Group, Ingredient } from "@/lib/data/types";
 
 // BONES Ingredients: one row per ingredient, grams on a shared right edge,
-// markers under the name, group headings in the recipe's order. No limit.
+// markers under the name, then the ingredient's note (never on shared pages), group
+// headings in the recipe's order. No limit.
 
 export function groupItems<T extends { groupId: string | null }>(groups: Group[], items: T[]) {
   if (groups.length === 0) return [{ group: null, items }];
@@ -77,6 +78,12 @@ function IngredientRow({ ingredient, scale, shared }: { ingredient: Ingredient; 
             </>
           )}
         </div>
+      )}
+      {ingredient.note && !shared && (
+        <p className="col-span-2 mt-xs type-body-sm text-muted">
+          <span className="sr-only">Note: </span>
+          {ingredient.note}
+        </p>
       )}
     </li>
   );

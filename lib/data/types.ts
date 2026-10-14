@@ -34,6 +34,11 @@ export interface Ingredient {
   status: AmountStatus;
   /** The stated amount before conversion, kept while status is "converted". */
   original?: string;
+  /**
+   * A remark about this ingredient: what the creator said ("Creator: 100 g makes it
+   * less sweet"), or the owner's own. Never on shared pages (BONES-r-detail).
+   */
+  note?: string;
 }
 
 export interface TimeMark {

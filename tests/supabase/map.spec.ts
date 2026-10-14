@@ -25,9 +25,9 @@ const row: RecipeRow = {
   ],
   step_groups: [],
   ingredients: [
-    { id: "i-sugar", group_id: "g-custard", name: "Caster sugar", grams: "250", status: "converted", original: "1¼ cups", position: 2 },
-    { id: "i-flour", group_id: "g-pastry", name: "Plain flour", grams: 250, status: "confirmed", original: null, position: 1 },
-    { id: "i-cinnamon", group_id: null, name: "Cinnamon stick", grams: null, status: "to-taste", original: null, position: 3 },
+    { id: "i-sugar", group_id: "g-custard", name: "Caster sugar", grams: "250", status: "converted", original: "1¼ cups", note: "Creator: caster dissolves faster", position: 2 },
+    { id: "i-flour", group_id: "g-pastry", name: "Plain flour", grams: 250, status: "confirmed", original: null, note: null, position: 1 },
+    { id: "i-cinnamon", group_id: null, name: "Cinnamon stick", grams: null, status: "to-taste", original: null, note: null, position: 3 },
   ],
   steps: [
     { id: "s-2", group_id: null, text: "Bake for 12 minutes.", time_marks: [{ text: "12 minutes", minutes: 12 }], position: 2, step_ingredients: [] },
@@ -45,7 +45,8 @@ test("a recipe row becomes the app's Recipe, in the owner's order", () => {
   const r = recipeFromRow(row);
   expect(r.ingredientGroups.map((g) => g.id)).toEqual(["g-pastry", "g-custard"]);
   expect(r.ingredients.map((i) => i.id)).toEqual(["i-flour", "i-sugar", "i-cinnamon"]);
-  expect(r.ingredients[1]).toEqual({ id: "i-sugar", groupId: "g-custard", name: "Caster sugar", grams: 250, status: "converted", original: "1¼ cups" });
+  expect(r.ingredients[1]).toEqual({ id: "i-sugar", groupId: "g-custard", name: "Caster sugar", grams: 250, status: "converted", original: "1¼ cups", note: "Creator: caster dissolves faster" });
+  expect(r.ingredients[0].note).toBeUndefined();
   expect(r.ingredients[2].grams).toBeNull();
   expect(r.steps.map((s) => s.id)).toEqual(["s-1", "s-2"]);
   expect(r.steps[0].ingredientIds).toEqual(["i-flour"]);
@@ -89,7 +90,7 @@ test("the editor's content round-trips to what save_recipe stores", () => {
       source_reel_url: content.source?.reelUrl ?? null,
       ingredient_groups: content.ingredientGroups.map((g, i) => ({ ...g, position: i + 1 })),
       step_groups: content.stepGroups.map((g, i) => ({ ...g, position: i + 1 })),
-      ingredients: content.ingredients.map((i, n) => ({ id: i.id, group_id: i.groupId, name: i.name, grams: i.grams, status: i.status, original: i.original ?? null, position: n + 1 })),
+      ingredients: content.ingredients.map((i, n) => ({ id: i.id, group_id: i.groupId, name: i.name, grams: i.grams, status: i.status, original: i.original ?? null, note: i.note ?? null, position: n + 1 })),
       steps: content.steps.map((s, n) => ({ id: s.id, group_id: s.groupId, text: s.text, time_marks: s.timeMarks, position: n + 1, step_ingredients: s.ingredientIds.map((ingredient_id) => ({ ingredient_id })) })),
     });
     for (const key of ["title", "category", "yield", "totalTimeMinutes", "source", "ingredientGroups", "stepGroups", "ingredients", "steps"] as const) {

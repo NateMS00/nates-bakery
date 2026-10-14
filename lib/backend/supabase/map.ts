@@ -10,14 +10,14 @@ export const RECIPE_SELECT = `
   source_creator_handle, source_reel_url, rating, favorite, created_at,
   ingredient_groups ( id, name, position ),
   step_groups ( id, name, position ),
-  ingredients ( id, group_id, name, grams, status, original, position ),
+  ingredients ( id, group_id, name, grams, status, original, note, position ),
   steps ( id, group_id, text, time_marks, position, step_ingredients ( ingredient_id ) ),
   bakes ( id, baked_on, scale, what_changed, how_it_turned_out, created_at ),
   share_links ( token, created_at )
 `;
 
 interface GroupRow { id: string; name: string; position: number }
-interface IngredientRow { id: string; group_id: string | null; name: string; grams: number | string | null; status: Recipe["ingredients"][number]["status"]; original: string | null; position: number }
+interface IngredientRow { id: string; group_id: string | null; name: string; grams: number | string | null; status: Recipe["ingredients"][number]["status"]; original: string | null; note: string | null; position: number }
 interface StepRow { id: string; group_id: string | null; text: string; time_marks: { text: string; minutes: number }[]; position: number; step_ingredients: { ingredient_id: string }[] }
 export interface BakeRow { id: string; baked_on: string; scale: number | string; what_changed: string | null; how_it_turned_out: string | null; created_at: string }
 interface ShareRow { token: string; created_at: string }
@@ -80,6 +80,7 @@ export function recipeFromRow(r: RecipeRow): Recipe {
       grams: num(i.grams),
       status: i.status,
       original: i.original ?? undefined,
+      note: i.note ?? undefined,
     })),
     steps: byPosition(r.steps).map((s) => ({
       id: s.id,

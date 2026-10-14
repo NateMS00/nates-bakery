@@ -249,6 +249,49 @@ test("row menu: move, move to group, delete with Undo", async ({ page }) => {
   expect(await page.getByRole("textbox", { name: /name$/ }).evaluateAll((els) => els.filter((e) => (e as HTMLTextAreaElement).value === "Eggs").length)).toBe(1);
 });
 
+test("ingredient notes: add, edit, and remove from the row menu", async ({ page }) => {
+  await ready(page, "/recipes/pasteis-de-nata/edit");
+  const menu = page.getByRole("button", { name: "More actions, Egg yolks" });
+  await expect(page.getByText("Creator: the fresher the eggs, the brighter the custard")).toBeVisible();
+
+  // Edit: the field starts with the note and has focus; Esc keeps it; focus returns to the menu.
+  await menu.click();
+  await page.getByRole("menuitem", { name: "Edit note" }).click();
+  const dialog = page.getByRole("dialog", { name: "Edit note" });
+  const field = dialog.getByRole("textbox", { name: "Note for Egg yolks" });
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("Creator: the fresher the eggs, the brighter the custard");
+  await expect(field).toHaveAttribute("maxlength", "300");
+  await expectFitsContent(page, "Edit note");
+  await page.waitForTimeout(350);
+  await shot(page, "13-edit-note");
+  await field.fill("Changed, then cancelled");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(menu).toBeFocused();
+  await expect(page.getByText("Creator: the fresher the eggs, the brighter the custard")).toBeVisible();
+
+  // Saved empty: the note is removed, and the menu offers Add note.
+  await menu.click();
+  await page.getByRole("menuitem", { name: "Edit note" }).click();
+  await dialog.getByRole("textbox").fill("  ");
+  await dialog.getByRole("button", { name: "Save note" }).click();
+  await expect(menu).toBeFocused();
+  await expect(page.getByText(/the brighter the custard/)).toHaveCount(0);
+
+  // Add note on another ingredient, then save the recipe: it shows on the Recipe page.
+  await page.getByRole("button", { name: "More actions, Whole milk" }).click();
+  await page.getByRole("menuitem", { name: "Add note" }).click();
+  const add = page.getByRole("dialog", { name: "Add note" });
+  await add.getByRole("textbox", { name: "Note for Whole milk" }).fill("Full fat only");
+  await add.getByRole("button", { name: "Save note" }).click();
+  await expect(page.getByRole("button", { name: "More actions, Whole milk" })).toBeFocused();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForURL(/\/recipes\/pasteis-de-nata$/);
+  await expect(page.getByRole("listitem").filter({ hasText: "Whole milk" }).getByText("Full fat only")).toBeVisible();
+  await expect(page.getByText(/the brighter the custard/)).toHaveCount(0);
+});
+
 test("group picker adds a group; steps detect times", async ({ page }) => {
   await ready(page, BABKA);
   await page.getByRole("button", { name: "Add ingredient group" }).click();

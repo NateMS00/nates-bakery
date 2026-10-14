@@ -76,7 +76,9 @@ export const fixturesData: DataBackend = {
     await simulatedLatency();
     const recipe = (await db()).recipes.find((r) => r.shareLink?.token === token);
     if (!recipe) return null;
-    const { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating } = recipe;
+    const { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, steps, rating } = recipe;
+    // As shared_recipe: no notes and no "was 1 cup" (Converted reads as confirmed).
+    const ingredients = recipe.ingredients.map(({ id, groupId, name, grams, status }) => ({ id, groupId, name, grams, status: status === "converted" ? ("confirmed" as const) : status }));
     return { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating, sharedBy: OWNER_NAME };
   },
 

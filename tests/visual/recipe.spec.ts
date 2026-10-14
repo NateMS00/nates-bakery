@@ -87,6 +87,19 @@ test("invalid scale renders 1× and corrects the URL", async ({ page }) => {
   await expect(page.getByRole("button", { name: "1×" })).toHaveAttribute("aria-pressed", "true");
 });
 
+test("an ingredient note shows as a muted line under the ingredient", async ({ page }) => {
+  await ready(page, NATA);
+  const row = page.getByRole("listitem").filter({ hasText: "Egg yolks" });
+  const note = row.getByText("Creator: the fresher the eggs, the brighter the custard");
+  await expect(note).toBeVisible();
+  // Read as a note, after the Estimated marker.
+  await expect(note).toHaveText(/^Note: Creator: the fresher/);
+  const [marker, line] = await Promise.all([row.getByText("Estimated").boundingBox(), note.boundingBox()]);
+  expect(line!.y).toBeGreaterThan(marker!.y);
+  await note.scrollIntoViewIfNeeded();
+  await shot(page, "07b-ingredient-note");
+});
+
 test("converted marker reveals the original amount", async ({ page }) => {
   await ready(page, NATA);
   const marker = page.getByRole("button", { name: /Converted/ });

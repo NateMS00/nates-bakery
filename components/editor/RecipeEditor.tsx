@@ -28,6 +28,7 @@ import type { Category, Group } from "@/lib/data/types";
 import { ActionMenu, type MenuAction } from "./ActionMenu";
 import { GroupPicker } from "./GroupPicker";
 import { IngredientsUsedPicker } from "./IngredientsUsedPicker";
+import { NoteDialog } from "./NoteDialog";
 import {
   addGroup,
   addRow,
@@ -333,6 +334,10 @@ function IngredientRow({
   onDelete: () => void;
 }) {
   const set = (patch: Partial<EditorIngredient>) => setState((s) => updateRow(s, "ingredient", ingredient.id, patch));
+  // Add note / Edit note: a new dialog each time (fresh text), focus back to the row menu.
+  const [noteSession, setNoteSession] = useState(0);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteOpener, setNoteOpener] = useState<HTMLElement | null>(null);
   const missing = isMissing(ingredient);
   const name = ingredient.name.trim() || `ingredient ${index}`;
   const errorId = `${amountFieldId(ingredient.id)}-error`;
@@ -392,6 +397,14 @@ function IngredientRow({
             label={`More actions, ${name}`}
             title={name}
             items={rowActions(state, setState, "ingredient", ingredient.id, ingredient.groupId, onDelete, [
+              {
+                label: ingredient.note ? "Edit note" : "Add note",
+                onSelect: (trigger) => {
+                  setNoteOpener(trigger);
+                  setNoteSession((n) => n + 1);
+                  setNoteOpen(true);
+                },
+              },
               ingredient.toTaste
                 ? { label: "Use an amount", onSelect: () => set({ toTaste: false }) }
                 : { label: "Mark as to taste", onSelect: () => set({ toTaste: true, amount: "" }) },
@@ -409,6 +422,24 @@ function IngredientRow({
           was {ingredient.original}
         </p>
       )}
+      {ingredient.note && (
+        <p className="mt-xs type-body-sm text-muted">
+          <span className="sr-only">Note: </span>
+          {ingredient.note}
+        </p>
+      )}
+      <NoteDialog
+        key={noteSession}
+        open={noteOpen}
+        ingredientName={name}
+        note={ingredient.note}
+        onSave={(note) => {
+          set({ note });
+          setNoteOpen(false);
+        }}
+        onClose={() => setNoteOpen(false)}
+        returnFocus={() => (noteOpener?.isConnected ? noteOpener : null)}
+      />
     </li>
   );
 }

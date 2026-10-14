@@ -1,0 +1,20 @@
+Turn this Instagram recipe caption into JSON. Reply with the JSON only, no other text.
+
+Rules:
+- Translate everything to English, except "amount": copy it exactly as written in the caption, in its own language.
+- Never convert units, never calculate, never invent an amount. If the caption gives no amount, use "amount": null and "parts": [].
+- "parts" splits the amount into pieces. "qty" is the number as written ("1", "½", "1 1/2", "2-3"). "unit" is one of: g, kg, ml, l, cup, tbsp, tsp, oz, lb, fl_oz, stick, can, packet, piece, pinch, to_taste, other.
+- Counted things (2 eggs, 1 banana) use piece. A stick or barra of butter uses stick. "To taste" or "al gusto" uses to_taste with "qty": null.
+- "name": the ingredient in English. Keep words like packed, melted, unsalted, room temperature.
+- "note": only what the creator says about that one ingredient (a swap, a brand, an amount tip). Otherwise null.
+- Use the caption's own sections as groups (Dough, Filling, Topping). If it has none, use one group with "name": null.
+- "steps": one per instruction, in order, in English. "uses" lists the ingredient names, exactly as you wrote them above, that the step uses.
+- "category": one of bread, viennoiserie, quick-bread, cake, cookie-bar, pie-tart, pastry, dessert, other.
+- "language": the caption's language, in English ("Spanish").
+- "yield" and "totalTime": only if the caption states them, otherwise null. Never add up step times.
+- If the caption has no ingredients, reply {"recipe": false}.
+
+Format:
+{"language":"Spanish","title":"Chocolate chip cookies","category":"cookie-bar","yield":{"quantity":12,"unit":"cookie","unitPlural":"cookies"},"totalTime":{"hours":0,"minutes":45},"ingredientGroups":[{"name":null,"items":[{"name":"all-purpose flour","amount":"2 ½ tazas","parts":[{"qty":"2 ½","unit":"cup"}],"note":null},{"name":"unsalted butter","amount":"1 barra","parts":[{"qty":"1","unit":"stick"}],"note":"Creator: salted works too, skip the salt"},{"name":"flaky salt","amount":null,"parts":[],"note":null}]}],"stepGroups":[{"name":null,"steps":[{"text":"Beat the butter and sugar for 3 minutes.","uses":["unsalted butter"]}]}]}
+
+Caption:

@@ -84,6 +84,8 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   const formOpener = useRef<HTMLElement | null>(null);
   /** Set once a bake is deleted: the heading to focus next, or null for the H1 (the log is empty). */
   const afterDelete = useRef<{ id: string | null } | null>(null);
+  /** The menu button that opened the Delete confirmation, for Cancel to return to. */
+  const deleteOpener = useRef<HTMLElement | null>(null);
 
   /** Polite status message; cleared first so the same words are announced again. */
   function announce(message: string) {
@@ -205,7 +207,10 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
                   editHref={editHref(entry)}
                   onEdit={(trigger) => openEdit(entry, trigger)}
                   onAddNotes={(link) => (formOpener.current = link)}
-                  onDelete={() => setDeleting(entry)}
+                  onDelete={(trigger) => {
+                    deleteOpener.current = trigger;
+                    setDeleting(entry);
+                  }}
                 />
               </li>
             ))}
@@ -263,8 +268,10 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
           // Cancel: back to the entry's menu button (the opener). After a delete: the
           // next entry's heading, or the H1 once the log is empty.
           const target = afterDelete.current;
+          const opener = deleteOpener.current;
           afterDelete.current = null;
-          if (!target) return null;
+          deleteOpener.current = null;
+          if (!target) return opener?.isConnected ? opener : null;
           return target.id ? document.getElementById(target.id) : h1.current;
         }}
         title="Delete this bake?"
@@ -300,7 +307,7 @@ function Entry({
   editHref: string;
   onEdit: (trigger: HTMLElement | null) => void;
   onAddNotes: (link: HTMLAnchorElement) => void;
-  onDelete: () => void;
+  onDelete: (trigger: HTMLElement | null) => void;
 }) {
   const date = formatBakeDate(entry.date);
   const hasNotes = Boolean(entry.whatChanged || entry.howItTurnedOut);

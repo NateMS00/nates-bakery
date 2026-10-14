@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.0 · **Updated**: 2026-09-30
+> **Version**: 1.4.1 · **Updated**: 2026-10-13
 
 ---
 
@@ -94,7 +94,7 @@ MOBILE
 
 ### Ingredients (SKELETON section 3)
 - **Layout**: desktop left column (4 of 12 cols; 4 of 8 on tablet), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width
-- **Content**: one row per ingredient: name on the left (wraps to at most 2 lines, then truncates), scaled amount in grams on the right (aligned on a shared right edge so numbers line up); an Estimated or Converted marker under the name; tapping a Converted marker reveals the original stated amount ("was 1 cup") on the line under it. When the recipe has component groups (Crust, Filling, Frosting…), each group gets a heading and a medium gap before it, in the recipe's order. No limit on rows or groups: everything shows
+- **Content**: one row per ingredient: name on the left (wraps to at most 2 lines, then truncates), scaled amount in grams on the right (aligned on a shared right edge so numbers line up); an Estimated or Converted marker under the name; tapping a Converted marker reveals the original stated amount ("was 1 cup") on the line under it. An ingredient note (a creator's remark kept from the import, or one added in the editor) shows as one muted line under the ingredient, always visible. When the recipe has component groups (Crust, Filling, Frosting…), each group gets a heading and a medium gap before it, in the recipe's order. No limit on rows or groups: everything shows
 - **Behavior**: amounts under 10 g show one decimal only when it isn't zero ("3.5 g", but "8 g", never "8.0 g"); "to taste" ingredients show that text instead of an amount
 
 ```text
@@ -231,6 +231,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.1 (2026-10-13): Ingredient notes show as a muted line under the ingredient (SKELETON 1.4.0).
 - 1.4.0 (2026-09-30): Tablet split is 4 + 4 columns (Scale and Ingredients / Steps), after the accessibility audit found the Scale control overflowing at 3 columns.
 - 1.3.0 (2026-09-30): After the first build review: overlays sized to their content with a close X in the header; large stars in the Rating prompt; no trailing ".0" on amounts.
 - 1.2.1 (2026-09-29): Desktop header actions in one row beside the title (Favorite, Share, Edit, Start baking), after the visual review.

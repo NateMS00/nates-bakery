@@ -4,7 +4,7 @@
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.1.1 · **Updated**: 2026-10-01
+> **Version**: 1.1.2 · **Updated**: 2026-10-13
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -69,7 +69,7 @@ MOBILE
 - **Behavior**: the friend's scale lives only in their URL; it never changes Nathan's recipe
 
 ### Ingredients (SKELETON section 3)
-- **Layout and content**: as in BONES-recipes-detail.md, with one difference: only the Estimated marker shows (labeled "Estimated amount"), so the friend knows which amounts are guesses; the Converted marker and its "was 1 cup" reveal are not shown
+- **Layout and content**: as in BONES-recipes-detail.md, with one difference: only the Estimated marker shows (labeled "Estimated amount"), so the friend knows which amounts are guesses; the Converted marker and its "was 1 cup" reveal are not shown; ingredient notes are not shown either (they can hold the owner's own remarks)
 - **Behavior**: sticky beside Steps on desktop and tablet, as on the Recipe page, with the same column split: 4 of 12 on desktop and 4 of 8 on tablet (Steps takes the other 8 or 4), so the Scale presets never overflow
 
 ### Steps (SKELETON section 4)
@@ -123,6 +123,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.2 (2026-10-13): Ingredient notes aren't shown on shared pages.
 - 1.1.1 (2026-10-01): App renamed to Nate’s Bakery; "Shared by Nate".
 - 1.1.0 (2026-09-30): Tablet split is 4 + 4 columns, matching BONES-recipes-detail 1.4.0 (accessibility audit).
 - 1.0.0 (2026-09-29): Initial wireframe.

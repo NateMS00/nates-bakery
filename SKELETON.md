@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.3.3 · **Updated**: 2026-10-01
+> **Version**: 1.4.0 · **Updated**: 2026-10-13
 
 ---
 
@@ -72,8 +72,8 @@ Default access: owner; signed-out → `/login?next=` plus the requested path (in
   - Params: `?q=` search text; `?category=` one category slug (`bread`, `cake`…); `?status=baked` or `?status=not-baked`; `?favorite=1`; `?rating=` minimum rating 1–5. All combine; invalid values are ignored.
 - `/import` - **Import**
   - Goal: Turn a reel link into a recipe draft in as few taps as possible.
-  - Params: `?url=` prefills the link and starts the import automatically
-  - Entry: also the iOS Shortcut in Instagram's share menu, which opens `/import?url=<reel link>`
+  - Params: `?url=` prefills the link (the page hands it to the Shortcut; it never imports on its own)
+  - Entry: the Nate’s Bakery Shortcut in Instagram's share menu does the import and opens the result at `/import/:draftId`; this page is for pasting a link, setup, and errors
 - `/import/:draftId` - **Review Import**
   - Goal: Check what the extraction guessed, fix it, and save it as a recipe.
   - Params: `:draftId` identifies an unsaved import; unknown or already-saved ID → not-found
@@ -135,24 +135,28 @@ Default access: public.
 
 ### FLOW-01: Reel to saved recipe
 - **Role**: Owner
-- **Entry**: An Instagram reel on iPhone, shared through the iOS Shortcut, or a link pasted on `/import`
-- **Success**: The recipe is saved in grams with its source credit; owner lands on `/recipes/:recipeId`
+- **Entry**: An Instagram reel, shared to the Nate’s Bakery Shortcut from Instagram's share menu, or a link pasted on `/import` (which runs the same Shortcut on this device)
+- **Success**: The recipe is saved in grams, in English, with its source credit; owner lands on `/recipes/:recipeId`
 
-1. Owner shares the reel to the Shortcut → `/import?url=<reel link>`.
-2. System confirms the session and starts the import automatically.
-3. System reads the caption, on-screen text, and audio; extracts title, yield, ingredients, and steps; converts volume amounts to grams → `/import/:draftId`.
-4. Owner reviews the items marked **Estimated** (the reel never gave the amount) or **Converted** (given in volume, converted to grams), and fills in any **Missing** amounts.
-5. Owner saves → `/recipes/:recipeId`.
+1. Owner shares the reel to the Shortcut. The Shortcut sends the link to the app with the owner's import key.
+2. System fetches the reel's **caption** (plus creator handle and thumbnail) through Apify and creates a draft, shown as "Importing…" under Drafts. The caption goes back to the Shortcut.
+3. On the owner's device, Apple Intelligence reads the caption and returns the recipe as structured data, translated to English: title, yield, total time, category suggestion, ingredient groups with each ingredient's amount **exactly as written** ("½ cup + 1 tbsp", "1 lata") and an English name, step groups and steps, and any notes the creator attached to an ingredient. It never converts amounts and never invents one.
+4. System converts every amount to grams with its own table of baking densities and typical weights, and marks the results: **Converted** (from volume, original kept), **Estimated** (from a count, like 1 egg or 1 can, at a typical weight), **Missing** (no amount in the caption). The Shortcut opens `/import/:draftId`.
+5. Owner reviews the marked items and fills in any Missing amounts (or marks them "to taste").
+6. Owner saves → `/recipes/:recipeId`.
 
 **Alternate paths**
-- Signed out at step 2 → `/login?next=/import?url=<reel link>`; after sign-in the import starts.
-- Pasted link is not an Instagram reel or post at step 1 → inline error on `/import`; nothing is imported.
-- Reel is private, deleted, or has no recipe at step 3 → error on `/import` with "Enter it manually" → `/recipes/new?source=<reel link>`.
+- Shortcut not set up, or no import key on the device → the Shortcut opens `/import` at its setup section.
+- Import key revoked or wrong at step 1 → the Shortcut shows "Your import key no longer works" and opens `/import` at its setup section.
+- Link is not an Instagram reel or post at step 1 → inline error on `/import`; nothing is imported.
+- Reel is private, deleted, or the caption service is unavailable at step 2 → error on `/import` with "Enter it manually" → `/recipes/new?source=<reel link>`; the draft is removed.
+- Caption has no recipe (the reel points to a website, or the recipe is only spoken) at step 3 → "No recipe in this caption" on `/import`, with Watch the reel and "Enter it manually"; the draft is removed.
+- Apple Intelligence unavailable on the device at step 3 → the draft keeps the caption and opens in Review Import with an empty editor, so the recipe can be typed in while reading it.
 - Reel was already imported at step 2 → notice on `/import` linking the existing `/recipes/:recipeId`, with the option to import again.
-- Owner leaves during step 3 → the import finishes in the background and the draft appears under Drafts on `/recipes`.
+- Owner leaves during step 3 or 4 → the draft stays under Drafts on `/recipes`; if the Shortcut stopped before step 4, it shows "Couldn't finish" with Retry and Discard.
 - Owner leaves `/import/:draftId` without saving → the draft stays under Drafts on `/recipes`.
-- Owner discards the draft at step 4 → draft deleted → `/recipes`.
-- Any ingredient still Missing at step 5 → save is blocked until it has an amount or is marked "to taste".
+- Owner discards the draft at step 5 → draft deleted → `/recipes`.
+- Any ingredient still Missing at step 6 → save is blocked until it has an amount or is marked "to taste".
 
 ### FLOW-02: Bake and log it
 - **Role**: Owner
@@ -231,15 +235,16 @@ Default access: public.
 ### `/import` (Import)
 - **Primary Action**: Import → `/import/:draftId`
 - **Section Stack**:
-  1. `Reel Link`: the link field, prefilled from `?url=`, and the Import action.
-  2. `Share from Instagram`: one-time setup for the iOS Shortcut, and how to use it.
+  1. `Reel Link`: the link field, prefilled from `?url=`, and the Import action, which hands the link to the Shortcut on this device.
+  2. `Set up the Shortcut`: one-time setup (get the Shortcut, Apple Intelligence on, the import key), and how to share from Instagram.
   3. `Manual Entry`: a link to `/recipes/new` for recipes without a reel.
-- **States**: Processing (import running; leaving is safe). Invalid link, Import failed (private, deleted, or no recipe found), Already imported, as in FLOW-01.
+- **States**: Handed to the Shortcut (import running there; leaving is safe). Invalid link, Import failed (private, deleted, caption service unavailable), No recipe in this caption, Already imported, as in FLOW-01.
+- **Import key**: a personal, revocable key the Shortcut uses instead of a password. Shown once when created; Revoke makes a new one and stops the old one at once.
 
 ### `/import/:draftId` (Review Import)
 - **Primary Action**: Save recipe → `/recipes/:recipeId`
 - **Section Stack**:
-  1. `Source`: the reel, creator handle, link to the original, and the reel's transcript (caption and spoken audio) for checking guesses without leaving the app.
+  1. `Source`: the reel thumbnail, creator handle, link to the original, and the **original caption** (in its own language, labeled when the recipe was translated) for checking the extraction without leaving the app; a notice when Instagram cut the caption off.
   2. `Needs Your Check`: every Missing, Estimated, and Converted item, each jumping to its field.
   3. `Recipe Editor`: title, category (suggested by the extraction), yield, ingredients (grams, with the original stated amount kept for Converted items), and steps, with ingredients and steps sorted into component groups by the extraction.
 - **Overlays**: Discard draft confirmation → `/recipes`.
@@ -249,7 +254,7 @@ Default access: public.
 - **Primary Action**: Save → `/recipes/:recipeId`
 - **Section Stack**:
   1. `Details`: title, category (required, one per recipe), yield, total time, source link (prefilled from `?source=` on New).
-  2. `Ingredients`: name, amount in grams, and the Estimated or Converted marker until the owner confirms it; optionally sorted into component groups.
+  2. `Ingredients`: name, amount in grams, an optional note (a creator's tip about that ingredient), and the Estimated or Converted marker until the owner confirms it; optionally sorted into component groups.
   3. `Steps`: ordered steps; times written in a step ("25 minutes") are detected for Bake Mode; each step lists the ingredients it uses (proposed by the importer, editable), which Bake Mode shows with that step; optionally sorted into the same component groups plus Assembly and Baking.
 - **Overlays**: Delete recipe confirmation (Edit only) → `/recipes`; also ends the recipe's share link.
 - **States**: Unsaved changes on leave → confirmation.
@@ -317,11 +322,18 @@ Default access: public.
 ## 7. ASSUMPTIONS & OPEN QUESTIONS
 
 - **Assumed**: React single-page web app, used in the browser and shareable by link (Nathan's choice).
-- **Assumed**: An iOS Shortcut in Instagram's share menu opens `/import?url=`, because a Safari web app can't be a share target on iOS.
+- **Assumed**: The Nate’s Bakery Shortcut is the import's entry point, because a Safari web app can't be a share target on iOS, and because reading the recipe runs on the device (below).
+- **Decided** (2026-10-13): The import reads the **caption only**: no audio, no on-screen text. Most saved reels put the full recipe in the caption; reels that don't fall back to manual entry.
+- **Decided**: Captions come from Apify's official Instagram scraper, called by the server with a key kept in server settings, never on the device. It runs on Apify's free monthly credit, with no card on file: when the credit runs out, imports stop until the next month instead of being charged. It reads Instagram against Instagram's terms; accepted for one person's personal use. Instagram offers no official way to get a reel's caption (tested: oEmbed and the public embed page return none).
+- **Decided**: The recipe is read by Apple Intelligence on the owner's device, through the Shortcut, at no cost. It extracts and translates; it never does arithmetic.
+- **Decided**: Every imported recipe is translated to English. The original caption stays with the draft for checking.
+- **Decided**: Grams are always computed by the app from its own table of densities (volume → grams, by ingredient) and typical weights (counts → grams, such as 1 egg ≈ 50 g, 1 can of condensed milk ≈ 395 g), never by the AI, so the same amount always converts the same way and a wrong value is fixed in one place. Tested: the AI's own conversions put packed brown sugar about 20% low.
+- **Assumed**: Importing works on devices with Apple Intelligence and the Shortcut (the iPhone; the Mac if its Shortcuts app supports the same action, to be confirmed). Elsewhere, recipes are entered by hand.
 - **Assumed**: One owner account created outside the app, email and password; no public sign-up (option A).
-- **Assumed**: The import runs on a server behind the owner login, so only Nathan can spend extraction costs.
-- **Assumed**: Grams are the canonical unit. Volume amounts convert by ingredient density and are marked Converted with the original kept; amounts the reel never gave are marked Estimated until confirmed.
-- **Assumed**: Imports auto-start from `?url=`, run in the background, and persist as drafts until saved or discarded.
+- **Assumed**: The caption fetch runs on the server and only answers requests carrying the owner's import key, so only Nathan can spend the Apify credit.
+- **Assumed**: Grams are the canonical unit. Volume amounts are marked Converted with the original kept; counts converted at a typical weight are marked Estimated; ingredients the caption gives no amount for are Missing, never filled with a guess.
+- **Assumed**: Drafts are created as soon as the caption arrives and persist until saved or discarded.
+- **Open**: Creator tips that aren't about one ingredient ("they'll finish setting as they cool"): import them as a final "Tips" step group, as a recipe note, or leave them in the caption only? Not decided; for now they stay in the caption.
 - **Assumed**: Scaling is a multiplier kept in the URL and carried into Bake Mode and the log entry.
 - **Assumed**: One revocable share link per recipe. Friends can read and scale but never see the bake log.
 - **Assumed**: A bake log entry holds date, scale used, what changed, and how it turned out; only the date is required, so marking a bake takes one tap.
@@ -348,6 +360,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.4.0 (2026-10-13): Reel import redesigned after testing: caption only (via Apify's free credit, server-side), read and translated to English by Apple Intelligence through the Shortcut, grams computed by the app's own table; import key for the Shortcut; new failure paths; ingredient notes; original caption replaces the transcript.
 - 1.3.3 (2026-10-01): App renamed to Nate’s Bakery; shared pages read "Shared by Nate".
 - 1.3.2 (2026-09-30): Bake Log gains `?edit=<entryId>` so Add notes and Edit open the entry form in one tap; log dates can't be in the future (owner's local date).
 - 1.3.1 (2026-09-29): Recorded data decisions from the build kickoff: separate ingredient and step groups, structured yield with rounding, several timers per step, "to taste" as an amount state.

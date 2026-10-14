@@ -1239,6 +1239,8 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`skeleton`** — Loading placeholders in `{colors.surface-sunken}` blocks with `{rounded.sm}`, sized to the final content; a slow shimmer toward `{colors.hairline}`, removed under reduced motion.
 
+**`recipe-picture`** — The reel thumbnail as a recipe's picture: a 3:4 frame cropped from the center (reel covers are 9:16, so a little of the top and bottom is cut), `{rounded.sm}`, with a 1px `{colors.hairline}` edge so pale covers don't melt into the tin-glaze canvas. While it loads, and when there is none in the Library, the frame shows `{colors.surface-sunken}` with one small tile-mark in `{colors.border}` centered in it, the same in both themes. Never put text over a picture: covers often carry their own text, and nothing over them can be guaranteed to meet contrast. Sizes come from BONES: 36×48 and 60×80 in the Library, 96×128 and 144×192 on the Recipe page.
+
 **`sheet`** — The mobile bottom sheet: glazed card with top corners at `{rounded.lg}`, a grab handle in `{colors.border}`, a thin `tile-band` along its top edge as the brand touch, over `{colors.scrim}`. Its height fits its content (never empty space below the last element), up to 90% of the viewport, after which the body scrolls; BONES-shell lists the few exceptions with pinned footers or full-screen forms. A header row holds the title and a close X (`icon-button`) at its end; there is no Close button at the bottom.
 
 **`modal`** — The desktop dialog: glazed card, `{rounded.lg}`, `{spacing.xl}` padding, over the scrim, with `{elevation.float}`. Sized to its content up to 90% of the viewport. A header row holds the title in `heading` and a close X (`icon-button`) at its end; actions sit directly under the content, never pushed to a far corner.
@@ -1297,7 +1299,6 @@ Learned on a real iPhone in Safari, where Chrome-based tests passed while the ph
 ## Known Gaps
 
 - **Logo mark and app icon**: only the wordmark is defined. The Home Screen icon (needed for timer alerts) should be one azulejo tile, cobalt on tin glaze; its final artwork needs a designer's pass.
-- **Recipe photography**: no photo treatment is defined because photos are still an open question in SKELETON. If added, they need a frame style and a rule for text over images.
 - **Manual theme switch**: dark mode follows the device only. An in-app Light/Dark/System control would need a place in the account menu.
 - **Timer sound**: the finished-timer sound (a short, warm chime, not an alarm buzz) needs to be chosen or produced.
 

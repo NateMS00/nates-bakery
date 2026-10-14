@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.4.0 · **Updated**: 2026-10-13
+> **Version**: 1.4.2 · **Updated**: 2026-10-13
 
 ---
 
@@ -141,7 +141,7 @@ Default access: public.
 1. Owner shares the reel to the Shortcut. The Shortcut sends the link to the app with the owner's import key.
 2. System fetches the reel's **caption** (plus creator handle and thumbnail) through Apify and creates a draft, shown as "Importing…" under Drafts. The caption goes back to the Shortcut.
 3. On the owner's device, Apple Intelligence reads the caption and returns the recipe as structured data, translated to English: title, yield, total time, category suggestion, ingredient groups with each ingredient's amount **exactly as written** ("½ cup + 1 tbsp", "1 lata") and an English name, step groups and steps, and any notes the creator attached to an ingredient. It never converts amounts and never invents one.
-4. System converts every amount to grams with its own table of baking densities and typical weights, and marks the results: **Converted** (from volume, original kept), **Estimated** (from a count, like 1 egg or 1 can, at a typical weight), **Missing** (no amount in the caption). The Shortcut opens `/import/:draftId`.
+4. System converts every amount to grams with its own table of baking densities and typical weights, and marks the results: **Converted** (from volume, original kept), **Estimated** (from a count or a package, like 1 egg, 1 can or 1 stick of butter, at a typical weight), **Missing** (no amount in the caption, or an ingredient or unit the table doesn't know; the original amount is kept). The Shortcut opens `/import/:draftId`.
 5. Owner reviews the marked items and fills in any Missing amounts (or marks them "to taste").
 6. Owner saves → `/recipes/:recipeId`.
 
@@ -229,7 +229,7 @@ Default access: public.
   1. `Search`: search by recipe title and ingredient (`?q=`).
   2. `Filters`: Category (`?category=`), Status (All, Baked, Not baked yet: `?status=`), Favorites (`?favorite=1`), and minimum rating (`?rating=`); shows which filters are active and a Clear filters action. Categories with no recipes are not offered.
   3. `Drafts`: unsaved imports, each linking to `/import/:draftId`; shown only when drafts exist and no filter is active.
-  4. `Recipes`: every recipe matching search and filters, most recently baked or added first; each shows its category, favorite mark, rating (or unrated), and last-baked date (or "Not baked yet").
+  4. `Recipes`: every recipe matching search and filters, most recently baked or added first; each shows its picture (or a placeholder), category, favorite mark, rating (or unrated), and last-baked date (or "Not baked yet").
 - **States**: Empty (no recipes) → the page reduces to a prompt to import the first reel, with how to set up the Shortcut. No results (search or filters match nothing) → message plus Clear search and Clear filters actions.
 
 ### `/import` (Import)
@@ -278,7 +278,7 @@ Default access: public.
 ### `/recipes/:recipeId` (Recipe)
 - **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 - **Section Stack**:
-  1. `Header`: category, title, favorite toggle, rating (1–5, set or changed in place, can be cleared), yield at the current scale, total time, and source credit (creator handle, link to the reel).
+  1. `Header`: the recipe picture (when it has one), category, title, favorite toggle, rating (1–5, set or changed in place, can be cleared), yield at the current scale, total time, and source credit (creator handle, link to the reel).
   2. `Scale`: the batch multiplier (`?scale=`); every amount updates.
   3. `Ingredients`: scaled grams, with Estimated and Converted markers, under component group headings when the recipe has them.
   4. `Steps`: numbered steps, under component group headings when the recipe has them.
@@ -325,13 +325,13 @@ Default access: public.
 - **Assumed**: The Nate’s Bakery Shortcut is the import's entry point, because a Safari web app can't be a share target on iOS, and because reading the recipe runs on the device (below).
 - **Decided** (2026-10-13): The import reads the **caption only**: no audio, no on-screen text. Most saved reels put the full recipe in the caption; reels that don't fall back to manual entry.
 - **Decided**: Captions come from Apify's official Instagram scraper, called by the server with a key kept in server settings, never on the device. It runs on Apify's free monthly credit, with no card on file: when the credit runs out, imports stop until the next month instead of being charged. It reads Instagram against Instagram's terms; accepted for one person's personal use. Instagram offers no official way to get a reel's caption (tested: oEmbed and the public embed page return none).
-- **Decided**: The recipe is read by Apple Intelligence on the owner's device, through the Shortcut, at no cost. It extracts and translates; it never does arithmetic.
+- **Decided**: The recipe is read by Apple Intelligence through the Shortcut, at no cost, using Private Cloud Compute by default because the on-device model's context is too small for long captions. It extracts and translates; it never does arithmetic.
 - **Decided**: Every imported recipe is translated to English. The original caption stays with the draft for checking.
 - **Decided**: Grams are always computed by the app from its own table of densities (volume → grams, by ingredient) and typical weights (counts → grams, such as 1 egg ≈ 50 g, 1 can of condensed milk ≈ 395 g), never by the AI, so the same amount always converts the same way and a wrong value is fixed in one place. Tested: the AI's own conversions put packed brown sugar about 20% low.
 - **Assumed**: Importing works on devices with Apple Intelligence and the Shortcut (the iPhone; the Mac if its Shortcuts app supports the same action, to be confirmed). Elsewhere, recipes are entered by hand.
 - **Assumed**: One owner account created outside the app, email and password; no public sign-up (option A).
 - **Assumed**: The caption fetch runs on the server and only answers requests carrying the owner's import key, so only Nathan can spend the Apify credit.
-- **Assumed**: Grams are the canonical unit. Volume amounts are marked Converted with the original kept; counts converted at a typical weight are marked Estimated; ingredients the caption gives no amount for are Missing, never filled with a guess.
+- **Assumed**: Grams are the canonical unit. Volume amounts are marked Converted with the original kept; counts and packages converted at a typical weight are marked Estimated (a stick of butter is a package: 113 g in the US, 90 g in Mexico); ingredients the caption gives no amount for, and ingredients or units the table doesn't know, are Missing, never filled with a guess (an unknown one keeps its original amount, and its name is logged so the table can grow).
 - **Assumed**: Drafts are created as soon as the caption arrives and persist until saved or discarded.
 - **Open**: Creator tips that aren't about one ingredient ("they'll finish setting as they cool"): import them as a final "Tips" step group, as a recipe note, or leave them in the caption only? Not decided; for now they stay in the caption.
 - **Assumed**: Scaling is a multiplier kept in the URL and carried into Bake Mode and the log entry.
@@ -350,7 +350,8 @@ Default access: public.
 - **Assumed**: Component groups use a suggested list covering breads, cakes, pies and tarts, and creams, but accept any name.
 - **Assumed**: Every imported recipe keeps the creator handle and reel link, including on shared pages.
 - **Open**: Scale by pan size or servings, not just a multiplier? This would change the Scale section.
-- **Open**: Photos on recipes (reel thumbnail) or on bake log entries?
+- **Decided** (2026-10-13, Nathan): Recipes keep the reel thumbnail as their picture, shown in the Library and on the Recipe page; not on shared pages for now. Instagram's image links expire within days, so the app copies the thumbnail into its own storage when the draft is created and deletes it with a discarded draft or recipe; if the copy fails, the placeholder shows.
+- **Open**: Photos on bake log entries?
 - **Assumed**: One category per recipe from a fixed list of nine, required on save and suggested by the importer; the Library filter picks one category at a time.
 - **Open**: Custom categories, or more than one category per recipe? The fixed list keeps filters clean; revisit if many recipes land in Other.
 - **Open**: Should friends get Bake Mode on shared recipes?
@@ -360,6 +361,8 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.4.2 (2026-10-13): The recipe picture shows in the Library and the Recipe header.
+- 1.4.1 (2026-10-13): Build-plan review: unknown ingredients or units arrive as Missing with the original kept; packages such as butter sticks are Estimated; Apple Intelligence uses Private Cloud Compute by default; recipes keep a stored copy of the reel thumbnail.
 - 1.4.0 (2026-10-13): Reel import redesigned after testing: caption only (via Apify's free credit, server-side), read and translated to English by Apple Intelligence through the Shortcut, grams computed by the app's own table; import key for the Shortcut; new failure paths; ingredient notes; original caption replaces the transcript.
 - 1.3.3 (2026-10-01): App renamed to Nate’s Bakery; shared pages read "Shared by Nate".
 - 1.3.2 (2026-09-30): Bake Log gains `?edit=<entryId>` so Add notes and Edit open the entry form in one tap; log dates can't be in the future (owner's local date).

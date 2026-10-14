@@ -1,9 +1,9 @@
 # BONES: Auth and System pages
 
-> **Source**: SKELETON.md v1.3.2: `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error; FLOW-04
+> **Source**: SKELETON.md v1.4.1: `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error; FLOW-04
 > **Primary Device**: mobile for the auth pages, because a sign-in usually interrupts something started on the iPhone (an import from Instagram's share menu, a link opened from Messages); the system pages have no single primary device
 > **Shell**: BONES-shell.md. Auth pages use the Share variant (public shell). Privacy, Not found and Error use the App variant when signed in and the Share variant otherwise, so a guest or friend never sees owner navigation
-> **Version**: 1.1.2 · **Updated**: 2026-10-01
+> **Version**: 1.2.0 · **Updated**: 2026-10-13
 > **Note**: Written after the build (prompt 8) to record the layout as reviewed and approved, so later changes and the accessibility audit have a spec to check against.
 
 ---
@@ -122,16 +122,18 @@ MAIN
 ├── LEAD (one sentence)
 ├── WHAT_THE_APP_STORES                     H2 (list)
 ├── WHAT_A_SHARE_LINK_SHOWS                 H2
-└── REELS                                   H2
+├── REELS                                   H2
+└── WHERE_IT_IS_STORED                      H2
 ```
 
 - **Layout**: reading column, 8 of 12 cols on desktop, full width on mobile; body at reading size with comfortable line length
 - **Content**:
-  - **What Nate’s Bakery stores**: the owner's email and password (the password stored only as a hash); recipes, ratings, favorites and the bake log; reel links and creator handles; the timer-alert subscription; a sign-in cookie, with no advertising or tracking cookies.
+  - **What Nate’s Bakery stores**: the owner's email and password (the password stored only as a hash); recipes, ratings, favorites and the bake log; reel links, creator handles, captions and a copy of each reel's thumbnail; the import key for the Shortcut, stored only in a form that can't be read back; the timer-alert subscription; a sign-in cookie, with no advertising or tracking cookies.
   - **What a share link shows**: what a friend can and can't see; revoking stops the link at once.
-  - **Reels**: the caption and audio are sent to a transcription and extraction service to read the recipe. The video isn't kept.
+  - **Reels**: when you import, the app sends the reel link to Apify, a web-scraping service, which returns the reel's caption, creator handle and thumbnail. The recipe is read from the caption by Apple Intelligence through the Shortcut, on your device or on Apple's Private Cloud Compute, not by Nate’s Bakery's servers. The audio and video are never downloaded.
+  - **Where it is stored**: the database is Supabase, in the United States (Oregon); the app runs on Vercel.
 - **Behavior**: none
-- **Open**: the copy is a draft whose promises the backend must keep. Name the transcription service and where data is stored once the backend is chosen; Nathan reviews every promise before launch.
+- **Open**: the copy is a draft whose promises the backend must keep; Nathan reviews every promise before import is turned on.
 
 ---
 
@@ -188,6 +190,7 @@ MAIN
 
 ## CHANGE LOG
 
+- 1.2.0 (2026-10-13): Privacy names Apify and Apple Intelligence for reel imports, lists captions, thumbnails and the import key, and adds where data is stored (SKELETON 1.4.1).
 - 1.1.2 (2026-10-01): App renamed to Nate’s Bakery.
 - 1.1.1 (2026-10-01): Restored "Send a new one below." in the Link expired notice; sign-in now recorded as Supabase Auth.
 - 1.1.0 (2026-10-01): Reset flow on Supabase's default email: sent message adds "Open it on this device, in this browser."; Link expired notice covers links opened in a different browser; constraint recorded.

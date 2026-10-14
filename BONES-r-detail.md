@@ -4,7 +4,7 @@
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.1.2 · **Updated**: 2026-10-13
+> **Version**: 1.1.3 · **Updated**: 2026-10-13
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -119,10 +119,13 @@ MOBILE
 - **Assumed**: No back link or navigation into the owner area (SKELETON: Shared Recipe links only to the original reel).
 - **Open**: Bake Mode for friends (SKELETON open question). If added, a "Start baking" action joins the Header and Bake Mode runs without the log step.
 
+- **Open** (2026-10-13): The recipe picture on shared pages. Not shown for now: pictures live in private storage that only the owner can read, and opening them to friends needs its own secure path (a short-lived link made by the server per share). Worth adding once import works.
+
 ---
 
 ## CHANGE LOG
 
+- 1.1.3 (2026-10-13): The recipe picture isn't shown on shared pages for now (open question).
 - 1.1.2 (2026-10-13): Ingredient notes aren't shown on shared pages.
 - 1.1.1 (2026-10-01): App renamed to Nate’s Bakery; "Shared by Nate".
 - 1.1.0 (2026-09-30): Tablet split is 4 + 4 columns, matching BONES-recipes-detail 1.4.0 (accessibility audit).

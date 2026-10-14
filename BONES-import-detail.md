@@ -1,10 +1,10 @@
 # BONES: `/import/:draftId` (Review Import)
 
-> **Source**: SKELETON.md v1.4.0, `/import/:draftId`, and the Recipe editor template
+> **Source**: SKELETON.md v1.4.1, `/import/:draftId`, and the Recipe editor template
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.0 · **Updated**: 2026-10-13
+> **Version**: 1.4.1 · **Updated**: 2026-10-13
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -105,7 +105,7 @@ MOBILE
 
 ### Needs Your Check (SKELETON section 2)
 - **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a to-do list next to the form, and ends with Save recipe (`button-primary`, full column width) so saving stays in view however long the form is; mobile full width under Source, with no Save here (mobile has the Save bar)
-- **Content**: a summary line "2 missing · 3 estimated · 1 converted"; then items in this order: Missing (no amount in the caption; must get an amount or "To taste" to save), Estimated (converted from a count at a typical weight, like "1 egg" → 50 g; should be confirmed), Converted (from a volume; check the conversion); each item shows the ingredient name, its current value ("— g", "50 g from 1 egg", "125 g from 1 cup"), and its type; each item jumps to that field in the editor and moves focus into it; at most 5 items on mobile, then "Show all (n)" expands in place; desktop shows all
+- **Content**: a summary line "2 missing · 3 estimated · 1 converted"; then items in this order: Missing (no amount in the caption, or an ingredient or unit the grams table doesn't know; must get an amount or "To taste" to save), Estimated (converted from a count or a package at a typical weight, like "1 egg" → 50 g or "1 barra" of butter → 113 g; should be confirmed), Converted (from a volume; check the conversion); each item shows the ingredient name, its current value ("— g", "Add grams · was ½ cup" for a Missing item that kept its original amount, "50 g from 1 egg", "125 g from 1 cup"), and its type; the "—" is hidden from screen readers, which hear "no amount" instead; each item jumps to that field in the editor and moves focus into it; at most 5 items on mobile, then "Show all (n)" expands in place; desktop shows all
 - **Behavior**: items leave the list as soon as they are resolved (amount entered, Confirm pressed) and the summary updates; the change is announced to screen readers
 
 ```text
@@ -168,7 +168,7 @@ MOBILE
 #### Ingredients
 - **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), a status area of fixed width reserved for the marker plus Confirm or the To taste toggle (left empty when the row has nothing to check), row menu; every row uses the same columns whether or not it has a marker. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); the name field wraps to a second line inside itself when the name is long (it grows with its content as many lines as the name needs, never truncates and never scrolls inside itself), so the full name is always readable; a second line of controls only when the ingredient needs it (marker with Confirm, or marker with To taste), so clean ingredients take one line. On desktop, inside the fixed status area, Confirm and the To taste toggle sit at its right edge, so they line up down the group whatever the marker's width
 - **Empty rows**: a new or empty row shows placeholders, "Ingredient" in the name and "—" in the amount (never "0", which reads as an entered value), so it doesn't read as two blank boxes; Missing amounts show the same "—", matching Needs Your Check; each field keeps its precise screen-reader name ("Caster sugar, grams") instead of a visible label per row
-- **Content**: name (text, in English); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); marker Missing, Estimated, or Converted; Confirm (for Estimated and Converted, removes the marker without changing the value); for Converted and Estimated, the original amount as written, in its own language ("was ½ taza", "was 1 egg"), on a line under the row, always visible here; an optional **note** for a creator's remark about that ingredient ("Creator: 100 g makes it less sweet"), shown as a muted line under the row and editable from the row menu (Add note / Edit note), also shown under the ingredient on the Recipe page; row menu: Move up, Move down, Move to group, Add or Edit note, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
+- **Content**: name (text, in English); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); marker Missing, Estimated, or Converted; Confirm (for Estimated and Converted, removes the marker without changing the value); for Converted, Estimated, and Missing items that kept one, the original amount as written, in its own language ("was ½ taza", "was 1 egg", "was 1 barra"), on a line under the row, always visible here; an optional **note** for a creator's remark about that ingredient ("Creator: 100 g makes it less sweet"), shown as a muted line under the row and editable from the row menu (Add note / Edit note), also shown under the ingredient on the Recipe page; row menu: Move up, Move down, Move to group, Add or Edit note, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
 - **Behavior**: reordering uses the row menu (and drag on desktop as a shortcut); a deleted row offers Undo; no limit on rows or groups
 
 ```text
@@ -289,6 +289,8 @@ MOBILE
 - **Assumed**: The caption stays in its own language even though the recipe is translated, so a translation can be checked against what the creator wrote.
 - **Assumed**: Collapsed to 3 lines so it doesn't push Needs Your Check out of the first mobile viewport.
 - **Assumed**: An ingredient the caption gives no amount for ("caramel sauce", "cocoa powder for dusting") arrives as Missing with the "—" placeholder, never with an invented amount; "To taste" resolves it in one tap.
+- **Decided** (2026-10-13): An ingredient or unit the grams table doesn't know arrives as Missing with its original amount kept ("Add grams · was ½ cup"), never with a guessed density. Not "— g from ½ cup", which screen readers read as "dash g".
+- **Decided** (2026-10-13): Packages whose size varies by country (a stick or barra of butter, a can, a packet) are Estimated, not Converted.
 - **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe stay in the caption for now (SKELETON open question).
 - **Open**: Highlight the part of the caption an item came from when you tap a check item ("125 g from 1 cup" → the words "1 cup flour")? Useful for checking, but it depends on the extraction returning positions; not drawn.
 
@@ -296,6 +298,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.1 (2026-10-13): Unknown ingredients or units arrive as Missing with the original kept ("Add grams · was ½ cup"); "—" hidden from screen readers; packages such as butter sticks are Estimated (SKELETON 1.4.1).
 - 1.4.0 (2026-10-13): Source shows the original caption (labeled when translated) instead of the caption-and-audio transcript, with a cut-off notice; Estimated now means converted from a count at a typical weight; ingredient notes; no-steps line; Couldn't finish state (SKELETON 1.4.0).
 - 1.3.2 (2026-09-30): No line cap on ingredient names on mobile; the field grows as needed (build review).
 - 1.3.1 (2026-09-30): Ingredient names wrap to 2 lines on mobile instead of truncating; "—" as the amount placeholder; Confirm and To taste aligned to the right edge of the status area on desktop.

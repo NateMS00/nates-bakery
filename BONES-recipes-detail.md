@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.1 · **Updated**: 2026-10-13
+> **Version**: 1.5.0 · **Updated**: 2026-10-13
 
 ---
 
@@ -15,6 +15,7 @@ MAIN
 ├── HEADER
 │   ├── BACK_TO_LIBRARY
 │   ├── ACTIONS (Favorite, Share, Edit)
+│   ├── RECIPE_PICTURE (beside the title block)
 │   ├── CATEGORY (label above the title)
 │   ├── RECIPE_TITLE                        H1
 │   ├── RATING (1–5, editable)
@@ -45,17 +46,18 @@ MAIN
 ### Header (SKELETON section 1)
 - **Layout**: desktop full width (12 cols): title block 8 cols, actions 4 cols right-aligned in a single row (Favorite, Share, Edit, then Start baking as the largest action), vertically aligned with the title so no empty column hangs below them; mobile single column, with Favorite, Share, and Edit as compact icon buttons on the back-link row
 - **Content**: "Library" back link → `/recipes`; Favorite toggle (on or off, labeled for screen readers as "Favorite" with its pressed state); Share (opens Share dialog); Edit → `/recipes/:recipeId/edit`; category as a short label on its own line above the title (plain text, not a link; the title stays the H1); title (wraps, never truncates; expected under 60 characters); rating as 5 stars, each a separate target, with "Not rated" text when empty; source credit "@creator · Watch reel" opening the reel in a new tab (hidden for manual recipes without a source); yield at the current scale ("Makes 36 cookies") and total time
+- **Picture**: the recipe picture (SKIN `recipe-picture`, 3:4) beside the title block, at its top: mobile 96×128px on the right, so the title wraps beside it and the Scale presets stay in the first viewport; desktop 144×192px at the start of the 8-col title block, with the text to its right. It isn't a link (Watch reel already is) and has empty alt text, since the title names the recipe. No picture: on mobile the title block takes the full width, with no placeholder, so the header isn't taller for nothing; on desktop the same
 - **Behavior**: yield updates when the scale changes. Tapping a star sets the rating in place; tapping the current rating again clears it. Favorite toggles in place. Neither navigates
 
 ```text
 DESKTOP
 +-----------------------------------------------+-----------------------+
 | < LIBRARY                                     |                       |
-| CATEGORY                                      |                       |
-| RECIPE_TITLE                                  |[F][S][E][START BAKING]|
-| [*][*][*][*][ ]                               |                       |
-| @CREATOR · WATCH_REEL                         |                       |
-| YIELD · TOTAL_TIME                            |                       |
+| +-------+ CATEGORY                            |                       |
+| |       | RECIPE_TITLE                        |[F][S][E][START BAKING]|
+| |  PIC  | [*][*][*][*][ ]                     |                       |
+| |       | @CREATOR · WATCH_REEL               |                       |
+| +-------+ YIELD · TOTAL_TIME                  |                       |
 +-----------------------------------------------+-----------------------+
 ```
 
@@ -63,11 +65,11 @@ DESKTOP
 MOBILE
 +--------------------------------------+
 | < LIBRARY        [FAV][SHARE][EDIT]  |
-| CATEGORY                             |
-| RECIPE_TITLE                         |
-| [*][*][*][*][ ]                      |
-| @CREATOR · WATCH_REEL                |
-| YIELD · TOTAL_TIME                   |
+| CATEGORY                     +-----+ |
+| RECIPE_TITLE                 |     | |
+| [*][*][*][*][ ]              | PIC | |
+| @CREATOR · WATCH_REEL        |     | |
+| YIELD · TOTAL_TIME           +-----+ |
 +--------------------------------------+
 ```
 
@@ -225,12 +227,15 @@ MOBILE
 - **Assumed**: Start baking moves from a sticky bottom bar (mobile) to the Header (desktop). DOM order puts it in the Header on both; on mobile it is visually pinned to the bottom.
 - **Assumed**: A "Link copied" confirmation inside the Share dialog (not in SKELETON).
 - **Open**: Scaling by pan size or servings (SKELETON open question). If added, Scale grows a second mode; the current row is drawn to allow it.
-- **Open**: A recipe photo (reel thumbnail) in the Header. Not drawn; adding it would push Scale out of the first mobile viewport, so the photo would need to be small or skipped on mobile.
+- **Decided** (2026-10-13): The reel thumbnail is the recipe picture (SKELETON 1.4.2). On mobile it sits beside the title instead of above it, so the Scale presets stay in the first viewport; a full-width cover would push them below the fold.
+- **Assumed**: Hand-entered recipes show no picture and no placeholder on this page; the empty slot only exists in the Library, where it keeps titles aligned.
+- **Open**: Removing or replacing the picture from Edit (a reel cover can be a face or text, not the bake), and adding your own photo. Not drawn yet.
 
 ---
 
 ## CHANGE LOG
 
+- 1.5.0 (2026-10-13): Recipe picture in the Header, beside the title block (96×128 mobile, 144×192 desktop); none for recipes without one (SKELETON 1.4.2).
 - 1.4.1 (2026-10-13): Ingredient notes show as a muted line under the ingredient (SKELETON 1.4.0).
 - 1.4.0 (2026-09-30): Tablet split is 4 + 4 columns (Scale and Ingredients / Steps), after the accessibility audit found the Scale control overflowing at 3 columns.
 - 1.3.0 (2026-09-30): After the first build review: overlays sized to their content with a close X in the header; large stars in the Rating prompt; no trailing ".0" on amounts.

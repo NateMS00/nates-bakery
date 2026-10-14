@@ -1,10 +1,10 @@
 # BONES: `/recipes` (Library)
 
-> **Source**: SKELETON.md v1.3.1, `/recipes`
+> **Source**: SKELETON.md v1.4.1, `/recipes`
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.1 · **Updated**: 2026-09-30
+> **Version**: 1.3.0 · **Updated**: 2026-10-13
 
 ---
 
@@ -100,8 +100,8 @@ MOBILE
 
 ### Drafts (SKELETON section 3)
 - **Layout**: desktop full width, one row per draft; mobile one row per draft, full width
-- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet) or "Ready to review" (links to `/import/:draftId`); at most 2 rows on mobile and 3 on desktop, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
-- **Behavior**: hidden when there are no drafts or when any search or filter is active (SKELETON). An Importing row turns into Ready to review when the import finishes, without a page reload
+- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet), "Ready to review" (links to `/import/:draftId`), or "Couldn't finish" (links to `/import/:draftId`, where Retry and Discard are; the status reads as text, not only as a color or icon); at most 2 rows on mobile and 3 on desktop, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
+- **Behavior**: hidden when there are no drafts or when any search or filter is active (SKELETON). An Importing row turns into Ready to review or Couldn't finish when the import ends, without a page reload. The page checks for changes while a row is importing, but screen readers only hear when a row's status changes, never on each check
 
 ```text
 DESKTOP
@@ -125,8 +125,9 @@ MOBILE
 ```
 
 ### Recipes (SKELETON section 4)
-- **Layout**: desktop (1280px and up) full width, one row per recipe: title 5 cols, category 2, rating 2, last baked 2, favorite mark 1; mobile and tablet (under 1280px) one card per recipe, full width: category label on the first line, title on the second, rating, favorite mark, and last-baked status on the third
+- **Layout**: desktop (1280px and up) full width, one row per recipe: the recipe picture (fixed 36×48px) at the start of the title column, then title (together 5 cols), category 2, rating 2, last baked 2, favorite mark 1; mobile and tablet (under 1280px) one card per recipe, full width: the recipe picture (fixed 60×80px) on the left, and on its right the category label on the first line, title on the second, rating, favorite mark, and last-baked status on the third. Every item has a picture slot, so titles line up down the list
 - **Content**: a result count above the list ("24 recipes", or "3 of 24 recipes" when searching or filtering); each item links to `/recipes/:recipeId`; title wraps to at most 2 lines, then truncates; rating as small stars or "Not rated"; favorite as a mark only (not a toggle here); "Baked 12 Sep" or "Not baked yet"; order is most recently baked or added first; 30 items, then "Show more" loads the next 30 below
+- **Picture**: the reel thumbnail stored with the recipe (SKIN `recipe-picture`), cropped to 3:4 from the center; recipes without one (entered by hand, or the copy failed) show the picture placeholder. The picture is decorative here (empty alt text), because the title in the same link already names the recipe. Its space is reserved before it loads, so the list never jumps; pictures below the first screen load as you scroll
 - **Behavior**: the whole row or card is one link; nothing inside it is separately interactive
 
 ```text
@@ -134,8 +135,8 @@ DESKTOP
 +-----------------------------------------------------------------------+
 | 24 RECIPES                                                            |
 +---------------------------+------------+------------+------------+----+
-| RECIPE_TITLE              | CATEGORY   | ★★★★☆      | BAKED DATE | ♥  |
-| RECIPE_TITLE              | CATEGORY   | NOT RATED  | NOT BAKED  |    |
+| [P] RECIPE_TITLE          | CATEGORY   | ★★★★☆      | BAKED DATE | ♥  |
+| [P] RECIPE_TITLE          | CATEGORY   | NOT RATED  | NOT BAKED  |    |
 +---------------------------+------------+------------+------------+----+
 | SHOW MORE                                                             |
 +-----------------------------------------------------------------------+
@@ -145,13 +146,13 @@ DESKTOP
 MOBILE
 +--------------------------------------+
 | 24 RECIPES                           |
-| CATEGORY                             |
-| RECIPE_TITLE                         |
-| ★★★★☆  ♥          BAKED 12 SEP       |
+| +----+ CATEGORY                      |
+| |PIC | RECIPE_TITLE                  |
+| +----+ ★★★★☆  ♥      BAKED 12 SEP    |
 +--------------------------------------+
-| CATEGORY                             |
-| RECIPE_TITLE                         |
-| NOT RATED           NOT BAKED YET    |
+| +----+ CATEGORY                      |
+| |PIC | RECIPE_TITLE                  |
+| +----+ NOT RATED     NOT BAKED YET   |
 +--------------------------------------+
 | SHOW MORE                            |
 +--------------------------------------+
@@ -176,7 +177,7 @@ MOBILE
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Recipes not yet loaded | Search and Filters render; Recipes shows 6 placeholder items in final proportions; Drafts hidden until loaded |
-| Empty | No recipes and no drafts | Search, Filters, Drafts, and Recipes hide. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up Share from Instagram" link → `/import` (its Share from Instagram section) |
+| Empty | No recipes and no drafts | Search, Filters, Drafts, and Recipes hide. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up the Shortcut" link → `/import` (its Set up the Shortcut section) |
 | Only drafts | No saved recipes, at least one draft | Search and Filters hide; Drafts shows; Recipes reduces to one line "No saved recipes yet" |
 | No results | Search or filters match nothing | Result count reads "No matches out of 24 recipes" (words, not a 0); the list is replaced by "Nothing matches" plus Clear search (when `?q=` is set) and Clear filters (when any filter is set) |
 | Filters sheet | Filters button (mobile only) | Bottom sheet sized to its content, with a footer pinned to its bottom. Order: a header row with "Filters" and a close X; Category as wrapping single-choice chips ("All" first, then each category with its count: "Cake 6"); Status as a three-part segmented control; Favorites toggle; Rating as wrapping single-choice chips (Any, 3★ and up, 4★ and up, 5★); footer with Clear and "Show n recipes" (n updates live). All four filters fit on one 390 × 844 screen without scrolling; if they ever don't, the body scrolls above the pinned footer. Dismissed by the close X, Esc, backdrop tap, or swipe down, which discard unapplied changes. Focus is trapped inside and returns to the Filters button on close |
@@ -197,15 +198,18 @@ MOBILE
 - **Assumed**: A result count above the list (not in SKELETON), announced to screen readers when it changes, so filtering has audible feedback.
 - **Assumed**: 30 recipes, then Show more, instead of infinite scroll, so the footer stays reachable and position survives going back.
 - **Assumed**: The favorite mark in the list is read-only, so scrolling with a thumb can't toggle it by accident; favoriting happens on the Recipe page.
-- **Assumed**: The desktop list is rows, not a card grid, because there are no photos yet and text rows scan faster.
+- **Assumed**: The desktop list stays rows, not a card grid, even with pictures: reel covers are often a face or overlaid text rather than the bake, so the title stays the main thing to scan, and rows scan faster.
 - **Assumed**: Tablet (768–1279px) uses the mobile cards, not the rows: at 768px the row squeezed "Baked Sat 12 Sep" onto two lines. Rows start at 1280px. Tablet uses the desktop filter row, which wraps to two lines.
-- **Open**: Recipe photos (SKELETON open question). If added, mobile cards gain a small thumbnail on the left and the desktop list could become a grid; the current layout leaves room for a thumbnail column.
+- **Decided** (2026-10-13): Recipes show the reel thumbnail as their picture (SKELETON 1.4.2). Small and to the left, not a large cover, so the Library still fits many recipes per screen.
+- **Assumed**: Draft rows stay text only; their picture shows once you open the draft (Review Import's Source).
 - **Open**: A sort control (for example, by rating or A–Z). SKELETON fixes the order to most recently baked or added; a sort control would add a query param and a control in Filters.
 
 ---
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-10-13): Recipe pictures: a 60×80 picture on the left of mobile and tablet cards, a 36×48 picture at the start of desktop rows, a placeholder when there's none (SKELETON 1.4.2).
+- 1.2.0 (2026-10-13): Draft rows gain "Couldn't finish"; status changes announced only when they happen; empty state links to Set up the Shortcut (SKELETON 1.4.1).
 - 1.1.1 (2026-09-30): Recorded tablet behavior from the build: recipe cards under 1280px, rows from 1280px; desktop filter row wraps on tablet.
 - 1.1.0 (2026-09-30): After the first build review: 2 drafts on mobile, Filters sheet with wrapping chips and a close X, "Search" label, no-results count in words.
 - 1.0.0 (2026-09-29): Initial wireframe.

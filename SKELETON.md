@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.4.2 · **Updated**: 2026-10-13
+> **Version**: 1.4.3 · **Updated**: 2026-10-13
 
 ---
 
@@ -333,6 +333,7 @@ Default access: public.
 - **Assumed**: The caption fetch runs on the server and only answers requests carrying the owner's import key, so only Nathan can spend the Apify credit.
 - **Assumed**: Grams are the canonical unit. Volume amounts are marked Converted with the original kept; counts and packages converted at a typical weight are marked Estimated (a stick of butter is a package: 113 g in the US, 90 g in Mexico); ingredients the caption gives no amount for, and ingredients or units the table doesn't know, are Missing, never filled with a guess (an unknown one keeps its original amount, and its name is logged so the table can grow).
 - **Assumed**: Drafts are created as soon as the caption arrives and persist until saved or discarded.
+- **Open** (2026-10-13): When a caption is cut off, some creators continue the recipe in their own first comment. Apify already returns the comments, so the import could append the creator's own comment (never anyone else's). Not in this first version; revisit after real use.
 - **Open**: Creator tips that aren't about one ingredient ("they'll finish setting as they cool"): import them as a final "Tips" step group, as a recipe note, or leave them in the caption only? Not decided; for now they stay in the caption.
 - **Assumed**: Scaling is a multiplier kept in the URL and carried into Bake Mode and the log entry.
 - **Assumed**: One revocable share link per recipe. Friends can read and scale but never see the bake log.
@@ -361,6 +362,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.4.3 (2026-10-13): Open question: reading the creator's own first comment when a caption is cut off.
 - 1.4.2 (2026-10-13): The recipe picture shows in the Library and the Recipe header.
 - 1.4.1 (2026-10-13): Build-plan review: unknown ingredients or units arrive as Missing with the original kept; packages such as butter sticks are Estimated; Apple Intelligence uses Private Cloud Compute by default; recipes keep a stored copy of the reel thumbnail.
 - 1.4.0 (2026-10-13): Reel import redesigned after testing: caption only (via Apify's free credit, server-side), read and translated to English by Apple Intelligence through the Shortcut, grams computed by the app's own table; import key for the Shortcut; new failure paths; ingredient notes; original caption replaces the transcript.

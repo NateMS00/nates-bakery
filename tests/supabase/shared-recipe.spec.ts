@@ -70,7 +70,8 @@ test.describe("live", () => {
   test.skip(!url || !key, "set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to run");
 
   test("anonymous visitors can't read any table", async () => {
-    for (const table of ["recipes", "ingredient_groups", "step_groups", "ingredients", "steps", "step_ingredients", "bakes", "share_links"]) {
+    const tables = ["recipes", "ingredient_groups", "step_groups", "ingredients", "steps", "step_ingredients", "bakes", "share_links"];
+    for (const table of [...tables, "drafts", "import_keys", "import_fetches"]) {
       const res = await fetch(`${url}/rest/v1/${table}?select=*&limit=1`, { headers });
       const body = await res.text();
       // Permission denied (no grant), never rows.
@@ -81,6 +82,21 @@ test.describe("live", () => {
   test("anonymous visitors can't call save_recipe", async () => {
     const res = await fetch(`${url}/rest/v1/rpc/save_recipe`, { method: "POST", headers, body: JSON.stringify({ p_id: null, p_content: {} }) });
     expect(res.ok).toBe(false);
+  });
+
+  test("the import functions answer a made-up key with bad-key, and create no key", async () => {
+    const fake = `nbk_${"0".repeat(43)}`;
+    const begin = await fetch(`${url}/rest/v1/rpc/import_begin`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ p_key: fake, p_url: "https://www.instagram.com/reel/Dc3kS3GRdEE/", p_again: false }),
+    });
+    expect(begin.ok).toBe(true);
+    expect(await begin.json()).toEqual({ status: "bad-key" });
+    for (const fn of ["create_import_key", "import_key_owner"]) {
+      const res = await fetch(`${url}/rest/v1/rpc/${fn}`, { method: "POST", headers, body: fn === "import_key_owner" ? JSON.stringify({ p_key: fake }) : "{}" });
+      expect(res.ok, fn).toBe(false);
+    }
   });
 
   test("an unknown token returns nothing", async () => {

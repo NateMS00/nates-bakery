@@ -7,6 +7,8 @@ in Vercel's environment variables, never in the repo.
 
 - [x] Run `supabase/migrations/0001_init.sql` in the SQL editor (2026-10-01).
 - [x] Run `supabase/checks/0001_verify.sql`: all 19 rows ok (2026-10-01).
+- [ ] Run `supabase/migrations/0002_import.sql` in the SQL editor (reel import: notes, drafts, the import key, the thumbnail bucket).
+- [ ] Run `supabase/checks/0002_verify.sql`: all 21 rows ok.
 - [x] Authentication → Sign-ups off.
 - [x] Authentication → Minimum password length 12.
 - [x] Authentication → URL Configuration: Site URL `http://localhost:3000`, redirect URL `http://localhost:3000/**` (local for now).

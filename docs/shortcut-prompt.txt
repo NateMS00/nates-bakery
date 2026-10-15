@@ -1,20 +1,62 @@
 Turn this Instagram recipe caption into JSON. Reply with the JSON only, no other text.
 
 Rules:
-- Translate everything to English, except "amount": copy it exactly as written in the caption, in its own language.
-- Never convert units, never calculate, never invent an amount. If the caption gives no amount, use "amount": null and "parts": [].
-- "parts" splits the amount into pieces. "qty" is the number as written ("1", "½", "1 1/2", "2-3"). "unit" is one of: g, kg, ml, l, cup, tbsp, tsp, oz, lb, fl_oz, stick, can, packet, piece, pinch, to_taste, other.
-- Counted things (2 eggs, 1 banana) use piece. A stick or barra of butter uses stick. "To taste" or "al gusto" uses to_taste with "qty": null.
-- "name": the ingredient in English. Keep words like packed, melted, unsalted, room temperature.
-- "note": only what the creator says about that one ingredient (a swap, a brand, an amount tip). Otherwise null.
-- Use the caption's own sections as groups (Dough, Filling, Topping). If it has none, use one group with "name": null.
-- "steps": one per instruction, in order, in English. "uses" lists the ingredient names, exactly as you wrote them above, that the step uses.
-- "category": one of bread, viennoiserie, quick-bread, cake, cookie-bar, pie-tart, pastry, dessert, other.
-- "language": the caption's language, in English ("Spanish").
-- "yield" and "totalTime": only if the caption states them, otherwise null. Never add up step times.
-- If the caption has no ingredients, reply {"recipe": false}.
+- Translate everything to English — the title, every group name, every step, the
+  yield's unit and unitPlural — except "amount", which stays exactly as written, in
+  the caption's own language and script.
+- Never convert units, never calculate, never invent an amount. If the caption gives
+  no amount, use "amount": null and "parts": []. A plain count ("2 eggs", "4 huevos")
+  is still an amount — copy it; don't fall back to null just because it has no unit
+  word.
+- When the caption writes one amount two ways ("1 cup (227 g)", "1 (14 oz) can",
+  "125 gramos de mantequilla (1 barrita)"), that's ONE amount, not two: "parts" has a
+  single entry. Use the weight in g or kg when the caption gives one; otherwise use
+  the first form written. "parts" only ever holds more than one entry for an amount
+  the caption genuinely adds together ("1 cup plus 2 tablespoons").
+- "parts" splits the amount into pieces. "qty" is the number as written ("1", "½",
+  "1 1/2", "2-3"). "unit" is one of: g, kg, ml, l, cup, tbsp, tsp, oz, lb, fl_oz,
+  stick, can, packet, piece, pinch, to_taste, other.
+- Counted things (2 eggs, 1 banana) use piece. A stick or barra of butter uses stick.
+  "To taste" or "al gusto" uses to_taste with "qty": null.
+- "name": the ingredient in English. Keep a descriptive word only if the caption uses
+  it (packed, melted, unsalted, room temperature) — never add one the caption
+  doesn't say. Plain "butter" stays "butter", not "unsalted butter".
+- "note": only what the creator says about that one ingredient (a swap, a brand, an
+  amount tip). Otherwise null.
+- Group name is whatever this caption's own section heading says, translated (for
+  example, a caption with "Crust" and "Glaze" sections uses those two names). If the
+  caption has no sections, use one group with "name": null. Never invent sections a
+  caption doesn't have — the names in this prompt's own example are examples only,
+  not labels to reuse.
+- "steps": one per instruction, in order, always translated to English — even when
+  the caption writes it informally, in the first person, or as a run-on sentence
+  with no number ("YO le hago los huequitos y le coloco el líquido..."). Use the
+  full sentence or sentences for each instruction — when the caption gives a short
+  numbered heading followed by a longer sentence for that same instruction ("3.
+  Incorporate the mascarpone.\nAdd the mascarpone and work it in..."), the step's
+  text is all of it, not just the heading. "uses" lists the ingredient names,
+  exactly as you wrote them above, that the step uses.
+- A creator's tip or aside that isn't one of the numbered instructions and isn't
+  about a single ingredient (serving advice, storage, encouragement) goes into one
+  extra step group at the very end named exactly "Tips", one tip per step, its text
+  translated in full — drop any label the creator used to introduce it ("CONSEJO:",
+  "TIP:", "NOTA:"), don't translate the label and keep it; never
+  mixed into the numbered steps.
+- "category": one of bread, viennoiserie, quick-bread, cake, cookie-bar, pie-tart,
+  pastry, dessert, other.
+- "language": this caption's own language, in English ("Spanish") — read it fresh
+  for every caption; don't default to the language in this prompt's example.
+- "yield": only if the caption states it, otherwise null.
+- "totalTime": only a stated total ("ready in 45 minutes", "total time 1 hour")
+  counts. Never add up a bake time, a rest time, and a chill time to make one — if
+  the caption never gives a total, totalTime is null even when it gives several
+  individual times.
+- If the caption has no ingredients, reply {"recipe": false}. Otherwise reply with
+  exactly the keys shown in the format below — nothing added, nothing duplicated (one
+  "steps" list per group, never a second top-level "steps", and no "recipe" key at
+  all unless its value is false).
 
 Format:
-{"language":"Spanish","title":"Chocolate chip cookies","category":"cookie-bar","yield":{"quantity":12,"unit":"cookie","unitPlural":"cookies"},"totalTime":{"hours":0,"minutes":45},"ingredientGroups":[{"name":null,"items":[{"name":"all-purpose flour","amount":"2 ½ tazas","parts":[{"qty":"2 ½","unit":"cup"}],"note":null},{"name":"unsalted butter","amount":"1 barra","parts":[{"qty":"1","unit":"stick"}],"note":"Creator: salted works too, skip the salt"},{"name":"flaky salt","amount":null,"parts":[],"note":null}]}],"stepGroups":[{"name":null,"steps":[{"text":"Beat the butter and sugar for 3 minutes.","uses":["unsalted butter"]}]}]}
+{"language":"Portuguese","title":"Corn bread","category":"bread","yield":{"quantity":8,"unit":"slice","unitPlural":"slices"},"totalTime":null,"ingredientGroups":[{"name":"Massa","items":[{"name":"butter","amount":"1 xícara (200 g)","parts":[{"qty":"200","unit":"g"}],"note":null},{"name":"eggs","amount":"2 ovos","parts":[{"qty":"2","unit":"piece"}],"note":null},{"name":"flaky salt","amount":null,"parts":[],"note":null}]}],"stepGroups":[{"name":null,"steps":[{"text":"Beat the butter and sugar for 3 minutes.","uses":["butter"]}]},{"name":"Tips","steps":[{"text":"It keeps well at room temperature for three days.","uses":[]}]}]}
 
 Caption:

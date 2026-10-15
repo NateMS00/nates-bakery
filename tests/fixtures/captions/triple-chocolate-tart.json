@@ -1,0 +1,199 @@
+{
+  "language": "Spanish",
+  "title": "No-Bake Triple Chocolate Tart",
+  "category": "pie-tart",
+  "yield": null,
+  "totalTime": null,
+  "ingredientGroups": [
+    {
+      "name": "Biscuit Base",
+      "items": [
+        {
+          "name": "cocoa biscuits",
+          "amount": "150 g",
+          "parts": [
+            {
+              "qty": "150",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        },
+        {
+          "name": "melted butter",
+          "amount": "60 g",
+          "parts": [
+            {
+              "qty": "60",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "White Chocolate Ganache",
+      "items": [
+        {
+          "name": "heavy cream",
+          "amount": "125 g",
+          "parts": [
+            {
+              "qty": "125",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        },
+        {
+          "name": "white chocolate",
+          "amount": "240 g",
+          "parts": [
+            {
+              "qty": "240",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Milk Chocolate Ganache",
+      "items": [
+        {
+          "name": "heavy cream",
+          "amount": "125 g",
+          "parts": [
+            {
+              "qty": "125",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        },
+        {
+          "name": "milk chocolate",
+          "amount": "188 g",
+          "parts": [
+            {
+              "qty": "188",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "Dark Chocolate Ganache",
+      "items": [
+        {
+          "name": "heavy cream",
+          "amount": "125 g",
+          "parts": [
+            {
+              "qty": "125",
+              "unit": "g"
+            }
+          ],
+          "note": null
+        },
+        {
+          "name": "dark chocolate",
+          "amount": "105 g",
+          "parts": [
+            {
+              "qty": "105",
+              "unit": "g"
+            }
+          ],
+          "note": "chocola"
+        }
+      ]
+    }
+  ],
+  "stepGroups": [
+    {
+      "name": "Prepare Biscuit Base",
+      "steps": [
+        {
+          "text": "Reduce the cocoa biscuits to fine powder.",
+          "uses": ["cocoa biscuits"]
+        },
+        {
+          "text": "Add the melted butter and mix until it reaches a damp sand texture.",
+          "uses": ["melted butter"]
+        },
+        {
+          "text": "Pour the mixture into a tart pan or 20 cm diameter ring. Press the base and edges firmly with the back of a spoon or glass.",
+          "uses": []
+        },
+        {
+          "text": "Place in the refrigerator for 30 minutes.",
+          "uses": []
+        }
+      ]
+    },
+    {
+      "name": "Prepare White Chocolate Ganache",
+      "steps": [
+        {
+          "text": "Finely chop the white chocolate and place it in a bowl.",
+          "uses": ["white chocolate"]
+        },
+        {
+          "text": "Heat the cream until simmering, then pour it over the chocolate. Mix gently from the center outward until perfectly smooth.",
+          "uses": ["heavy cream", "white chocolate"]
+        },
+        {
+          "text": "Pour the ganache over the cold biscuit base.",
+          "uses": []
+        },
+        {
+          "text": "Place in the refrigerator for 45 minutes to 1 hour, until the surface is firm enough for the next layer.",
+          "uses": []
+        }
+      ]
+    },
+    {
+      "name": "Prepare Milk Chocolate Ganache",
+      "steps": [
+        {
+          "text": "Chop the milk chocolate and place it in a bowl.",
+          "uses": ["milk chocolate"]
+        },
+        {
+          "text": "Bring the cream to a simmer, then pour it over the chocolate. Let rest 1 minute, then mix until smooth and shiny.",
+          "uses": ["heavy cream", "milk chocolate"]
+        },
+        {
+          "text": "Pour this ganache gently over the well-set white chocolate layer.",
+          "uses": []
+        },
+        {
+          "text": "Place in the refrigerator again for 45 minutes to 1 hour.",
+          "uses": []
+        }
+      ]
+    },
+    {
+      "name": "Prepare Dark Chocolate Ganache",
+      "steps": [
+        {
+          "text": "Chop the dark chocolate and place it in a bowl.",
+          "uses": ["dark chocolate"]
+        },
+        {
+          "text": "Heat the cream until simmering, then pour it over the chocolate.",
+          "uses": ["heavy cream", "dark chocolate"]
+        },
+        {
+          "text": "Pour gently over the milk chocolate layer.",
+          "uses": []
+        }
+      ]
+    }
+  ]
+}

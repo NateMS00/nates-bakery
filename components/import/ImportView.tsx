@@ -38,6 +38,9 @@ type Status =
 
 const POLL_MS = 3000;
 const canPaste = () => typeof navigator !== "undefined" && typeof navigator.clipboard?.readText === "function";
+/** "Getting the caption, reading the recipe, converting to grams." — one sentence, not
+ * three separate steps, since the page can't see which stage the Shortcut is actually in. */
+const STAGES_SENTENCE = `${IMPORT_STAGES.map((s, i) => (i === 0 ? s : s[0].toLowerCase() + s.slice(1))).join(", ")}.`;
 
 function landingToStatus(landing: LandingState | null): Status {
   if (!landing) return { kind: "idle" };
@@ -133,6 +136,9 @@ export function ImportView({
       <StatusArea
         status={status}
         onAgain={() => run(link, true)}
+        onTryAgain={() => {
+          if (status.kind === "handedOff") run(status.reelUrl);
+        }}
         onTryAnother={() => {
           setStatus({ kind: "idle" });
           setLink("");
@@ -236,37 +242,63 @@ const FAIL_ACTIONS: Record<FailReason, { watchReel: boolean; tryAnother: boolean
   limit: { watchReel: false, tryAnother: false },
 };
 
-function StatusArea({ status, onAgain, onTryAnother }: { status: Status; onAgain: () => void; onTryAnother: () => void }) {
+function StatusArea({
+  status,
+  onAgain,
+  onTryAgain,
+  onTryAnother,
+}: {
+  status: Status;
+  onAgain: () => void;
+  onTryAgain: () => void;
+  onTryAnother: () => void;
+}) {
   if (status.kind === "idle") return <div className="mt-base" />;
+
+  if (status.kind === "handedOff" && status.readyDraftId) {
+    return (
+      <div role="status" className="mt-lg rounded-md border-l-4 border-success bg-success-wash px-base py-md">
+        <p className="type-body-md font-bold text-ink">Your draft is ready</p>
+        <ButtonLink href={`/import/${status.readyDraftId}`} variant="primary" className="mt-md w-full tablet:w-auto">
+          Open the draft
+        </ButtonLink>
+      </div>
+    );
+  }
 
   if (status.kind === "handedOff") {
     return (
       <div className="mt-lg">
-        <p role="status" className="type-body-md text-ink">
-          Importing in the Shortcut
-        </p>
-        <ol role="list" aria-label="What the Shortcut does" className="mt-sm flex flex-col gap-sm">
-          {IMPORT_STAGES.map((name) => (
-            <li key={name} className="flex items-center gap-sm type-body-md text-muted">
-              <span aria-hidden="true" className="size-icon-sm shrink-0 rounded-full border-2 border-border" />
-              {name}
-            </li>
-          ))}
-        </ol>
+        <div className="flex items-center gap-sm">
+          <span aria-hidden="true" className="size-icon-sm shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent motion-reduce:animate-none" />
+          <p role="status" className="type-body-md text-ink">
+            Importing in the Shortcut
+          </p>
+        </div>
+        <p className="mt-xs type-body-sm text-muted">{STAGES_SENTENCE}</p>
         <p className="mt-base type-body-sm text-body">
           You can leave: it will wait in your Library under Drafts.{" "}
           <TextLink href="/recipes" className="inline-flex min-h-touch-min items-center">
             Go to Library
           </TextLink>
         </p>
-        {status.readyDraftId && (
-          <p role="status" className="mt-base">
-            <TextLink href={`/import/${status.readyDraftId}`} className="inline-flex min-h-touch-min items-center font-bold">
-              Open the draft
-            </TextLink>
-          </p>
-        )}
+        <p className="mt-base type-body-sm text-muted">
+          Didn’t start?{" "}
+          <Button variant="text" onClick={onTryAgain}>
+            Try again
+          </Button>
+          {" · "}
+          <TextLink href="#set-up-the-shortcut">Set up the Shortcut</TextLink>
+        </p>
       </div>
+    );
+  }
+
+  if (status.kind === "failed" && status.reason === "limit") {
+    return (
+      <Notice tone="warning" className="mt-lg" action={<ButtonLink href={`/recipes/new?source=${encodeURIComponent(status.url)}`} variant="primary">Enter it manually</ButtonLink>}>
+        {FAIL_MESSAGES.limit}
+      </Notice>
     );
   }
 

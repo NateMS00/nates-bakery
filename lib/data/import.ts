@@ -41,11 +41,11 @@ export type FailReason = "private" | "deleted" | "no-recipe" | "unavailable" | "
 export const FAIL_MESSAGES: Record<FailReason, string> = {
   private: "This reel is private, so Nate’s Bakery can’t read it.",
   deleted: "This reel has been deleted.",
-  "no-recipe": "Nate’s Bakery couldn’t find a recipe in this reel.",
+  "no-recipe": "This reel’s caption doesn’t include the recipe.",
   // The live caption fetch can't yet tell a private reel from a deleted one from
   // Apify's response, so any fetch failure other than those stub cases lands here.
   unavailable: "Couldn’t reach this reel. The import service may be down — try again in a few minutes.",
-  limit: "You’ve used today’s 30 imports. It resets in a few hours.",
+  limit: "You’ve reached today’s import limit. Try again tomorrow, or enter this one by hand.",
 };
 
 /** Where the Shortcut is installed from. STUB: the Shortcut hasn't been published yet. */

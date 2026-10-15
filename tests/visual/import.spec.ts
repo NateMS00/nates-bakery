@@ -173,12 +173,31 @@ test("Handed to the Shortcut: leave safely, then Open the draft appears once the
   const finish = await page.request.post("/api/import/finish", { data: { draftId, importKey, reply: VALID_REPLY } });
   expect((await finish.json()).status).toBe("ready");
 
+  // "Your draft is ready" replaces the whole importing status, announced to AT.
+  await expect(page.getByRole("status").filter({ hasText: "Your draft is ready" })).toBeVisible({ timeout: 6000 }); // polling interval
+  await expect(page.getByText("Importing in the Shortcut")).toHaveCount(0);
   const openDraft = page.getByRole("link", { name: "Open the draft" });
-  await expect(openDraft).toBeVisible({ timeout: 6000 }); // polling interval
+  await expect(openDraft).toBeVisible();
   await shot(page, "04b-handed-off-open-the-draft");
   await openDraft.click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Review import");
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Kouign-amann");
+});
+
+test("Handed to the Shortcut: Didn't start? Try again re-runs the hand-off", async ({ page }) => {
+  await ready(page, "/import");
+  await field(page).fill(NEW_REEL);
+  await importButton(page).click();
+  await expect(page.getByText("Importing in the Shortcut")).toBeVisible();
+
+  const tryAgain = page.getByRole("button", { name: "Try again" });
+  await expect(tryAgain).toBeVisible();
+  await expect(page.getByRole("link", { name: "Set up the Shortcut" })).toHaveAttribute("href", "#set-up-the-shortcut");
+  await tryAgain.click();
+  // Re-hands off: still locked, importing, same link — no crash, no change of state.
+  await expect(page.getByText("Importing in the Shortcut")).toBeVisible();
+  await expect(field(page)).toHaveValue(NEW_REEL);
+  await expect(importButton(page)).toBeDisabled();
 });
 
 test("?url= prefills the link; Import still needs to be pressed", async ({ page }) => {
@@ -220,8 +239,8 @@ test("Import failed: Enter it manually or Try another link", async ({ page }) =>
 test("No recipe in this caption: Watch the reel, Enter it manually, or Try another link", async ({ page }) => {
   const link = "https://www.instagram.com/reel/Cnorecipe42/";
   await ready(page, `/import?error=no-recipe&url=${encodeURIComponent(link)}`);
-  const failed = page.getByRole("alert").filter({ hasText: "couldn’t find a recipe" });
-  await expect(failed).toContainText("Nate’s Bakery couldn’t find a recipe in this reel.");
+  const failed = page.getByRole("alert").filter({ hasText: "doesn’t include the recipe" });
+  await expect(failed).toContainText("This reel’s caption doesn’t include the recipe.");
   await expect(failed.getByRole("link", { name: "Watch the reel" })).toHaveAttribute("href", link);
   await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
   await expect(failed.getByRole("button", { name: "Try another link" })).toBeVisible();
@@ -231,10 +250,9 @@ test("No recipe in this caption: Watch the reel, Enter it manually, or Try anoth
 test("Daily limit reached: Enter it manually only, no Try another link", async ({ page }) => {
   const link = "https://www.instagram.com/reel/Ckouign99/";
   await ready(page, `/import?error=limit&url=${encodeURIComponent(link)}`);
-  const failed = page.getByRole("alert").filter({ hasText: "today’s 30 imports" });
-  await expect(failed).toContainText("You’ve used today’s 30 imports. It resets in a few hours.");
-  await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
-  await expect(failed.getByRole("button", { name: "Try another link" })).toHaveCount(0);
+  await expect(page.getByText("You’ve reached today’s import limit. Try again tomorrow, or enter this one by hand.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Enter it manually" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Try another link" })).toHaveCount(0);
   await shot(page, "08-daily-limit-reached");
 });
 

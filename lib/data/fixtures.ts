@@ -106,6 +106,7 @@ const croissants: Recipe = {
     { id: "cs-lamination", name: "Lamination" },
     { id: "cs-assembly", name: "Assembly" },
     { id: "cs-baking", name: "Baking" },
+    { id: "cs-tips", name: "Tips" },
   ],
   ingredients: [
     ing("cr-flour", "cg-dough", "Strong white bread flour", 500),
@@ -136,6 +137,8 @@ const croissants: Recipe = {
     step("c12", "cs-baking", "Whisk the egg, milk and salt and brush the croissants thinly.", ["cr-egg", "cr-wash-milk", "cr-wash-salt"]),
     step("c13", "cs-baking", "Bake at 190 °C for 18 minutes, until deep golden.", [], [{ text: "18 minutes", minutes: 18 }]),
     step("c14", "cs-baking", "Cool on the tray for 15 minutes before eating.", [], [{ text: "15 minutes", minutes: 15 }]),
+    step("c15", "cs-tips", "Shape ahead and freeze unbaked: proof for 30 minutes at room temperature before baking from frozen."),
+    step("c16", "cs-tips", "If the butter block cracks while rolling, let it sit a minute to warm slightly rather than forcing it — a crack now becomes a leak in the oven."),
   ],
   rating: 5,
   favorite: false,

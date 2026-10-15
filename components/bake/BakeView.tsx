@@ -67,26 +67,35 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
   const tabletUp = useMediaQuery(TABLET_UP);
 
   // ?scale= and ?step=: invalid values open the nearest valid step and correct the URL.
+  // Tips (SKELETON 1.4.4, BONES-recipes-bake 1.3.0) is a screen of its own, after the
+  // last numbered step, reached with ?step=tips; it doesn't count in the numbering.
+  const tipsGroupId = recipe.stepGroups.find((g) => g.name === "Tips")?.id;
+  const numberedSteps = useMemo(() => recipe.steps.filter((s) => s.groupId !== tipsGroupId), [recipe.steps, tipsGroupId]);
+  const tipSteps = useMemo(() => recipe.steps.filter((s) => s.groupId === tipsGroupId), [recipe.steps, tipsGroupId]);
+  const tipsAvailable = tipSteps.length > 0;
   const { scale, valid: scaleValid } = parseScale(params.get("scale") ?? undefined);
-  const total = recipe.steps.length;
+  const total = numberedSteps.length;
+  const totalScreens = total + (tipsAvailable ? 1 : 0);
+  const stepParam = useCallback((n: number) => (tipsAvailable && n === totalScreens ? "tips" : String(n)), [tipsAvailable, totalScreens]);
   const rawStep = params.get("step");
+  const onTips = tipsAvailable && rawStep === "tips";
   const wanted = Math.round(Number(rawStep));
-  const stepNumber = Number.isFinite(wanted) && rawStep !== null && rawStep.trim() !== "" ? Math.min(Math.max(wanted, 1), total) : 1;
-  const step = recipe.steps[stepNumber - 1];
-  const last = stepNumber === total;
+  const stepNumber = onTips ? totalScreens : Number.isFinite(wanted) && rawStep !== null && rawStep.trim() !== "" ? Math.min(Math.max(wanted, 1), total) : 1;
+  const step = onTips ? undefined : numberedSteps[stepNumber - 1];
+  const last = stepNumber === totalScreens;
 
   const writeUrl = useCallback(
     (n: number) => {
       const next = new URLSearchParams();
       if (scale !== 1) next.set("scale", String(scale));
-      next.set("step", String(n));
+      next.set("step", stepParam(n));
       window.history.replaceState(null, "", `${pathname}?${next}`);
     },
-    [pathname, scale],
+    [pathname, scale, stepParam],
   );
   useEffect(() => {
-    if (String(stepNumber) !== rawStep || !scaleValid) writeUrl(stepNumber);
-  }, [stepNumber, rawStep, scaleValid, writeUrl]);
+    if (stepParam(stepNumber) !== rawStep || !scaleValid) writeUrl(stepNumber);
+  }, [stepNumber, rawStep, scaleValid, writeUrl, stepParam]);
 
   // Moving to another step moves focus to its heading, so screen readers read it.
   const heading = useRef<HTMLHeadingElement>(null);
@@ -96,7 +105,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
     moved.current = false;
   }, [stepNumber]);
   function goTo(n: number) {
-    if (n < 1 || n > total || n === stepNumber) return;
+    if (n < 1 || n > totalScreens || n === stepNumber) return;
     moved.current = true;
     writeUrl(n);
   }
@@ -134,10 +143,11 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
   const showEstimates = estimates && stepNumber === 1 && isClient && !dismissed.has("estimates");
 
   const byId = useMemo(() => new Map(recipe.ingredients.map((i) => [i.id, i])), [recipe.ingredients]);
-  const forThisStep = step.ingredientIds.map((id) => byId.get(id)).filter((i): i is Ingredient => Boolean(i));
+  const forThisStep = step ? step.ingredientIds.map((id) => byId.get(id)).filter((i): i is Ingredient => Boolean(i)) : [];
   const groupName = (groupId: string | null) => recipe.stepGroups.find((g) => g.id === groupId)?.name;
   // Timer labels break only at the dots: "Step 2 · Dough · 6 min" never splits "6 min".
-  const label = `Step\u00a0${stepNumber}${groupName(step.groupId) ? ` · ${groupName(step.groupId)}` : ""}`;
+  // Tips never start timers, so `label` is only ever read when `step` exists.
+  const label = step ? `Step\u00a0${stepNumber}${groupName(step.groupId) ? ` · ${groupName(step.groupId)}` : ""}` : "";
 
   // All ingredients: collapsed on mobile except on step 1; always open from tablet up.
   const [allOpenChoice, setAllOpenChoice] = useState<boolean | null>(null);
@@ -204,11 +214,9 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
               </>
             )}
             <span className="tablet:hidden" aria-hidden="true">
-              {stepNumber}/{total}
+              {onTips ? "Tips" : `${stepNumber}/${total}`}
             </span>
-            <span className="max-tablet:sr-only">
-              Step {stepNumber} of {total}
-            </span>
+            <span className="max-tablet:sr-only">{onTips ? "Tips" : `Step ${stepNumber} of ${total}`}</span>
           </p>
         </div>
       </header>
@@ -264,19 +272,30 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
             <div className={cx((showEstimates || showAlertsCard || screenMayLock) && "mt-lg")}>
               {/* SKIN step-eyebrow: the page's H1, small so the step text stays the largest element */}
               <h1 ref={heading} id="step-heading" tabIndex={-1} className="type-label text-[15px] text-primary outline-none">
-                {groupName(step.groupId) && `${groupName(step.groupId)} · `}Step {stepNumber}
+                {onTips ? "Tips" : <>{groupName(step!.groupId) && `${groupName(step!.groupId)} · `}Step {stepNumber}</>}
               </h1>
-              <p className="mt-sm type-step-text text-ink tablet:text-[28px]">
-                {splitStepText(step.text, step.timeMarks).map((part, i) =>
-                  part.kind === "time" ? (
-                    <span key={i} className="font-bold whitespace-nowrap text-ink">
-                      {part.text}
-                    </span>
-                  ) : (
-                    part.text
-                  ),
-                )}
-              </p>
+              {onTips ? (
+                // BONES-recipes-bake 1.3.0: every tip, plain, at step-text size; no timers, no "For this step".
+                <ul role="list" className="mt-sm flex flex-col gap-base">
+                  {tipSteps.map((t) => (
+                    <li key={t.id} className="type-step-text text-ink tablet:text-[28px]">
+                      {t.text}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-sm type-step-text text-ink tablet:text-[28px]">
+                  {splitStepText(step!.text, step!.timeMarks).map((part, i) =>
+                    part.kind === "time" ? (
+                      <span key={i} className="font-bold whitespace-nowrap text-ink">
+                        {part.text}
+                      </span>
+                    ) : (
+                      part.text
+                    ),
+                  )}
+                </p>
+              )}
 
               {forThisStep.length > 0 && (
                 <div className="mt-lg">
@@ -307,10 +326,10 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                 </div>
               )}
 
-              {step.timeMarks.length > 0 && (
+              {!onTips && step!.timeMarks.length > 0 && (
                 <div className="mt-lg flex flex-col gap-sm tablet:flex-row tablet:flex-wrap">
-                  {step.timeMarks.map((mark, i) => {
-                    const source = `${step.id}:${i}`;
+                  {step!.timeMarks.map((mark, i) => {
+                    const source = `${step!.id}:${i}`;
                     const live = timers.find((t) => t.source === source && !t.finishedAt);
                     if (live) {
                       // BONES 1.2.0: a started time becomes a live status, never a greyed-out button.
@@ -332,7 +351,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                         variant="secondary"
                         onClick={() => {
                           // Several times in one step: the duration tells their timers apart.
-                          start(source, step.timeMarks.length > 1 ? `${label} · ${formatTimeChip(mark.minutes).replace(/ /g, "\u00a0")}` : label, mark.minutes);
+                          start(source, step!.timeMarks.length > 1 ? `${label} · ${formatTimeChip(mark.minutes).replace(/ /g, "\u00a0")}` : label, mark.minutes);
                         }}
                         className="w-full tablet:w-auto"
                       >
@@ -436,7 +455,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
             </Button>
           ) : (
             <Button variant="primary" onClick={() => goTo(stepNumber + 1)} className={cx("min-h-touch-bake!", stepNumber > 1 ? "col-span-2" : "col-span-3")}>
-              Next step
+              {tipsAvailable && stepNumber === total ? "Next: Tips" : "Next step"}
             </Button>
           )}
         </nav>

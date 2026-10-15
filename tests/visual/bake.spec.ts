@@ -97,6 +97,46 @@ test("invalid step opens the nearest valid step", async ({ page }) => {
   await expect(heading(page)).toHaveText(/Step 1$/);
 });
 
+test("?step=tips on a recipe with no Tips group falls back to step 1", async ({ page }) => {
+  await open(page, `${NATA}?step=tips`);
+  await expect(heading(page)).toHaveText(/Step 1$/);
+  await expect(page).toHaveURL(new RegExp(`${NATA}\\?step=1$`));
+});
+
+test("Tips screen: last numbered step offers Next: Tips; Tips is unnumbered, no timers, no For this step", async ({ page }) => {
+  // croissants: 14 numbered steps, then Tips.
+  await open(page, `${CROISSANTS}?step=14`);
+  const counter = page.locator("header p").last();
+  await expect(counter).toContainText(mobile() ? "14/14" : "Step 14 of 14");
+  const toTips = page.getByRole("button", { name: "Next: Tips" });
+  await expect(toTips).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next step" })).toHaveCount(0);
+
+  await toTips.click();
+  await expect(page).toHaveURL(new RegExp(`${CROISSANTS}\\?step=tips$`));
+  await expect(heading(page)).toHaveText("Tips");
+  await expect(counter).toContainText("Tips");
+  await shot(page, "14-tips");
+
+  // Both tips show, plain, with no step number, no "For this step", no timer buttons.
+  await expect(page.getByText("Shape ahead and freeze unbaked")).toBeVisible();
+  await expect(page.getByText("If the butter block cracks")).toBeVisible();
+  await expect(page.getByText("For this step")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Start .* timer/ })).toHaveCount(0);
+
+  // Finish replaces Next step; Previous still returns to the last numbered step.
+  await expect(page.getByRole("button", { name: "Finish" })).toBeVisible();
+  await page.getByRole("button", { name: "Previous" }).click();
+  await expect(heading(page)).toHaveText(/Step 14$/);
+});
+
+test("Tips screen: a timer started earlier keeps running in the strip", async ({ page }) => {
+  await open(page, `${CROISSANTS}?step=4`); // "Chill the butter block for 30 minutes"
+  await page.getByRole("button", { name: "Start 30 min timer" }).click();
+  await open(page, `${CROISSANTS}?step=tips`);
+  await expect(page.getByText(/^(29|30):\d\d$/).filter({ visible: true }).first()).toBeVisible();
+});
+
 test("swipe left and right changes steps on touch screens", async ({ page }) => {
   test.skip(!mobile(), "touch only");
   await open(page, NATA);

@@ -193,9 +193,20 @@ test("rating prompt: choosing a star saves and closes", async ({ page }) => {
 
 test("long recipe with several groups", async ({ page }) => {
   await ready(page, "/recipes/cultured-butter-croissants");
-  await expect(page.locator("h3")).toHaveCount(8);
+  await expect(page.locator("h3")).toHaveCount(9); // 3 ingredient groups + 6 step groups, Tips included
   await shot(page, "15-long-recipe-first-viewport");
   await shot(page, "16-long-recipe-full", true);
+});
+
+test("Tips: last, unnumbered, a plain list, not part of the step count", async ({ page }) => {
+  await ready(page, "/recipes/cultured-butter-croissants");
+  const tips = page.locator("h3", { hasText: "Tips" }).locator("xpath=following-sibling::ul[1]");
+  await expect(tips.locator("li")).toHaveCount(2);
+  await expect(tips.getByText(/^\d+$/)).toHaveCount(0); // no visible step number
+  // the last numbered step is still 14, even though two Tips rows follow it
+  await expect(page.getByText("Cool on the tray")).toBeVisible();
+  const numbers = page.locator("ol[role=list] > li > span.type-amount");
+  await expect(numbers.last()).toHaveText("14");
 });
 
 test("rating: tap sets, tapping again clears; favorite toggles", async ({ page }) => {

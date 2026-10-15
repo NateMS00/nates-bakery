@@ -109,15 +109,23 @@ test("no source and unrated: no reel link, creator, or stars", async ({ page }) 
 
 test("long recipe with groups", async ({ page }) => {
   await ready(page, "/r/croissant-q2t6vb");
-  await expect(page.locator("h3")).toHaveCount(8);
+  await expect(page.locator("h3")).toHaveCount(9); // 3 ingredient groups + 6 step groups, Tips included
   await shot(page, "05-long-recipe");
+});
+
+test("Tips: shown to friends, last and unnumbered", async ({ page }) => {
+  await ready(page, "/r/croissant-q2t6vb");
+  const tips = page.locator("h3", { hasText: "Tips" }).locator("xpath=following-sibling::ul[1]");
+  await expect(tips.locator("li")).toHaveCount(2);
+  await expect(page.getByText("If the butter block cracks")).toBeVisible();
+  await shot(page, "06-tips");
 });
 
 test("loading", async ({ page }) => {
   await page.goto(`http://localhost:3101${NATA}`, { waitUntil: "commit" });
   await page.getByText("Loading recipe").waitFor({ state: "attached" });
   await page.evaluate(() => document.fonts.ready);
-  await shot(page, "06-loading");
+  await shot(page, "07-loading");
 });
 
 test("link unavailable: an unknown token goes to /r/expired", async ({ page }) => {
@@ -136,7 +144,7 @@ test("link unavailable: an unknown token goes to /r/expired", async ({ page }) =
     return { above: h1.top - header.bottom, below: footer.top - p.bottom };
   });
   expect(Math.abs(gaps.above - gaps.below)).toBeLessThan(50);
-  await shot(page, "07-expired");
+  await shot(page, "08-expired");
 });
 
 test.describe("owner", () => {
@@ -181,5 +189,5 @@ test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control f
   const [track, custom] = await Promise.all([group.boundingBox(), group.getByRole("button", { name: "Custom" }).boundingBox()]);
   expect(custom!.x + custom!.width).toBeLessThanOrEqual(track!.x + track!.width);
   await page.evaluate(() => document.fonts.ready);
-  await shot(page, "08-tablet");
+  await shot(page, "09-tablet");
 });

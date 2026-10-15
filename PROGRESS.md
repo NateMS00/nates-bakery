@@ -80,14 +80,17 @@ The caption → recipe pipeline, migrations 0002 (2026-10-13) and 0003 (2026-10-
 
 Verified end to end from Nathan's iPhone (2026-10-15): Instagram → Share → Nate's Bakery → draft opens in Safari, through to a saved recipe with its thumbnail. Known rough edges are in `BACKLOG.md` (the Shortcut's share link is still a placeholder; the model occasionally over-captures "amount"; a step's time range should use the lower number).
 
+## App icon (2026-10-15)
+
+`scripts/generate-icons.mjs` (`npm run icons`) rasterizes SKIN's `app-icon` and `favicon` components from `design-reference/icons/` into `public/`: `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, a 1024 master, `favicon.svg`, and a 32px `favicon.ico` (hand-built PNG-in-ICO; `sharp` has no native ICO encoder). Strips each source SVG's C2PA provenance block first. Wired into `app/layout.tsx`'s `metadata.icons` and `app/manifest.ts`'s `icons` (192 and 512, purpose `any` only — no maskable icon yet). Not yet checked on a real iPhone Home Screen (next deploy).
+
 ## Next
 
-Priority order (Nathan, 2026-10-13; reel import done as of 2026-10-15):
+Priority order (Nathan, 2026-10-13; reel import done 2026-10-15, app icon done 2026-10-15):
 
 1. Timer alerts (locked-phone notifications for Bake Mode timers).
-2. App icons for the Home Screen (BACKLOG).
 
-The other BACKLOG items come after these.
+The other BACKLOG items come after this.
 
 ## Half-finished and stubbed
 

@@ -2,7 +2,9 @@ import type { MetadataRoute } from "next";
 
 // Web app manifest (Add to Home Screen; SKELETON FLOW-05 needs the Home Screen app for
 // timer alerts). short_name is the Home Screen label, kept short so it isn't truncated.
-// Colours: SKIN canvas. No icons yet (BACKLOG): the phone uses a page snapshot.
+// Colours: SKIN canvas (light — the manifest has no dark variant; app/layout.tsx's
+// viewport.themeColor covers the live browser-chrome colour in both themes).
+// Icons: public/icon-{192,512}.png (npm run icons, from SKIN's app-icon component).
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Nate’s Bakery",
@@ -12,5 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#F6F2E8",
     theme_color: "#F6F2E8",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    ],
   };
 }

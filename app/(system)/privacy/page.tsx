@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
-// /privacy (Privacy), SKELETON: what the app stores (owner email, recipes, source
-// links, notification subscription) and what share links expose. Draft copy for
-// Nathan to confirm. One reading column, 8 of 12 cols on desktop (SKIN).
+// /privacy (Privacy), BONES-system.md 1.2.0: what the app stores (owner email,
+// recipes, reel captions and thumbnails, the import key, notification subscription),
+// what share links expose, how Apify and Apple Intelligence read a reel, and where
+// data is stored. One reading column, 8 of 12 cols on desktop (SKIN).
 
 export const metadata: Metadata = { title: "Privacy" };
 
@@ -13,7 +14,8 @@ const sections: { heading: string; body: React.ReactNode }[] = [
       <ul className="list-disc space-y-xs pl-lg">
         <li>The owner’s email address and password, to sign in. The password is stored only as a secure hash.</li>
         <li>Recipes: ingredients, steps, ratings, favorites, and the bake log with its notes.</li>
-        <li>For imported recipes, the link to the original reel and the creator’s handle, so the creator is always credited.</li>
+        <li>For imported recipes: the reel’s link, the creator’s handle (so the creator is always credited), its caption, and a copy of its thumbnail.</li>
+        <li>The import key that connects the Shortcut to your account, stored only in a form that can’t be read back — not even by Nate’s Bakery.</li>
         <li>If timer alerts are turned on, a notification subscription for that device, so alerts reach a locked phone.</li>
         <li>A sign-in cookie, so you stay signed in. No advertising or tracking cookies.</li>
       </ul>
@@ -35,10 +37,15 @@ const sections: { heading: string; body: React.ReactNode }[] = [
     heading: "Reels",
     body: (
       <p>
-        When you import a reel, its caption and audio are sent to a transcription and extraction service to read the recipe. The video itself
-        isn’t kept; the recipe links back to the original on Instagram.
+        When you import a reel, Nate’s Bakery sends the link to Apify, a web-scraping service, which returns the reel’s caption, creator
+        handle, and thumbnail. The recipe itself is read from the caption by Apple Intelligence, through the Shortcut — on your device, or on
+        Apple’s Private Cloud Compute — never by Nate’s Bakery’s own servers. The reel’s audio and video are never downloaded.
       </p>
     ),
+  },
+  {
+    heading: "Where it is stored",
+    body: <p>The database is Supabase, in the United States (Oregon). The app itself runs on Vercel.</p>,
   },
 ];
 
@@ -46,7 +53,7 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">
       <h1 className="type-display-md text-ink desktop:type-display-lg">Privacy</h1>
-      <p className="mt-xs type-caption text-muted">Updated 30 September 2026</p>
+      <p className="mt-xs type-caption text-muted">Updated 15 October 2026</p>
       <p className="mt-base type-body-lg text-body">Nate’s Bakery is a personal baking app with one owner. Here is what it keeps and who can see it.</p>
       {sections.map((s) => (
         <section key={s.heading} aria-labelledby={slug(s.heading)} className="mt-xl">

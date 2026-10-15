@@ -148,7 +148,7 @@ test.describe("signed out", () => {
   test("privacy and not-found use the public shell", async ({ page }) => {
     await ready(page, "/privacy");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy");
-    await expect(page.getByRole("heading", { level: 2 })).toHaveText(["What Nate’s Bakery stores", "What a share link shows", "Reels"]);
+    await expect(page.getByRole("heading", { level: 2 })).toHaveText(["What Nate’s Bakery stores", "What a share link shows", "Reels", "Where it is stored"]);
     await expectPublicShell(page);
     await expectPageTop(page);
     await shot(page, "09-privacy-signed-out", true);

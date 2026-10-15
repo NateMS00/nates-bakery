@@ -11,7 +11,8 @@ export function normalizeReelUrl(input: string): string | null {
   return `https://www.instagram.com/${kind}/${m[2]}/`;
 }
 
-export const IMPORT_STAGES = ["Reading the caption", "Listening to the audio", "Converting to grams"] as const;
+// SKELETON 1.4.0: caption only, read by Apple Intelligence through the Shortcut.
+export const IMPORT_STAGES = ["Getting the caption", "Reading the recipe", "Converting to grams"] as const;
 /** How long each stage of the stubbed import takes. */
 export const STAGE_MS = 1500;
 export const IMPORT_MS = STAGE_MS * IMPORT_STAGES.length;
@@ -32,3 +33,15 @@ export type StartResult =
 
 /** Where the Shortcut is installed from. STUB: the Shortcut hasn't been published yet. */
 export const SHORTCUT_URL = "https://www.icloud.com/shortcuts/backery-import";
+
+/**
+ * BONES-import "Setup needed": the Shortcut found no import key ("no-key"), or the
+ * server rejected it as revoked or malformed ("bad-key"). Not a FailReason — this
+ * opens Set up the Shortcut instead of the status area's error notice.
+ */
+export type SetupReason = "no-key" | "bad-key";
+
+export const SETUP_MESSAGES: Record<SetupReason, string> = {
+  "no-key": "Add your import key to the Shortcut to start importing.",
+  "bad-key": "Your import key no longer works. Create a new one.",
+};

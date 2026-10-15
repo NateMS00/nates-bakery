@@ -42,6 +42,11 @@ export interface DataBackend {
   startImport(url: string, options: { again?: boolean }): Promise<StartResult>;
   /** Re-runs a "failed" draft's import from its kept caption. False if the draft isn't "failed". */
   retryDraft(draftId: string): Promise<boolean>;
+
+  /** When the owner's import key was made, or null if there isn't one yet. Never the key itself. */
+  getImportKeyCreatedAt(): Promise<string | null>;
+  /** Creates the owner's import key, replacing any earlier one at once. Returned only this once. */
+  createImportKey(): Promise<string>;
 }
 
 export interface AuthBackend {

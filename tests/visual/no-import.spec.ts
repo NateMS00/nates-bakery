@@ -59,7 +59,7 @@ test("empty Library: Add your first recipe, nothing about reels", async ({ page 
   await ready(page, `${EMPTY}/recipes`);
   await expect(page.getByText("Add your first recipe")).toBeVisible();
   await expect(page.getByRole("link", { name: "New recipe", exact: true })).toHaveAttribute("href", "/recipes/new");
-  await expect(page.getByText(/reel|Share from Instagram/i)).toHaveCount(0);
+  await expect(page.getByText(/reel|Set up the Shortcut/i)).toHaveCount(0);
   expect((await hrefs(page)).filter((h) => h.startsWith("/import"))).toEqual([]);
   await shot(page, "02-empty");
 });

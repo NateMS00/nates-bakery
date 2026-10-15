@@ -1,15 +1,19 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Copy } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { ConfirmActions } from "@/components/ui/ConfirmDialog";
+import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
+import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ExternalLink, TextLink } from "@/components/ui/TextLink";
 import { cx } from "@/components/ui/cx";
-import { startImport } from "@/lib/data/actions";
-import { FAIL_MESSAGES, IMPORT_MS, IMPORT_STAGES, SHORTCUT_URL, STAGE_MS, type FailReason } from "@/lib/data/import";
+import { createImportKey, startImport } from "@/lib/data/actions";
+import { FAIL_MESSAGES, IMPORT_MS, IMPORT_STAGES, SETUP_MESSAGES, SHORTCUT_URL, STAGE_MS, type FailReason, type SetupReason } from "@/lib/data/import";
+import { formatKeyDate } from "@/lib/format";
 
 // /import (Import), BONES-import.md: one centered column (8 of 12 cols on desktop).
 // Reel Link with the status area under Import (Processing, Invalid link, Import failed,
@@ -24,7 +28,17 @@ type Status =
 
 const canPaste = () => typeof navigator !== "undefined" && typeof navigator.clipboard?.readText === "function";
 
-export function ImportView({ initialUrl, importedBefore }: { initialUrl: string; importedBefore: boolean }) {
+export function ImportView({
+  initialUrl,
+  importedBefore,
+  setupReason,
+  importKeyCreatedAt,
+}: {
+  initialUrl: string;
+  importedBefore: boolean;
+  setupReason: SetupReason | null;
+  importKeyCreatedAt: string | null;
+}) {
   const router = useRouter();
   const [link, setLink] = useState(initialUrl);
   const [error, setError] = useState<string>();
@@ -116,7 +130,7 @@ export function ImportView({ initialUrl, importedBefore }: { initialUrl: string;
         }}
       />
 
-      <ShareFromInstagram defaultOpen={!importedBefore} />
+      <SetUpTheShortcut defaultOpen={!importedBefore} setupReason={setupReason} initialCreatedAt={importKeyCreatedAt} />
 
       {/* Manual Entry */}
       <p className="mt-lg type-body-md text-body">
@@ -285,26 +299,37 @@ function ProgressStage({ name, state }: { name: string; state: "pending" | "curr
 }
 
 /**
- * BONES Share from Instagram: 3 steps, open until the first import succeeds, then
- * collapsed to a plain "How to share from Instagram" disclosure, which expands in
- * place into the full section (focus moves to its heading). Opening the page
- * at #share-from-instagram (the Library's empty state) opens it.
+ * BONES-import "Set up the Shortcut": 4 steps, open until the first import succeeds,
+ * then collapsed to a plain disclosure, which expands in place into the full section
+ * (focus moves to its heading). Opening the page at #set-up-the-shortcut (the
+ * Library's empty state) opens it; so does a "Setup needed" reason — which also takes
+ * focus immediately, not only when the owner expands it themselves.
  */
-function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
+function SetUpTheShortcut({
+  defaultOpen,
+  setupReason,
+  initialCreatedAt,
+}: {
+  defaultOpen: boolean;
+  setupReason: SetupReason | null;
+  initialCreatedAt: string | null;
+}) {
   const linkedTo = useSyncExternalStore(
     (onChange) => {
       window.addEventListener("hashchange", onChange);
       return () => window.removeEventListener("hashchange", onChange);
     },
-    () => window.location.hash === "#share-from-instagram",
+    () => window.location.hash === "#set-up-the-shortcut",
     () => false,
   );
   const [toggled, setToggled] = useState<boolean | null>(null);
-  const open = toggled ?? (defaultOpen || linkedTo);
+  const open = toggled ?? (defaultOpen || linkedTo || Boolean(setupReason));
   const panelId = useId();
 
   const heading = useRef<HTMLHeadingElement>(null);
-  const expandedByUser = useRef(false);
+  // A "Setup needed" reason takes focus as soon as the page opens, same as the owner
+  // expanding it by hand — both are "this just became the thing to do".
+  const expandedByUser = useRef(Boolean(setupReason));
   useEffect(() => {
     if (open && expandedByUser.current) heading.current?.focus();
   }, [open]);
@@ -312,7 +337,7 @@ function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
   if (!open) {
     // Collapsed: a plain disclosure, not a section heading.
     return (
-      <div id="share-from-instagram" className="mt-lg scroll-mt-lg">
+      <div id="set-up-the-shortcut" className="mt-lg scroll-mt-lg">
         <button
           type="button"
           aria-expanded={false}
@@ -322,7 +347,7 @@ function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
           }}
           className="inline-flex min-h-touch-min items-center gap-xs rounded-sm type-body-md text-primary underline-offset-3 hover:underline focus-visible:outline-offset-2"
         >
-          How to share from Instagram
+          Set up the Shortcut
           <ChevronDown aria-hidden="true" className="size-icon-sm" strokeWidth={2.2} />
         </button>
       </div>
@@ -330,28 +355,164 @@ function ShareFromInstagram({ defaultOpen }: { defaultOpen: boolean }) {
   }
 
   return (
-    <section id="share-from-instagram" aria-labelledby="share-heading" className="mt-xl scroll-mt-lg">
-      <SectionHeading ref={heading} tabIndex={-1} id="share-heading" className="outline-none">
-        Share from Instagram
+    <section id="set-up-the-shortcut" aria-labelledby="setup-heading" className="mt-xl scroll-mt-lg">
+      <SectionHeading ref={heading} tabIndex={-1} id="setup-heading" className="outline-none">
+        Set up the Shortcut
       </SectionHeading>
+      {setupReason && (
+        <Notice tone="warning" className="mt-sm">
+          {SETUP_MESSAGES[setupReason]}
+        </Notice>
+      )}
       <ol role="list" id={panelId} className="mt-sm flex flex-col">
         <Step n={1}>
           <ExternalLink href={SHORTCUT_URL} className="inline-flex min-h-touch-min items-center">
             Get the Shortcut
           </ExternalLink>
         </Step>
-        <Step n={2}>In Instagram, tap Share on a reel, then Nate’s Bakery.</Step>
-        <Step n={3}>The reel opens here and imports on its own.</Step>
+        <Step n={2}>
+          <p>Turn on Apple Intelligence (Settings → Apple Intelligence & Siri).</p>
+          <p className="mt-xs type-body-sm text-muted">It reads the recipe on your device, free.</p>
+        </Step>
+        <Step n={3}>
+          <ImportKeyStep initialCreatedAt={initialCreatedAt} />
+        </Step>
+        <Step n={4}>In Instagram, tap Share on a reel, then Nate’s Bakery.</Step>
       </ol>
     </section>
   );
 }
 
+/**
+ * BONES: "Add your import key". Create import key shows it once, with Copy; it's
+ * never shown again after that or after the page is left. With a key already made,
+ * "Import key created 13 Oct" and Revoke and create a new one, which follows the
+ * Destructive confirmations rule inline (no key works until the new one is pasted in).
+ */
+function ImportKeyStep({ initialCreatedAt }: { initialCreatedAt: string | null }) {
+  const [createdAt, setCreatedAt] = useState(initialCreatedAt);
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const field = useRef<HTMLInputElement>(null);
+  const createButton = useRef<HTMLButtonElement>(null);
+  const copyButton = useRef<HTMLButtonElement>(null);
+  const revokeButton = useRef<HTMLButtonElement>(null);
+  const keepButton = useRef<HTMLButtonElement>(null);
+  const pendingFocus = useRef<"create" | "copy" | "revoke" | "keep" | null>(null);
+
+  useEffect(() => {
+    const target = { create: createButton, copy: copyButton, revoke: revokeButton, keep: keepButton }[pendingFocus.current ?? "create"];
+    if (pendingFocus.current) target.current?.focus();
+    pendingFocus.current = null;
+  }, [revealedKey, confirmRevoke]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = window.setTimeout(() => setCopied(false), 10_000);
+    return () => window.clearTimeout(t);
+  }, [copied]);
+
+  async function create() {
+    setCreating(true);
+    const key = await createImportKey();
+    setCreating(false);
+    setCreatedAt(new Date().toISOString());
+    setRevealedKey(key);
+    setConfirmRevoke(false);
+    setCopied(false);
+    pendingFocus.current = "copy";
+  }
+
+  async function copy() {
+    if (!revealedKey) return;
+    try {
+      await navigator.clipboard.writeText(revealedKey);
+    } catch {
+      field.current?.select();
+      document.execCommand("copy");
+    }
+    // Never shown again once it's copied.
+    setRevealedKey(null);
+    setCopied(true);
+    pendingFocus.current = "revoke";
+  }
+
+  return (
+    <div className="mt-xs flex flex-col items-start gap-sm">
+      <p>Add your import key.</p>
+      {revealedKey ? (
+        <>
+          <div className="flex w-full max-w-[36ch] gap-sm">
+            <input
+              suppressHydrationWarning
+              ref={field}
+              aria-label="Import key"
+              readOnly
+              value={revealedKey}
+              onFocus={(e) => e.currentTarget.select()}
+              className="min-h-control-height min-w-0 flex-1 truncate rounded-md border border-border bg-surface-card px-base type-body-sm text-ink hover:border-ink focus-visible:border-primary focus-visible:outline-offset-1"
+            />
+            <Button ref={copyButton} variant="secondary" onClick={copy} data-autofocus>
+              <Copy aria-hidden="true" />
+              Copy
+            </Button>
+          </div>
+          <p className="type-body-sm text-muted">This is the only time you’ll see it — paste it into the Shortcut now.</p>
+        </>
+      ) : (
+        <>
+          {createdAt && !confirmRevoke && <p className="type-body-sm text-muted">Import key created {formatKeyDate(createdAt)}</p>}
+          {copied && <InlineConfirmation>Key copied</InlineConfirmation>}
+          {!confirmRevoke &&
+            (createdAt ? (
+              <Button
+                ref={revokeButton}
+                variant="text"
+                onClick={() => {
+                  pendingFocus.current = "keep";
+                  setConfirmRevoke(true);
+                }}
+                className="-ml-sm"
+              >
+                Revoke and create a new one
+              </Button>
+            ) : (
+              <Button ref={createButton} variant="secondary" onClick={create} aria-busy={creating || undefined}>
+                {creating ? "Creating…" : "Create import key"}
+              </Button>
+            ))}
+          {confirmRevoke && (
+            <div role="group" aria-labelledby="revoke-key-question" className="w-full rounded-md border-l-4 border-error bg-error-wash px-base py-md">
+              <p id="revoke-key-question" className="type-body-sm text-ink">
+                The Shortcut stops working until you paste the new key.
+              </p>
+              <ConfirmActions
+                className="mt-md"
+                confirm="Revoke and create"
+                cancel="Keep current key"
+                autoFocusCancel={false}
+                cancelRef={keepButton}
+                onConfirm={create}
+                onCancel={() => {
+                  pendingFocus.current = "revoke";
+                  setConfirmRevoke(false);
+                }}
+              />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
-    <li className="flex min-h-touch-min items-center gap-md border-b border-hairline py-xs type-body-md text-ink last:border-b-0">
+    <li className="flex min-h-touch-min items-start gap-md border-b border-hairline py-sm type-body-md text-ink last:border-b-0">
       <span className="min-w-[2ch] type-amount font-bold text-primary">{n}</span>
-      <span>{children}</span>
+      <div className="min-w-0 flex-1">{children}</div>
     </li>
   );
 }

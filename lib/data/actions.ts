@@ -34,6 +34,16 @@ export async function retryImport(draftId: string): Promise<boolean> {
   return (await data()).retryDraft(draftId);
 }
 
+/** Set up the Shortcut: when the owner's import key was made, or null if there isn't one. */
+export async function getImportKeyCreatedAt(): Promise<string | null> {
+  return (await data()).getImportKeyCreatedAt();
+}
+
+/** Create import key, or Revoke and create a new one: returned once, never stored client-side after. */
+export async function createImportKey(): Promise<string> {
+  return (await data()).createImportKey();
+}
+
 /** New Recipe: Save → /recipes/:recipeId. */
 export async function createRecipe(content: EditorState): Promise<SaveResult> {
   if (blockers(content).length) return { ok: false, error: "blocked" };

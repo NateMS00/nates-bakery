@@ -200,7 +200,7 @@ test("empty: no recipes and no drafts", async ({ page }) => {
   await ready(page, "http://localhost:3102/recipes");
   await expect(page.getByText("Save your first recipe from a reel")).toBeVisible();
   await expect(page.getByRole("link", { name: "Import from a reel" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Set up Share from Instagram" })).toHaveAttribute("href", "/import#share-from-instagram");
+  await expect(page.getByRole("link", { name: "Set up the Shortcut" })).toHaveAttribute("href", "/import#set-up-the-shortcut");
   await expect(page.getByLabel("Search", { exact: true })).toHaveCount(0);
   await expect(page.locator("h2")).toHaveCount(0);
   await expectPageBasics(page);

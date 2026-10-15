@@ -211,4 +211,18 @@ export const fixturesData: DataBackend = {
     draft.startedAt = Date.now();
     return true;
   },
+
+  async getImportKeyCreatedAt() {
+    return (await db()).importKey?.createdAt ?? null;
+  },
+
+  async createImportKey() {
+    const data = await db();
+    const createdAt = new Date().toISOString();
+    data.importKey = { createdAt };
+    // STUB: a real-shaped key (nbk_ + 43 base64url characters), not real crypto.
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const key = Array.from({ length: 43 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+    return `nbk_${key}`;
+  },
 };

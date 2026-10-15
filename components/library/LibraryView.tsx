@@ -231,8 +231,8 @@ function EmptyState({ importEnabled }: { importEnabled: boolean }) {
       <p className="mt-lg type-body-lg text-ink">{importEnabled ? "Save your first recipe from a reel" : "Add your first recipe"}</p>
       <PrimaryAction importEnabled={importEnabled} centered />
       {importEnabled && (
-        <TextLink href="/import#share-from-instagram" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">
-          Set up Share from Instagram
+        <TextLink href="/import#set-up-the-shortcut" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">
+          Set up the Shortcut
         </TextLink>
       )}
     </div>

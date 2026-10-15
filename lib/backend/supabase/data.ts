@@ -141,4 +141,20 @@ export const supabaseData: DataBackend = {
   discardDraft: noImport,
   startImport: noImport,
   retryDraft: noImport,
+
+  // The import key itself doesn't need the rest of Import to be live (migration
+  // 0002's schema and create_import_key() work regardless), so this one is real.
+  async getImportKeyCreatedAt() {
+    const db = await supabaseServer();
+    const { data, error } = await db.from("import_keys").select("created_at").maybeSingle();
+    if (error) fail("loading the import key", error);
+    return (data?.created_at as string | undefined) ?? null;
+  },
+
+  async createImportKey() {
+    const db = await supabaseServer();
+    const { data, error } = await db.rpc("create_import_key");
+    if (error || !data) fail("creating the import key", error ?? { message: "no key returned" });
+    return data as string;
+  },
 };

@@ -17,6 +17,8 @@ export const FIXTURE_NS_COOKIE = "backery_fixture_ns";
 export interface Db {
   recipes: Recipe[];
   drafts: Draft[];
+  /** BONES-import "Add your import key": null until Create import key is pressed. */
+  importKey: { createdAt: string } | null;
 }
 
 const store = globalThis as typeof globalThis & { __backeryDb?: Map<string, Db> };
@@ -27,6 +29,7 @@ function seed(): Db {
   return structuredClone({
     recipes: set === "full" ? [...RECIPES, ...LIBRARY_RECIPES] : [],
     drafts: set === "empty" ? [] : DRAFTS,
+    importKey: null,
   });
 }
 

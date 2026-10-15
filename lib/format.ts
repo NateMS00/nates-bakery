@@ -57,6 +57,13 @@ export function formatBakeDate(isoDate: string, today: Date = new Date()): strin
   return `${weekday} ${d} ${month}${y === today.getFullYear() ? "" : ` ${y}`}`;
 }
 
+/** "13 Oct" (the year only when it isn't the current one) — BONES-import "Import key created". */
+export function formatKeyDate(isoTimestamp: string, today: Date = new Date()): string {
+  const d = new Date(isoTimestamp);
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()];
+  return `${d.getUTCDate()} ${month}${d.getUTCFullYear() === today.getFullYear() ? "" : ` ${d.getUTCFullYear()}`}`;
+}
+
 export function todayIso(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");

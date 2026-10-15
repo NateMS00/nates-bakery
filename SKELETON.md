@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.4.5 · **Updated**: 2026-10-14
+> **Version**: 1.4.6 · **Updated**: 2026-10-15
 
 ---
 
@@ -335,6 +335,7 @@ Default access: public.
 - **Assumed**: The caption fetch runs on the server and only answers requests carrying the owner's import key, so only Nathan can spend the Apify credit.
 - **Assumed**: Grams are the canonical unit. Volume amounts are marked Converted with the original kept; counts and packages converted at a typical weight are marked Estimated (a stick of butter is a package: 113 g in the US, 90 g in Mexico); ingredients the caption gives no amount for, and ingredients or units the table doesn't know, are Missing, never filled with a guess (an unknown one keeps its original amount, and its name is logged so the table can grow).
 - **Assumed**: Drafts are created as soon as the caption arrives and persist until saved or discarded.
+- **Decided** (2026-10-15): The reel thumbnail is copied into the app's own Storage the first time its draft is opened, not when the recipe is saved — a draft can wait days, and Instagram's image link expires. The Shortcut opens `/import/:draftId` seconds after importing, in the owner's signed-in session, so the copy runs there with no service-role key and no separate upload slot. A failed copy leaves the picture placeholder; nothing else breaks.
 - **Open** (2026-10-13): When a caption is cut off, some creators continue the recipe in their own first comment. Apify already returns the comments, so the import could append the creator's own comment (never anyone else's). Not in this first version; revisit after real use.
 - **Decided** (2026-10-14): Creator tips that aren't about one ingredient ("they'll finish setting as they cool") import into one step group named exactly "Tips", always last, however the model ordered it. Bake Mode shows it unnumbered, after the last numbered step.
 - **Assumed**: Scaling is a multiplier kept in the URL and carried into Bake Mode and the log entry.
@@ -364,6 +365,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.4.6 (2026-10-15): Decided: the reel thumbnail copies into Storage when its draft is first opened, not at save, since the Instagram link can expire first.
 - 1.4.5 (2026-10-14): Decided: a structured-data reply that doesn't parse gets one automatic retry (same caption) before the draft reaches "Couldn't finish" (FLOW-01).
 - 1.4.4 (2026-10-14): Decided: creator tips land in one step group named "Tips", always last, shown unnumbered in Bake Mode.
 - 1.4.3 (2026-10-13): Open question: reading the creator's own first comment when a caption is cut off.

@@ -21,7 +21,7 @@ export function Notice({
   className?: string;
 }) {
   return (
-    <div className={cx("flex flex-wrap items-center gap-x-sm rounded-md border-l-4 px-base py-md type-body-sm text-ink", tones[tone], className)}>
+    <div className={cx("flex flex-wrap items-center gap-x-sm gap-y-md rounded-md border-l-4 px-base py-md type-body-sm text-ink", tones[tone], className)}>
       <p>{children}</p>
       {action}
     </div>

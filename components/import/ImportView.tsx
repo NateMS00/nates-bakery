@@ -8,7 +8,7 @@ import { ConfirmActions } from "@/components/ui/ConfirmDialog";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ExternalLink, TextLink } from "@/components/ui/TextLink";
+import { ExternalLink, TextLink, textLinkClass } from "@/components/ui/TextLink";
 import { cx } from "@/components/ui/cx";
 import { createImportKey, findReadyDraft } from "@/lib/data/actions";
 import {
@@ -284,11 +284,13 @@ function StatusArea({
         </p>
         <p className="mt-base type-body-sm text-muted">
           Didn’t start?{" "}
-          <Button variant="text" onClick={onTryAgain}>
+          <button type="button" onClick={onTryAgain} className={cx(textLinkClass, "inline-flex min-h-touch-min items-center")}>
             Try again
-          </Button>
+          </button>
           {" · "}
-          <TextLink href="#set-up-the-shortcut">Set up the Shortcut</TextLink>
+          <TextLink href="#set-up-the-shortcut" className="inline-flex min-h-touch-min items-center">
+            Set up the Shortcut
+          </TextLink>
         </p>
       </div>
     );

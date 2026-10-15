@@ -6,6 +6,8 @@ import { handleFinishImport } from "@/lib/import/server";
 // POST {draftId, importKey, reply} → one of FinishImportResponse's shapes
 // (lib/data/import.ts). No session, same as start-import.
 
+// Always HTTP 200 with the status in the body, even for a malformed request — see
+// start/route.ts.
 export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null);
   if (
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
     typeof (body as Record<string, unknown>).importKey !== "string" ||
     typeof (body as Record<string, unknown>).reply !== "string"
   ) {
-    return NextResponse.json({ status: "failed" }, { status: 400 });
+    return NextResponse.json({ status: "failed" });
   }
   const { draftId, importKey, reply } = body as { draftId: string; importKey: string; reply: string };
   const backend = await dataBackend();

@@ -17,14 +17,20 @@ async function pickFetchCaption(): Promise<CaptionFetcher> {
   return (await import("@/lib/import/apify")).fetchReel;
 }
 
+// Always HTTP 200 with the status in the body, even for a malformed request — the
+// Shortcut (docs/shortcut-guide.md) reads `status` from the response either way, and
+// a non-200 risks Shortcuts stopping before it gets the chance to.
 export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || typeof (body as Record<string, unknown>).url !== "string" || typeof (body as Record<string, unknown>).importKey !== "string") {
-    return NextResponse.json({ status: "invalid" }, { status: 400 });
+    return NextResponse.json({ status: "invalid" });
   }
   const { url, importKey, again } = body as { url: string; importKey: string; again?: unknown };
   const backend = await dataBackend();
   const fetchCaption = await pickFetchCaption();
-  const result = await handleStartImport(backend, fetchCaption, { url, importKey, again: again === true });
+  // A Shortcut field mistyped as Text rather than Boolean sends the JSON string
+  // "true"; accept it too, so that mistake fails loudly during testing instead of
+  // silently never retrying/re-importing.
+  const result = await handleStartImport(backend, fetchCaption, { url, importKey, again: again === true || again === "true" });
   return NextResponse.json(result);
 }

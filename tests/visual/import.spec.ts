@@ -222,6 +222,27 @@ test("start-import: a private, deleted, or no-recipe reel fails with its own rea
   }
 });
 
+test("the import routes always answer HTTP 200, even a malformed request — the Shortcut reads status from the body", async ({ page }) => {
+  await ready(page, "/import");
+  const start = await page.request.post("/api/import/start", { data: { url: 123 } }); // no importKey, wrong url type
+  expect(start.status()).toBe(200);
+  expect(await start.json()).toEqual({ status: "invalid" });
+
+  const finish = await page.request.post("/api/import/finish", { data: {} });
+  expect(finish.status()).toBe(200);
+  expect(await finish.json()).toEqual({ status: "failed" });
+
+  // A field mistyped as Text in Shortcuts' JSON editor sends "true", not true — it
+  // must still count as true (skipping the already-imported check), same as the
+  // native boolean would.
+  const importKey = await makeImportKey(page);
+  const already = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/C9nataRita01/", importKey } });
+  expect((await already.json()).status).toBe("already");
+  const again = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/C9nataRita01/", importKey, again: "true" } });
+  expect(again.status()).toBe(200);
+  expect((await again.json()).status).not.toBe("already");
+});
+
 test("Import failed: Enter it manually or Try another link", async ({ page }) => {
   const link = "https://www.instagram.com/reel/Cprivate42/";
   await ready(page, `/import?error=private&url=${encodeURIComponent(link)}`);

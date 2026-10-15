@@ -1253,9 +1253,9 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`wordmark`** — "Nate’s Bakery" (typographic apostrophe) in Fraunces italic `wordmark` style, cobalt. Links to the Library in the App variant; plain text in the Share variant.
 
-**`app-icon`** — The Home Screen and app icon: an azulejo tile frame (rounded square outline with a diamond at each corner) around the wordmark's italic N, tin glaze (`{colors.canvas}`, #F6F2E8) on cobalt (`{colors.primary}`), full bleed, square corners (iOS rounds them). The N matches the wordmark's cut. Exports: 1024 master, 512 and 192 (web manifest, purpose any), apple-touch-icon 180. Artwork: `design-reference/icons/app-icon.svg`; source in the Design System file, Branding → Logo (chosen by Nathan, 2026-10-15).
+**`app-icon`** — The Home Screen and app icon: an azulejo tile frame (rounded square outline with a diamond at each corner) around the wordmark's italic N, tin glaze (`{colors.canvas}`, #F6F2E8) on cobalt (`{colors.primary}`), full bleed, square corners (iOS rounds them). The N uses the sharp cut (`SOFT 0`, `opsz 144`), unlike the wordmark: at icon sizes its hairlines hold up. Exports: 1024 master, 512 and 192 (web manifest, purpose any), apple-touch-icon 180. Artwork: `design-reference/icons/app-icon.svg`; source in the Design System file, Branding → Logo (chosen by Nathan, 2026-10-15).
 
-**`favicon`** — The browser tab icon: the N alone on cobalt, no frame, because at 16–32px the frame turns to noise. Same cut as the wordmark: `design-reference/icons/favicon-sharp.svg` with the sharp wordmark, `favicon-chunky.svg` if the wordmark stays soft.
+**`favicon`** — The browser tab icon: the N alone on cobalt, no frame, because at 16–32px the frame turns to noise. Soft cut, matching the wordmark (`SOFT 100`, `opsz 36`): `design-reference/icons/favicon-chunky.svg`. The sharp version (`favicon-sharp.svg`) is kept for reference; its hairlines break up at tab size.
 
 **`tile-band`** — A 24px strip of the azulejo motif in cobalt on canvas, between two 1px cobalt rules, like the painted border (barra) that frames a tile panel. Used under `app-header` and along the top of `sheet`. Decorative and hidden from assistive technology.
 

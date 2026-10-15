@@ -52,10 +52,11 @@ for (const size of [1024, 512, 192, 180]) {
   console.log(`public/${name} (${size}×${size})`);
 }
 
-// Favicon: the sharp-cut N (SKIN.md 2026-10-15: the wordmark kept SOFT 0, the sharp
-// cut, so favicon-sharp.svg is the one that matches it), shipped as-is and as a 32px
-// .ico for browsers that don't read SVG favicons.
-const favicon = readIcon("favicon-sharp.svg");
+// Favicon: the soft-cut N (SKIN.md 2026-10-15: SOFT 0 was tried for the wordmark but
+// its hairlines broke up at 24px/1x, so the wordmark — and favicon.svg, same cut —
+// stayed on SOFT 100), shipped as-is and as a 32px .ico for browsers that don't read
+// SVG favicons.
+const favicon = readIcon("favicon-chunky.svg");
 writeFileSync(resolve(publicDir, "favicon.svg"), favicon);
 console.log("public/favicon.svg");
 

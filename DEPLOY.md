@@ -27,8 +27,9 @@ in Vercel's environment variables, never in the repo.
 ## Vercel
 
 - [x] Import the GitHub repository. (The import created no deployment; an empty commit to `main` started the first one.)
-- [x] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (all environments; previews share the Supabase project for now). Not `BACKERY_BACKEND`, not `BACKERY_FEATURE_IMPORT`.
-- [ ] `APIFY_TOKEN` (server-only, no `NEXT_PUBLIC_` prefix) — needed before `BACKERY_FEATURE_IMPORT` goes on; `lib/import/apify.ts`'s live caption fetch throws without it. Not added yet.
+- [x] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (all environments; previews share the Supabase project for now). Not `BACKERY_BACKEND`.
+- [x] `APIFY_TOKEN` (server-only, no `NEXT_PUBLIC_` prefix) — `lib/import/apify.ts`'s live caption fetch needs it. Added to Production and Preview, marked Sensitive (2026-10-15).
+- [x] `BACKERY_FEATURE_IMPORT=on` — added to Production and Preview (2026-10-15); verified end to end from Nathan's iPhone the same day (`PROGRESS.md`).
 - [x] Functions region: Portland (`pdx1`), next to the Supabase project, set in `vercel.json` (applies from the first deploy).
 - [x] Deploy: **https://nates-bakery.vercel.app** (2026-10-01). Deployment-specific `…-nate-bcff.vercel.app` addresses sit behind Vercel's login.
 

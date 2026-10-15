@@ -61,19 +61,25 @@ test("Set up the Shortcut: all 4 steps, Apple Intelligence's reason, and the imp
   await shot(page, "03-set-up-the-shortcut");
 });
 
-test("import key: Create shows it once with Copy; copying hides it, leaving the date", async ({ page }) => {
+test("import key: Create shows it once with Copy; copying keeps it visible until Done", async ({ page }) => {
   await ready(page, "http://localhost:3102/import");
   const create = page.getByRole("button", { name: "Create import key" });
   await create.click();
   const field = page.getByRole("textbox", { name: "Import key" });
   await expect(field).toHaveValue(/^nbk_/);
+  const key = await field.inputValue();
   const copy = page.getByRole("button", { name: "Copy" });
   await expect(copy).toBeFocused();
   await shot(page, "04-import-key-revealed");
 
   await copy.click();
-  await expect(field).toHaveCount(0); // never shown again once copied
   await expect(page.getByText("Key copied")).toBeVisible();
+  // A failed paste shouldn't force a new key: it stays visible until Done.
+  await expect(field).toHaveValue(key);
+  await expect(page.getByText(/^Import key created /)).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(field).toHaveCount(0); // never shown again once dismissed
   await expect(page.getByText(/^Import key created /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Revoke and create a new one" })).toBeFocused();
 });
@@ -83,6 +89,7 @@ test("import key: Revoke and create a new one, confirmed inline, replaces the ke
   await page.getByRole("button", { name: "Create import key" }).click();
   const firstKey = await page.getByRole("textbox", { name: "Import key" }).inputValue();
   await page.getByRole("button", { name: "Copy" }).click();
+  await page.getByRole("button", { name: "Done" }).click();
 
   const revoke = page.getByRole("button", { name: "Revoke and create a new one" });
   await revoke.click();

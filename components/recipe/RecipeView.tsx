@@ -138,7 +138,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         </div>
 
         {hasPicture && (
-          <RecipePicture src={recipe.picture} className="mt-sm w-[96px] h-[128px] self-start [grid-area:pic] tablet:w-[144px] tablet:h-[192px]" />
+          <RecipePicture src={recipe.picture} className="mt-sm w-[96px] h-[128px] self-start justify-self-end [grid-area:pic] tablet:w-[144px] tablet:h-[192px]" />
         )}
         <p className="mt-sm type-label text-primary [grid-area:category]">{categoryLabel(recipe.category)}</p>
         <h1 className="mt-xs type-display-md text-ink [grid-area:h1] desktop:type-display-lg">{recipe.title}</h1>

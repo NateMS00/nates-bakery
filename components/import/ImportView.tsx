@@ -366,7 +366,7 @@ function SetUpTheShortcut({
       )}
       <ol role="list" id={panelId} className="mt-sm flex flex-col">
         <Step n={1}>
-          <ExternalLink href={SHORTCUT_URL} className="inline-flex min-h-touch-min items-center">
+          <ExternalLink href={SHORTCUT_URL} className="inline-flex min-h-touch-min items-start">
             Get the Shortcut
           </ExternalLink>
         </Step>
@@ -398,12 +398,13 @@ function ImportKeyStep({ initialCreatedAt }: { initialCreatedAt: string | null }
   const field = useRef<HTMLInputElement>(null);
   const createButton = useRef<HTMLButtonElement>(null);
   const copyButton = useRef<HTMLButtonElement>(null);
+  const doneButton = useRef<HTMLButtonElement>(null);
   const revokeButton = useRef<HTMLButtonElement>(null);
   const keepButton = useRef<HTMLButtonElement>(null);
-  const pendingFocus = useRef<"create" | "copy" | "revoke" | "keep" | null>(null);
+  const pendingFocus = useRef<"create" | "copy" | "done" | "revoke" | "keep" | null>(null);
 
   useEffect(() => {
-    const target = { create: createButton, copy: copyButton, revoke: revokeButton, keep: keepButton }[pendingFocus.current ?? "create"];
+    const target = { create: createButton, copy: copyButton, done: doneButton, revoke: revokeButton, keep: keepButton }[pendingFocus.current ?? "create"];
     if (pendingFocus.current) target.current?.focus();
     pendingFocus.current = null;
   }, [revealedKey, confirmRevoke]);
@@ -433,9 +434,13 @@ function ImportKeyStep({ initialCreatedAt }: { initialCreatedAt: string | null }
       field.current?.select();
       document.execCommand("copy");
     }
-    // Never shown again once it's copied.
-    setRevealedKey(null);
+    // Stays visible until Done or leaving the page, so a failed paste doesn't force a new key.
     setCopied(true);
+  }
+
+  function done() {
+    setRevealedKey(null);
+    setCopied(false);
     pendingFocus.current = "revoke";
   }
 
@@ -459,12 +464,15 @@ function ImportKeyStep({ initialCreatedAt }: { initialCreatedAt: string | null }
               Copy
             </Button>
           </div>
+          {copied && <InlineConfirmation>Key copied</InlineConfirmation>}
           <p className="type-body-sm text-muted">This is the only time you’ll see it — paste it into the Shortcut now.</p>
+          <Button ref={doneButton} variant="secondary" onClick={done}>
+            Done
+          </Button>
         </>
       ) : (
         <>
           {createdAt && !confirmRevoke && <p className="type-body-sm text-muted">Import key created {formatKeyDate(createdAt)}</p>}
-          {copied && <InlineConfirmation>Key copied</InlineConfirmation>}
           {!confirmRevoke &&
             (createdAt ? (
               <Button

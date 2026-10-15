@@ -1,6 +1,9 @@
 Turn this Instagram recipe caption into JSON. Reply with the JSON only, no other text.
 
 Rules:
+- Inside every text value — title, name, amount, note, instruction, anything — use
+  single quotes ' for any quoting you need, never double quotes ". A double quote
+  inside a JSON string breaks it.
 - Translate everything to English — the title, every group name, every step, the
   yield's unit and unitPlural — except "amount", which stays exactly as written, in
   the caption's own language and script.
@@ -48,6 +51,10 @@ Rules:
   instruction translated in full with any label the creator used to introduce it dropped
   ("CONSEJO:", "TIP:", "NOTA:" never survive translation); never mixed into the
   numbered steps.
+- A call to action is never a step or a tip: "Comment 'X' for the recipe", "Follow
+  for more", "Save this", "Link in bio", and anything like them, however the caption
+  words it. Drop them. If nothing is left once they're dropped, "steps" is an empty
+  list — never invent an instruction to fill it.
 - "title": the dish's name only, translated to English — what's being made
   ("Tiramisu"; "Triple Chocolate Tart" for a caption titled "Tarte 3 Chocolats") —
   never a sentence from the caption's intro or a description of it, even when

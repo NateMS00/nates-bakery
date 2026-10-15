@@ -23,7 +23,15 @@ import type { AmountPart } from "./grams";
 //   reported as "malformed" (with a `reason`, and for a parse failure a `context` —
 //   both for Vercel's logs) rather than guessed at or partially used;
 // - a reply wrapped in a markdown code fence (```json ... ```) is tolerated and
-//   unwrapped before parsing, a known quirk of asking a chat model for JSON.
+//   unwrapped before parsing, a known quirk of asking a chat model for JSON;
+// - the model turned a caption's call-to-action into a step, quoting a word inside it
+//   with real double quotes ('Comment "cheesecake" for the recipe...'), breaking the
+//   JSON (a real production failure, 2026-10-15). The prompt now says to drop calls
+//   to action and use single quotes inside text; narrowly repaired here too, as a
+//   safety net, by escaping an unescaped quote found a JSON parse error points at
+//   (`findStrayQuote`) and reparsing — logged (quoteRepairs) when it fires;
+// - "stepGroups" missing or null (a caption with real ingredients but no actual
+//   instructions, SKELETON's "no steps" state) is read as an empty list, not malformed.
 
 export interface ExtractedIngredient {
   name: string;
@@ -66,7 +74,9 @@ export interface ExtractedRecipe {
 }
 
 export type ExtractResult =
-  | { status: "ok"; recipe: ExtractedRecipe }
+  /** `quoteRepairs`: how many unescaped quotes inside string values were repaired to
+   * get here (0 or absent if the reply parsed cleanly) — for Vercel's logs. */
+  | { status: "ok"; recipe: ExtractedRecipe; quoteRepairs?: number }
   /** The model replied {"recipe": false}: no recipe in this caption. */
   | { status: "no-recipe" }
   /** The reply wasn't valid JSON, or didn't have the shape the prompt asked for.
@@ -227,20 +237,47 @@ function contextAroundError(text: string, message: string): string | undefined {
   return text.slice(Math.max(0, pos - 40), pos + 40);
 }
 
+/**
+ * The position of the unescaped quote that broke a JSON.parse at `position` (a
+ * closing `"` the model should have written as `\"`) — V8 reports the position of
+ * whatever came after it, skipping whitespace, not the quote itself. Scans back from
+ * `position` through whitespace only; stops (-1) the moment it hits anything else, so
+ * this only ever fires on exactly that pattern, not some other kind of broken JSON.
+ */
+function findStrayQuote(text: string, position: number): number {
+  for (let i = position - 1; i >= Math.max(0, position - 10); i--) {
+    if (text[i] === '"') return i;
+    if (!/\s/.test(text[i])) return -1;
+  }
+  return -1;
+}
+
+const MAX_QUOTE_REPAIRS = 6;
+
 export function extractRecipe(reply: string, caption: string): ExtractResult {
-  const candidate = repairBrokenTextKey(stripCodeFence(reply));
+  let text = repairBrokenTextKey(stripCodeFence(reply));
   let raw: unknown;
-  try {
-    raw = JSON.parse(candidate);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "invalid JSON";
-    return { status: "malformed", reason: message, context: contextAroundError(candidate, message) };
+  let quoteRepairs = 0;
+  for (;;) {
+    try {
+      raw = JSON.parse(text);
+      break;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "invalid JSON";
+      const match = /position (\d+)/.exec(message);
+      const quotePos = match && quoteRepairs < MAX_QUOTE_REPAIRS ? findStrayQuote(text, Number(match[1])) : -1;
+      if (quotePos === -1) return { status: "malformed", reason: message, context: contextAroundError(text, message) };
+      text = text.slice(0, quotePos) + "\\" + text.slice(quotePos);
+      quoteRepairs++;
+    }
   }
   if (!isRecord(raw)) return { status: "malformed", reason: "the reply's top level isn't a JSON object" };
   if (raw.recipe === false) return { status: "no-recipe" };
 
   const ingredientGroups = readGroups(raw.ingredientGroups, "items", (r) => readIngredient(r, caption));
-  const stepGroups = readGroups(raw.stepGroups, "steps", readStep);
+  // A caption with real ingredients but no actual instructions (SKELETON's "no steps"
+  // state) — missing or null, not an empty array, is what the model tends to send.
+  const stepGroups = raw.stepGroups == null ? [] : readGroups(raw.stepGroups, "steps", readStep);
   if (ingredientGroups === null) return { status: "malformed", reason: "ingredientGroups didn't match the expected shape" };
   if (stepGroups === null) return { status: "malformed", reason: "stepGroups didn't match the expected shape" };
 
@@ -255,5 +292,6 @@ export function extractRecipe(reply: string, caption: string): ExtractResult {
       ingredientGroups: dropEmpty(ingredientGroups),
       stepGroups: moveTipsLast(dropEmpty(stepGroups)),
     },
+    ...(quoteRepairs > 0 ? { quoteRepairs } : {}),
   };
 }

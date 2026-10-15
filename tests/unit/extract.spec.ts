@@ -106,6 +106,42 @@ test("extractRecipe: tolerates a reply wrapped in a markdown code fence", () => 
   expect(extractRecipe(fenced, caption)).toEqual(extractRecipe(reply, caption));
 });
 
+// A real production "Couldn't finish" (2026-10-15, draft f2c5c5d2): the model turned
+// the caption's call-to-action into a step, quoting a word with real double quotes —
+// "instruction": "Comment "cheesecake" for the recipe sent directly to you!" — which
+// breaks the JSON right there. cheesecake.json reconstructs that exact pattern (the
+// real reply's full text isn't available — only the error and a short log excerpt);
+// the prompt now tells the model to drop calls to action and use single quotes, and
+// the parser repairs this kind of break if it still happens.
+
+test("extractRecipe: an unescaped quote inside a string value is repaired, not reported malformed", () => {
+  const { caption, reply } = load("cheesecake");
+  const result = extractRecipe(reply, caption);
+  expect(result.status).toBe("ok");
+  if (result.status !== "ok") return;
+  expect(result.quoteRepairs).toBe(2); // the quotes around 'cheesecake', opening and closing
+  expect(result.recipe.stepGroups[0].items[0].text).toContain('"cheesecake"');
+});
+
+test("extractRecipe: a genuinely unrelated stray quote isn't mistaken for this pattern", () => {
+  // Position 10 chars back from the break lands on ordinary text, not a quote —
+  // findStrayQuote must give up, not escape something that isn't the problem.
+  const result = extractRecipe('{"ingredientGroups": [], "stepGroups": [{bad: 1}]}', "caption");
+  expect(result.status).toBe("malformed");
+});
+
+test("extractRecipe: a missing or null stepGroups is an empty list, not malformed", () => {
+  // SKELETON's "no steps in the caption" state: ingredients but no real instructions.
+  const ingredientGroups = '[{"name":null,"items":[{"name":"flour","amount":"1 cup","parts":[{"qty":"1","unit":"cup"}],"note":null}]}]';
+  for (const stepGroups of ['"stepGroups": null,', ""]) {
+    const reply = `{${stepGroups}"ingredientGroups": ${ingredientGroups}}`;
+    const result = extractRecipe(reply, "1 cup flour");
+    expect(result.status, reply).toBe("ok");
+    if (result.status !== "ok") continue;
+    expect(result.recipe.stepGroups).toEqual([]);
+  }
+});
+
 test("extractRecipe: no recipe, and extra or duplicated keys are ignored", () => {
   expect(extractRecipe('{"recipe": false}', "no recipe here")).toEqual({ status: "no-recipe" });
 

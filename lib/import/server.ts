@@ -88,6 +88,9 @@ export async function handleFinishImport(
   if (!draft) return { status: "failed", open: draftUrl(origin, body.draftId) };
 
   const extracted = extractRecipe(body.reply, draft.caption);
+  if (extracted.status === "ok" && extracted.quoteRepairs) {
+    console.error(`import finish: repaired ${extracted.quoteRepairs} unescaped quote(s) in the reply for draft ${body.draftId}`);
+  }
   if (extracted.status === "no-recipe") {
     await backend.importDrop(body.importKey, body.draftId);
     return { status: "no-recipe", open: importUrl(origin, { error: "no-recipe", url: draft.reelUrl }) };

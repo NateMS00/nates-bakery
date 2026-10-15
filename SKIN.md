@@ -172,7 +172,7 @@ typography:
     fontStyle: italic
     lineHeight: 1
     letterSpacing: -0.3px
-    fontVariationSettings: "'SOFT' 100, 'opsz' 36"
+    fontVariationSettings: "'SOFT' 0, 'opsz' 144"
 
 rounded:
   none: 0px
@@ -1040,7 +1040,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 
 ## Typography
 
-**Display face**: Fraunces, a soft old-style serif with an adjustable "softness" axis. Turned to `SOFT 50` for titles and `SOFT 80–100` for group headings and the wordmark, its rounded terminals feel hand-painted, like lettering on a tile panel, without becoming a novelty face.
+**Display face**: Fraunces, a soft old-style serif with an adjustable "softness" axis. Turned to `SOFT 50` for titles and `SOFT 80` for group headings, its rounded terminals feel hand-painted, like lettering on a tile panel, without becoming a novelty face. The wordmark is the exception: `SOFT 0` at the largest optical size (`opsz 144`), so it has sharp, high-contrast strokes with thin hairlines, like a sign painter's display lettering (Nathan's choice, 2026-10-15). The app icon's N uses the same settings.
 
 **Reading face**: Atkinson Hyperlegible Next, designed by the Braille Institute so letters that are easy to confuse (I, l, 1; O, 0) stay distinct. It carries steps, notes, buttons, and labels.
 
@@ -1253,6 +1253,10 @@ This system is border-first: cards and list items use a 1px `{colors.hairline}` 
 
 **`wordmark`** — "Nate’s Bakery" (typographic apostrophe) in Fraunces italic `wordmark` style, cobalt. Links to the Library in the App variant; plain text in the Share variant.
 
+**`app-icon`** — The Home Screen and app icon: an azulejo tile frame (rounded square outline with a diamond at each corner) around the wordmark's italic N, tin glaze (`{colors.canvas}`, #F6F2E8) on cobalt (`{colors.primary}`), full bleed, square corners (iOS rounds them). The N matches the wordmark's cut. Exports: 1024 master, 512 and 192 (web manifest, purpose any), apple-touch-icon 180. Artwork: `design-reference/icons/app-icon.svg`; source in the Design System file, Branding → Logo (chosen by Nathan, 2026-10-15).
+
+**`favicon`** — The browser tab icon: the N alone on cobalt, no frame, because at 16–32px the frame turns to noise. Same cut as the wordmark: `design-reference/icons/favicon-sharp.svg` with the sharp wordmark, `favicon-chunky.svg` if the wordmark stays soft.
+
 **`tile-band`** — A 24px strip of the azulejo motif in cobalt on canvas, between two 1px cobalt rules, like the painted border (barra) that frames a tile panel. Used under `app-header` and along the top of `sheet`. Decorative and hidden from assistive technology.
 
 **`tile-mark`** — A single 18px azulejo tile in cobalt placed before every H2 section title (Scale, Ingredients, Steps, Latest bake, Drafts, Timers), `{spacing.sm}` from the text and vertically centred on its first line, like a maker's stamp. Not used on H1s, group headings, or inside cards. Decorative and hidden from assistive technology.
@@ -1298,7 +1302,7 @@ Learned on a real iPhone in Safari, where Chrome-based tests passed while the ph
 
 ## Known Gaps
 
-- **Logo mark and app icon**: only the wordmark is defined. The Home Screen icon (needed for timer alerts) should be one azulejo tile, cobalt on tin glaze; its final artwork needs a designer's pass.
+- **Maskable app icon**: Android's maskable format crops to a circle and would cut off the app icon's corner diamonds. Not made yet, since the app is used on an iPhone, which never crops.
 - **Manual theme switch**: dark mode follows the device only. An in-app Light/Dark/System control would need a place in the account menu.
 - **Timer sound**: the finished-timer sound (a short, warm chime, not an alarm buzz) needs to be chosen or produced.
 

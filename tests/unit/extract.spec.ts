@@ -13,9 +13,9 @@ import type { AmountPart } from "@/lib/import/grams";
 
 const part = (qty: string | null, unit: string): AmountPart => ({ qty, unit });
 
-const load = (name: string, round: "round1" | "round2" = "round1") => ({
+const load = (name: string, round: "round1" | "round2" | "round3" = "round1") => ({
   caption: readFileSync(join(process.cwd(), "tests/fixtures/captions", `${name}.txt`), "utf8"),
-  reply: readFileSync(join(process.cwd(), "tests/fixtures/captions", round === "round1" ? `${name}.json` : `${name}.round2.json`), "utf8"),
+  reply: readFileSync(join(process.cwd(), "tests/fixtures/captions", round === "round1" ? `${name}.json` : `${name}.${round}.json`), "utf8"),
 });
 
 function ingredient(groups: ExtractedGroup<{ name: string }>[], name: string) {
@@ -58,8 +58,33 @@ test("extractRecipe: reports broken JSON as malformed, not a crash", () => {
   // ({ + tab + ext") — real round-1 failures, kept as-is.
   for (const name of ["milo-brownies", "tres-leches"]) {
     const { caption, reply } = load(name);
-    expect(extractRecipe(reply, caption), name).toEqual({ status: "malformed" });
+    expect(extractRecipe(reply, caption), name).toEqual({ status: "malformed", reason: expect.any(String) });
   }
+});
+
+// Round 3 (2026-10-15): a real reply from Nathan's Shortcut in production, against
+// milo-brownies' caption, came back "retry" even though it reads as valid JSON.
+// Reproducing it directly (same reply text, same caption) parses fine — ruling out
+// the reply's content (nothing here is actually malformed) and pointing instead at
+// something in how the Shortcut's JSON body carries the reply. Kept as a regression
+// fixture either way, plus a defensive fix (tolerate a markdown code fence) that's a
+// plausible real-world cause and costs nothing if it isn't this one.
+
+test("extractRecipe: round 3 — milo-brownies' real production reply parses ok", () => {
+  const { caption, reply } = load("milo-brownies", "round3");
+  const result = extractRecipe(reply, caption);
+  expect(result.status).toBe("ok");
+  if (result.status !== "ok") return;
+  expect(result.recipe.title).toBe("Brownies of Milo");
+  expect(result.recipe.ingredientGroups[0].items).toHaveLength(8);
+  const tips = result.recipe.stepGroups.find((g) => g.name === "Tips");
+  expect(tips?.items).toHaveLength(3);
+});
+
+test("extractRecipe: tolerates a reply wrapped in a markdown code fence", () => {
+  const { caption, reply } = load("milo-brownies", "round3");
+  const fenced = "```json\n" + reply + "\n```";
+  expect(extractRecipe(fenced, caption)).toEqual(extractRecipe(reply, caption));
 });
 
 test("extractRecipe: no recipe, and extra or duplicated keys are ignored", () => {

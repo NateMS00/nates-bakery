@@ -14,7 +14,9 @@ import type { AmountPart } from "./grams";
 // - two captions' JSON was simply broken (a dropped character). `extractRecipe`
 //   never throws on bad input; a reply that doesn't parse, or where any group, item,
 //   or step doesn't have the shape the prompt asked for, is reported as "malformed"
-//   rather than guessed at or partially used.
+//   (with a `reason` for Vercel's logs) rather than guessed at or partially used;
+// - a reply wrapped in a markdown code fence (```json ... ```) is tolerated and
+//   unwrapped before parsing, a known quirk of asking a chat model for JSON.
 
 export interface ExtractedIngredient {
   name: string;
@@ -60,8 +62,11 @@ export type ExtractResult =
   | { status: "ok"; recipe: ExtractedRecipe }
   /** The model replied {"recipe": false}: no recipe in this caption. */
   | { status: "no-recipe" }
-  /** The reply wasn't valid JSON, or didn't have the shape the prompt asked for. */
-  | { status: "malformed" };
+  /** The reply wasn't valid JSON, or didn't have the shape the prompt asked for.
+   * `reason` is for Vercel's function logs (handleFinishImport), not shown to the
+   * owner — a real production "retry" is otherwise undiagnosable after the fact,
+   * since the Shortcut's exact reply is never stored anywhere once it's rejected. */
+  | { status: "malformed"; reason: string };
 
 const WEIGHT_UNITS = new Set(["g", "kg", "oz", "lb"]);
 const METRIC_WEIGHT_UNITS = new Set(["g", "kg"]);
@@ -182,19 +187,32 @@ function moveTipsLast(groups: ExtractedGroup<ExtractedStep>[]): ExtractedGroup<E
   return tips.length ? [...rest, ...tips] : groups;
 }
 
+/**
+ * Apple Intelligence sometimes wraps its reply in a markdown code fence
+ * (```json ... ``` or ``` ... ```), a known quirk of asking a chat model for JSON.
+ * The prompt doesn't ask for this, but stripping it costs nothing and a reply that's
+ * genuinely broken still fails to parse afterwards.
+ */
+function stripCodeFence(text: string): string {
+  const trimmed = text.trim();
+  const match = /^```[^\n]*\n([\s\S]*?)\n?```$/.exec(trimmed);
+  return match ? match[1].trim() : trimmed;
+}
+
 export function extractRecipe(reply: string, caption: string): ExtractResult {
   let raw: unknown;
   try {
-    raw = JSON.parse(reply);
-  } catch {
-    return { status: "malformed" };
+    raw = JSON.parse(stripCodeFence(reply));
+  } catch (err) {
+    return { status: "malformed", reason: err instanceof Error ? err.message : "invalid JSON" };
   }
-  if (!isRecord(raw)) return { status: "malformed" };
+  if (!isRecord(raw)) return { status: "malformed", reason: "the reply's top level isn't a JSON object" };
   if (raw.recipe === false) return { status: "no-recipe" };
 
   const ingredientGroups = readGroups(raw.ingredientGroups, "items", (r) => readIngredient(r, caption));
   const stepGroups = readGroups(raw.stepGroups, "steps", readStep);
-  if (ingredientGroups === null || stepGroups === null) return { status: "malformed" };
+  if (ingredientGroups === null) return { status: "malformed", reason: "ingredientGroups didn't match the expected shape" };
+  if (stepGroups === null) return { status: "malformed", reason: "stepGroups didn't match the expected shape" };
 
   return {
     status: "ok",

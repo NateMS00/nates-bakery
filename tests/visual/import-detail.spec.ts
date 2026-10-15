@@ -55,8 +55,9 @@ test("focus rings", async ({ page }) => {
   await expectFocusRings(page, 20);
 });
 
-test("transcript: Read more expands in place, Show less collapses", async ({ page }) => {
+test("original caption: Read more expands in place, Show less collapses", async ({ page }) => {
   await ready(page, BABKA);
+  await expect(page.getByText("Original caption")).toBeVisible();
   const toggle = page.getByRole("button", { name: "Read more" });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await toggle.click();
@@ -64,11 +65,50 @@ test("transcript: Read more expands in place, Show less collapses", async ({ pag
   await expect(less).toHaveAttribute("aria-expanded", "true");
   // Expanding doesn't move focus. (In WebKit the click doesn't focus the button to begin with.)
   if (!phoneWebKit()) await expect(less).toBeFocused();
-  await expect(page.getByText("Spoken:")).toBeVisible();
+  await expect(page.getByText("broke my feed")).toBeVisible();
   await page.locator("#source-heading").scrollIntoViewIfNeeded();
   await shot(page, "03-transcript-expanded");
   await less.click();
   await expect(page.getByRole("button", { name: "Read more" })).toBeVisible();
+});
+
+test("original caption: Translated from label, and a cut-off notice", async ({ page }) => {
+  await ready(page, "/import/d-tiramisu");
+  await expect(page.getByText("Original caption · Translated from Spanish")).toBeVisible();
+  await expect(page.getByText("Instagram cut this caption off.")).toHaveCount(0);
+
+  await ready(page, "/import/d-triple-chocolate-tart");
+  await expect(page.getByText("Original caption · Translated from French")).toBeVisible();
+  await expect(page.getByText("Instagram cut this caption off. Check the reel for the rest.")).toBeVisible();
+  await shot(page, "04-cut-off-notice");
+});
+
+test("Tips group: last, unnumbered, no time chips or Uses line", async ({ page }) => {
+  await ready(page, "/import/d-tiramisu");
+  const tipsGroup = page.getByRole("group").filter({ hasText: "Tips" });
+  await tipsGroup.scrollIntoViewIfNeeded();
+  await shot(page, "06-tips-group");
+
+  // its one row is labeled "Tip 1" for assistive tech, not "Step 8"
+  await expect(page.getByRole("textbox", { name: "Tip 1" })).toBeVisible();
+  await expect(tipsGroup.getByText(/^\d+$/)).toHaveCount(0); // no visible step number
+  await expect(tipsGroup.getByText("Uses:")).toHaveCount(0);
+  await expect(tipsGroup.getByText("min", { exact: false })).toHaveCount(0); // no detected-time chip
+
+  // a numbered step keeps its number and Uses line right above the Tips group
+  await expect(page.getByRole("textbox", { name: "Step 7" })).toBeVisible();
+});
+
+test("Couldn't finish: a notice with Retry, and an otherwise-empty editor", async ({ page }) => {
+  await ready(page, "/import/d-failed");
+  await expect(page.getByText("This import didn’t finish reading the recipe.")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("");
+  await shot(page, "05-couldnt-finish");
+
+  await page.getByRole("button", { name: "Retry" }).click();
+  await expect(page).toHaveURL(/\/recipes$/);
+  await page.getByRole("button", { name: /Show all drafts/ }).click();
+  await expect(page.locator("#drafts-heading ~ ul > li").filter({ hasText: "weekend.bakes" })).toContainText("Importing…");
 });
 
 test("an ingredient group with Missing, Estimated, and Converted rows", async ({ page }) => {

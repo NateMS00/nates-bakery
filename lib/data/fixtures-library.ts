@@ -3,6 +3,7 @@
 // "Other" has no recipes, so the Category filter must leave it out.
 
 import type { EditorIngredient, EditorState } from "./editor";
+import { IMPORT_FIXTURE_DRAFTS } from "./import-fixtures";
 import type { Category, Draft, Ingredient, Recipe, Step } from "./types";
 
 type Simple = {
@@ -220,12 +221,8 @@ export const DRAFTS: Draft[] = [
     creatorHandle: "braided.bea",
     reelUrl: babka.sourceUrl,
     createdAt: "2026-09-29T19:40:00Z",
-    transcript: {
-      caption:
-        "The babka that broke my feed 🍫 Tahini + dark chocolate + a crunchy sesame top. Recipe below! 500g bread flour, 1/2 cup warm milk, sugar, 7g yeast, 3 eggs, soft butter, salt. Filling: 150g dark chocolate, 1/2 cup tahini, a few spoons of cocoa, sesame. Syrup: 100g sugar + a splash of water. Save this for the weekend!",
-      spoken:
-        "Okay so start with your dough, flour, a little sugar, the yeast, warm milk and three eggs. Mix it for about five minutes, then the salt and the butter, bit by bit, it takes a while but that's what makes it so soft. Into the fridge overnight. Next day, melt the chocolate, tahini, cocoa, half the sesame. Roll, spread, roll it up, cut it in half and twist. Let it rise one to two hours, bake at one-eighty for thirty-five minutes, and brush the syrup on while it's hot.",
-    },
+    caption:
+      "The babka that broke my feed 🍫 Tahini + dark chocolate + a crunchy sesame top. Recipe below! 500g bread flour, 1/2 cup warm milk, sugar, 7g yeast, 3 eggs, soft butter, salt. Filling: 150g dark chocolate, 1/2 cup tahini, a few spoons of cocoa, sesame. Syrup: 100g sugar + a splash of water. Save this for the weekend!",
     content: babka,
   },
   {
@@ -235,7 +232,7 @@ export const DRAFTS: Draft[] = [
     creatorHandle: "bordeaux.bakes",
     reelUrl: canele.sourceUrl,
     createdAt: "2026-09-28T21:05:00Z",
-    transcript: { caption: "Canelés, the real Bordeaux way. Two days of patience for that crust.", spoken: "Rest the batter forty-eight hours. Don't skip it." },
+    caption: "Canelés, the real Bordeaux way. Two days of patience for that crust. Rest the batter forty-eight hours in the fridge. Don't skip it, that's what gives the crust its crackle.",
     content: canele,
   },
   {
@@ -245,9 +242,10 @@ export const DRAFTS: Draft[] = [
     creatorHandle: "coquille.co",
     reelUrl: madeleines.sourceUrl,
     createdAt: "2026-09-21T10:00:00Z",
-    transcript: { spoken: "Brown butter, honey, and a cold batter. That's the hump." },
+    caption: "Brown butter, honey, and a cold batter. That's the hump. Rest the batter at least an hour before baking for the classic bump.",
     content: madeleines,
   },
+  ...IMPORT_FIXTURE_DRAFTS,
 ];
 
 /** STUB extraction result for a newly imported reel: a kouign-amann with things to check. */

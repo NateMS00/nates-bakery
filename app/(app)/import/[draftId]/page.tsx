@@ -9,6 +9,7 @@ export default async function ReviewImportPage({ params }: { params: Promise<{ d
   const draft = await getDraft((await params).draftId);
   // SKELETON: unknown or already-saved draft → not-found. A draft still importing has
   // nothing to review yet, so it's treated the same until the import service exists.
-  if (!draft || draft.status !== "ready" || !draft.content) notFound();
+  // "failed" ("Couldn't finish") is reviewable too, with an empty editor.
+  if (!draft || (draft.status !== "ready" && draft.status !== "failed")) notFound();
   return <ReviewImport key={draft.id} draft={draft} />;
 }

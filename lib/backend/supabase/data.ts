@@ -140,4 +140,5 @@ export const supabaseData: DataBackend = {
   saveImport: noImport,
   discardDraft: noImport,
   startImport: noImport,
+  retryDraft: noImport,
 };

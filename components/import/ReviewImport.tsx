@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
-import { discardDraft, saveDraftContent, saveImport } from "@/lib/data/actions";
-import { blockers, saveStatus, type EditorState } from "@/lib/data/editor";
+import { discardDraft, retryImport, saveDraftContent, saveImport } from "@/lib/data/actions";
+import { blockers, emptyEditor, saveStatus, type EditorState } from "@/lib/data/editor";
 import type { Draft } from "@/lib/data/types";
 import { DiscardDialog } from "./DiscardDialog";
 import { NeedsYourCheck } from "./NeedsYourCheck";
@@ -23,13 +23,13 @@ const AUTOSAVE_MS = 600;
 
 export function ReviewImport({ draft }: { draft: Draft }) {
   const router = useRouter();
-  const [state, setState] = useState<EditorState>(draft.content!);
+  const [state, setState] = useState<EditorState>(draft.content ?? emptyEditor(draft.reelUrl));
   const [draftStatus, setDraftStatus] = useState<"saved" | "saving">("saved");
   const [attempted, setAttempted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
-  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const [captionOpen, setCaptionOpen] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const discardButton = useRef<HTMLButtonElement>(null);
   const keyboardOpen = useKeyboardOpen();
@@ -76,6 +76,13 @@ export function ReviewImport({ draft }: { draft: Draft }) {
     else setFailed(true);
   }
 
+  /** Couldn't finish: Retry runs the Shortcut again; the draft goes back to Importing on the Library. */
+  async function retry() {
+    await retryImport(draft.id);
+    router.push("/recipes");
+    router.refresh();
+  }
+
   const saveFailed = failed && (
     <Notice tone="error" action={<Button variant="text" onClick={save} className="-my-md -ml-sm">Retry</Button>}>
       Couldn&rsquo;t save the recipe. Your edits are kept in the draft.
@@ -118,9 +125,9 @@ export function ReviewImport({ draft }: { draft: Draft }) {
 
       <div className="mt-lg tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
         {/* Left column: Source and Needs Your Check; sticky unless the transcript is open */}
-        <div className={cx("flex flex-col gap-lg tablet:col-span-3 desktop:col-span-4 desktop:gap-xl", !transcriptOpen && "tablet:sticky tablet:top-base")}>
-          <SourcePanel draft={draft} expanded={transcriptOpen} onExpandedChange={setTranscriptOpen} />
-          <NeedsYourCheck state={state} problems={attempted ? problems : null} summaryRef={summaryRef} />
+        <div className={cx("flex flex-col gap-lg tablet:col-span-3 desktop:col-span-4 desktop:gap-xl", !captionOpen && "tablet:sticky tablet:top-base")}>
+          <SourcePanel draft={draft} expanded={captionOpen} onExpandedChange={setCaptionOpen} />
+          <NeedsYourCheck state={state} problems={attempted ? problems : null} summaryRef={summaryRef} incomplete={draft.status === "failed" ? { onRetry: retry } : undefined} />
           {/* BONES 1.3.0: Save repeated at the end of the sticky left column, so it stays in view (not on mobile, which has the Save bar) */}
           <Button variant="primary" onClick={save} aria-busy={saving || undefined} className="w-full max-tablet:hidden">
             {saving ? "Saving…" : "Save recipe"}

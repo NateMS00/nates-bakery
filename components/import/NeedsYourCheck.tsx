@@ -31,7 +31,18 @@ function value(item: CheckItem) {
   return item.kind === "converted" && item.ingredient.original ? `${g} from ${item.ingredient.original}` : g;
 }
 
-export function NeedsYourCheck({ state, problems, summaryRef }: { state: EditorState; problems: Problem[] | null; summaryRef: React.RefObject<HTMLDivElement | null> }) {
+export function NeedsYourCheck({
+  state,
+  problems,
+  summaryRef,
+  incomplete,
+}: {
+  state: EditorState;
+  problems: Problem[] | null;
+  summaryRef: React.RefObject<HTMLDivElement | null>;
+  /** "Couldn't finish" (BONES-import-detail): the Shortcut never read the recipe. */
+  incomplete?: { onRetry: () => void };
+}) {
   const items = checkItems(state);
   const [expanded, setExpanded] = useState(false);
   const counts = { missing: 0, estimated: 0, converted: 0 };
@@ -52,6 +63,17 @@ export function NeedsYourCheck({ state, problems, summaryRef }: { state: EditorS
     }
     previous.current = items;
   });
+
+  if (incomplete) {
+    return (
+      <section aria-labelledby="check-heading">
+        <SectionHeading id="check-heading">Needs your check</SectionHeading>
+        <Notice tone="error" className="mt-sm" action={<Button variant="text" onClick={incomplete.onRetry} className="-my-md -ml-sm">Retry</Button>}>
+          This import didn&rsquo;t finish reading the recipe.
+        </Notice>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="check-heading">

@@ -105,7 +105,8 @@ export interface Recipe {
 /** An unsaved import (SKELETON FLOW-01). */
 export interface Draft {
   id: string;
-  status: "importing" | "ready";
+  /** "failed" (SKELETON 1.4.5, "Couldn't finish"): the caption arrived but the recipe never did. */
+  status: "importing" | "ready" | "failed";
   /** Null until the extraction has found one; shown as "@creator's reel". */
   title: string | null;
   creatorHandle: string;
@@ -113,8 +114,12 @@ export interface Draft {
   createdAt: string;
   /** When a stubbed import started (ms); it becomes ready IMPORT_MS later. */
   startedAt?: number;
-  /** What the reel says, in two parts; each is absent when the reel has none. */
-  transcript?: { caption?: string; spoken?: string };
+  /** The post text exactly as the creator wrote it. Absent only while "importing". */
+  caption?: string;
+  /** True when Instagram's length limit cut the caption off. */
+  captionCutOff?: boolean;
+  /** The caption's own language, in English ("Spanish"); absent or "English" shows no "Translated from" label. */
+  captionLanguage?: string;
   /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */
   content?: import("./editor").EditorState;
 }

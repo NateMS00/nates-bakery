@@ -201,4 +201,12 @@ export const fixturesData: DataBackend = {
     });
     return { status: "started", draftId };
   },
+
+  async retryDraft(draftId) {
+    const draft = (await db()).drafts.find((d) => d.id === draftId);
+    if (!draft || draft.status !== "failed") return false;
+    draft.status = "importing";
+    draft.startedAt = Date.now();
+    return true;
+  },
 };

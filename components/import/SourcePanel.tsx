@@ -3,19 +3,22 @@
 import { Play } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { cx } from "@/components/ui/cx";
 import { ExternalLink, tallHitArea } from "@/components/ui/TextLink";
 import type { Draft } from "@/lib/data/types";
 
-// BONES Source: reel thumbnail (portrait 9:16), creator handle, Watch reel, and the
-// transcript (Caption, then Spoken) collapsed to 3 lines, with Read more / Show less.
-// Starts collapsed every time; expanding doesn't move focus.
+// BONES-import-detail 1.4.0 Source: reel thumbnail (portrait 9:16), creator handle,
+// Watch reel, and the original caption (labeled "Translated from" when translated,
+// with a cut-off notice when Instagram's length limit cut it short), collapsed to 3
+// lines, with Read more / Show less. Starts collapsed every time; expanding doesn't
+// move focus.
 
 export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draft; expanded: boolean; onExpandedChange: (v: boolean) => void }) {
-  const { caption, spoken } = draft.transcript ?? {};
-  const parts = [caption && { label: "Caption", text: caption }, spoken && { label: "Spoken", text: spoken }].filter(Boolean) as { label: string; text: string }[];
-  const [id] = useState(() => `transcript-${draft.id}`);
+  const { caption, captionCutOff, captionLanguage } = draft;
+  const translatedFrom = captionLanguage && captionLanguage !== "English" ? captionLanguage : null;
+  const [id] = useState(() => `caption-${draft.id}`);
 
   return (
     <section aria-labelledby="source-heading">
@@ -33,25 +36,19 @@ export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draf
           </ExternalLink>
         </p>
       </div>
-      {parts.length > 0 && (
+      {caption && (
         <div className="mt-base">
-          <span className="type-label text-muted">Transcript</span>
+          <span className="type-label text-muted">
+            Original caption
+            {translatedFrom && <span className="font-normal"> · Translated from {translatedFrom}</span>}
+          </span>
+          {captionCutOff && (
+            <Notice tone="info" className="mt-xs">
+              Instagram cut this caption off. Check the reel for the rest.
+            </Notice>
+          )}
           <div id={id} className="mt-xs type-body-sm text-body">
-            {expanded ? (
-              parts.map((p) => (
-                <p key={p.label} className="mt-sm first:mt-0">
-                  <span className="font-bold text-ink">{p.label}:</span> {p.text}
-                </p>
-              ))
-            ) : (
-              <p className="line-clamp-3">
-                {parts.map((p) => (
-                  <span key={p.label}>
-                    <span className="font-bold text-ink">{p.label}:</span> {p.text}{" "}
-                  </span>
-                ))}
-              </p>
-            )}
+            <p className={expanded ? undefined : "line-clamp-3"}>{caption}</p>
           </div>
           <Button variant="text" aria-expanded={expanded} aria-controls={id} onClick={() => onExpandedChange(!expanded)} className="-ml-sm">
             {expanded ? "Show less" : "Read more"}

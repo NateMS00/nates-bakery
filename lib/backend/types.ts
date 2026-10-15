@@ -40,6 +40,8 @@ export interface DataBackend {
   discardDraft(draftId: string): Promise<void>;
   /** `url` is already normalized. */
   startImport(url: string, options: { again?: boolean }): Promise<StartResult>;
+  /** Re-runs a "failed" draft's import from its kept caption. False if the draft isn't "failed". */
+  retryDraft(draftId: string): Promise<boolean>;
 }
 
 export interface AuthBackend {

@@ -20,7 +20,7 @@ export function DraftsSection({ drafts, initiallyImporting }: { drafts: Draft[];
   const visible = expanded ? drafts : drafts.slice(0, LIMIT);
   // The third row and the button switch by breakpoint in CSS, so there's no layout jump.
   const buttonClass = drafts.length > LIMIT ? "" : drafts.length > LIMIT_MOBILE ? "tablet:hidden" : "hidden";
-  const finished = drafts.filter((d) => initiallyImporting.has(d.id) && d.status === "ready");
+  const finished = drafts.filter((d) => initiallyImporting.has(d.id) && (d.status === "ready" || d.status === "failed"));
 
   return (
     <section aria-labelledby="drafts-heading" className="mt-lg desktop:mt-xl">
@@ -50,7 +50,7 @@ export function DraftsSection({ drafts, initiallyImporting }: { drafts: Draft[];
         </Button>
       )}
       <p role="status" className="sr-only">
-        {finished.map((d) => `${draftTitle(d)} is ready to review.`).join(" ")}
+        {finished.map((d) => (d.status === "failed" ? `${draftTitle(d)} couldn't finish importing.` : `${draftTitle(d)} is ready to review.`)).join(" ")}
       </p>
     </section>
   );
@@ -59,19 +59,19 @@ export function DraftsSection({ drafts, initiallyImporting }: { drafts: Draft[];
 const draftTitle = (d: Draft) => d.title ?? `@${d.creatorHandle}'s reel`;
 
 function DraftRow({ draft }: { draft: Draft }) {
-  const ready = draft.status === "ready";
-  const status = ready ? "Ready to review" : "Importing…";
+  const linked = draft.status === "ready" || draft.status === "failed";
+  const status = draft.status === "ready" ? "Ready to review" : draft.status === "failed" ? "Couldn't finish" : "Importing…";
   // Mobile: title, then "@creator · status". Tablet up: title | creator | status,
   // the meta spans joining the row's grid.
   const className = cx(
     "grid rounded-lg border border-dashed border-border px-base py-md tablet:grid-cols-[minmax(0,1fr)_minmax(0,calc(var(--col)*2))_auto] tablet:items-center tablet:gap-x-lg",
-    ready
+    linked
       ? "bg-surface-card transition-colors duration-(--motion-fast) ease-skin hover:border-solid hover:border-primary active:border-solid active:border-primary active:bg-primary-wash focus-visible:outline-offset-2"
       : "bg-surface-sunken",
   );
   const content = (
     <>
-      <span className={cx("truncate type-body-md", ready ? "text-ink" : "text-muted")}>{draftTitle(draft)}</span>
+      <span className={cx("truncate type-body-md", linked ? "text-ink" : "text-muted")}>{draftTitle(draft)}</span>
       <span className="type-caption text-muted tablet:contents">
         <span className="tablet:truncate">@{draft.creatorHandle}</span>
         <span aria-hidden="true" className="tablet:hidden">
@@ -84,7 +84,7 @@ function DraftRow({ draft }: { draft: Draft }) {
     </>
   );
 
-  if (!ready) {
+  if (!linked) {
     return (
       <div aria-busy="true" className={className}>
         {content}

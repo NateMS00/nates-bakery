@@ -236,11 +236,12 @@ export const GROUP_SUGGESTIONS: { label: string; names: string[] }[] = [
   { label: "Creams and extras", names: ["Pastry cream", "Custard", "Curd", "Meringue", "Caramel", "Icing"] },
 ];
 
-/** Add step group: the recipe's ingredient group names first, then Assembly, Baking, Finishing. */
+/** Add step group: the recipe's ingredient group names first, then Assembly, Baking, Finishing, and Tips when the recipe has none (BONES-import-detail 1.4.2). */
 export function stepGroupSuggestions(state: EditorState): { label: string; names: string[] }[] {
   const fromIngredients = state.ingredientGroups.map((g) => g.name);
+  const hasTips = state.stepGroups.some((g) => g.name === "Tips");
   return [
     ...(fromIngredients.length ? [{ label: "This recipe's ingredient groups", names: fromIngredients }] : []),
-    { label: "Steps only", names: ["Assembly", "Baking", "Finishing"] },
+    { label: "Steps only", names: [...["Assembly", "Baking", "Finishing"], ...(hasTips ? [] : ["Tips"])] },
   ];
 }

@@ -100,6 +100,19 @@ export function RecipeEditor({ state, setState, errors }: { state: EditorState; 
       </InlineConfirmation>
     );
 
+  // Tips (BONES-import-detail 1.4.2): its rows carry no step number, no detected-time
+  // chips, and no Uses line, since a tip isn't something you do at a point in the
+  // bake. Numbering stays continuous across every other group.
+  const tipsGroupId = state.stepGroups.find((g) => g.name === "Tips")?.id;
+  const stepLabels = new Map<string, { number: number | null; label: string }>();
+  {
+    let n = 0;
+    let t = 0;
+    for (const s of state.steps) {
+      stepLabels.set(s.id, s.groupId === tipsGroupId ? { number: null, label: `Tip ${++t}` } : { number: ++n, label: `Step ${n}` });
+    }
+  }
+
   return (
     <section aria-labelledby="editor-heading">
       <SectionHeading id="editor-heading">Recipe</SectionHeading>
@@ -150,16 +163,21 @@ export function RecipeEditor({ state, setState, errors }: { state: EditorState; 
         {blocks(state.stepGroups, state.steps).map(({ group, rows }) => (
           <GroupBlock key={group?.id ?? "none"} kind="step" group={group} state={state} setState={setState} label="Steps">
             <ol role="list">
-              {rows.map((step) => (
-                <StepRow
-                  key={step.id}
-                  number={state.steps.indexOf(step) + 1}
-                  step={step}
-                  state={state}
-                  setState={setState}
-                  onDelete={() => remove("step", step.id, `step ${state.steps.indexOf(step) + 1}`)}
-                />
-              ))}
+              {rows.map((step) => {
+                const { number, label } = stepLabels.get(step.id)!;
+                return (
+                  <StepRow
+                    key={step.id}
+                    number={number}
+                    label={label}
+                    isTips={step.groupId === tipsGroupId}
+                    step={step}
+                    state={state}
+                    setState={setState}
+                    onDelete={() => remove("step", step.id, label.toLowerCase())}
+                  />
+                );
+              })}
             </ol>
             <Button variant="text" onClick={() => add("step", group?.id ?? null)} className="mt-xs -ml-sm self-start">
               <Plus aria-hidden="true" />
@@ -479,10 +497,26 @@ function NameField({ id, label, value, onChange }: { id: string; label: string; 
 
 const USES_LIMIT = 6;
 
-function StepRow({ number, step, state, setState, onDelete }: { number: number; step: EditorStep; state: EditorState; setState: SetState; onDelete: () => void }) {
+function StepRow({
+  number,
+  label,
+  isTips,
+  step,
+  state,
+  setState,
+  onDelete,
+}: {
+  number: number | null;
+  label: string;
+  isTips: boolean;
+  step: EditorStep;
+  state: EditorState;
+  setState: SetState;
+  onDelete: () => void;
+}) {
   const [picking, setPicking] = useState(false);
   const edit = useRef<HTMLButtonElement>(null);
-  const times = detectTimes(step.text);
+  const times = isTips ? [] : detectTimes(step.text);
   const used = step.ingredientIds.map((id) => state.ingredients.find((i) => i.id === id)).filter((i): i is EditorIngredient => Boolean(i?.name.trim()));
   const shownNames = used.slice(0, USES_LIMIT).map((i) => i.name.trim());
 
@@ -491,7 +525,7 @@ function StepRow({ number, step, state, setState, onDelete }: { number: number; 
       <div className="grid grid-cols-[minmax(2ch,1fr)_auto] items-start gap-x-sm gap-y-xs tablet:grid-cols-[minmax(2ch,auto)_minmax(0,1fr)_auto]">
         <span className="pt-md type-amount font-bold text-primary">{number}</span>
         <div className="col-span-2 row-start-2 tablet:col-span-1 tablet:col-start-2 tablet:row-start-1">
-          <Textarea id={`step-${step.id}`} aria-label={`Step ${number}`} value={step.text} onChange={(e) => setState((s) => updateRow(s, "step", step.id, { text: e.target.value }))} />
+          <Textarea id={`step-${step.id}`} aria-label={label} value={step.text} onChange={(e) => setState((s) => updateRow(s, "step", step.id, { text: e.target.value }))} />
           {times.length > 0 && (
             <div className="mt-sm flex flex-wrap items-center gap-sm">
               <span className="sr-only">Detected times:</span>
@@ -503,40 +537,42 @@ function StepRow({ number, step, state, setState, onDelete }: { number: number; 
               ))}
             </div>
           )}
-          <div className="relative mt-xs flex items-start gap-sm">
-            <p className="line-clamp-2 flex-1 pt-md type-body-sm text-body">
-              <span className="font-bold">Uses:</span>{" "}
-              {used.length ? (
-                <>
-                  {shownNames.join(", ")}
-                  {used.length > USES_LIMIT && ` +${used.length - USES_LIMIT}`}
-                </>
-              ) : (
-                <span className="text-muted">No ingredients</span>
-              )}
-            </p>
-            <Button ref={edit} variant="text" aria-haspopup="dialog" aria-expanded={picking} onClick={() => setPicking((v) => !v)} className="min-w-touch-min shrink-0">
-              Edit<span className="sr-only"> ingredients for step {number}</span>
-            </Button>
-            <IngredientsUsedPicker
-              open={picking}
-              onClose={() => setPicking(false)}
-              anchor={edit}
-              state={state}
-              step={step}
-              number={number}
-              onToggle={(id, on) =>
-                setState((s) =>
-                  updateRow(s, "step", step.id, {
-                    ingredientIds: on ? [...s.steps.find((x) => x.id === step.id)!.ingredientIds, id] : s.steps.find((x) => x.id === step.id)!.ingredientIds.filter((x) => x !== id),
-                  }),
-                )
-              }
-            />
-          </div>
+          {!isTips && (
+            <div className="relative mt-xs flex items-start gap-sm">
+              <p className="line-clamp-2 flex-1 pt-md type-body-sm text-body">
+                <span className="font-bold">Uses:</span>{" "}
+                {used.length ? (
+                  <>
+                    {shownNames.join(", ")}
+                    {used.length > USES_LIMIT && ` +${used.length - USES_LIMIT}`}
+                  </>
+                ) : (
+                  <span className="text-muted">No ingredients</span>
+                )}
+              </p>
+              <Button ref={edit} variant="text" aria-haspopup="dialog" aria-expanded={picking} onClick={() => setPicking((v) => !v)} className="min-w-touch-min shrink-0">
+                Edit<span className="sr-only"> ingredients for {label.toLowerCase()}</span>
+              </Button>
+              <IngredientsUsedPicker
+                open={picking}
+                onClose={() => setPicking(false)}
+                anchor={edit}
+                state={state}
+                step={step}
+                number={number ?? 0}
+                onToggle={(id, on) =>
+                  setState((s) =>
+                    updateRow(s, "step", step.id, {
+                      ingredientIds: on ? [...s.steps.find((x) => x.id === step.id)!.ingredientIds, id] : s.steps.find((x) => x.id === step.id)!.ingredientIds.filter((x) => x !== id),
+                    }),
+                  )
+                }
+              />
+            </div>
+          )}
         </div>
         <div className="col-start-2 row-start-1 justify-self-end tablet:col-start-3">
-          <ActionMenu label={`More actions, step ${number}`} title={`Step ${number}`} items={rowActions(state, setState, "step", step.id, step.groupId, onDelete)} />
+          <ActionMenu label={`More actions, ${label.toLowerCase()}`} title={label} items={rowActions(state, setState, "step", step.id, step.groupId, onDelete)} />
         </div>
       </div>
     </li>

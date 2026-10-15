@@ -29,6 +29,11 @@ export async function discardDraft(draftId: string) {
   await (await data()).discardDraft(draftId);
 }
 
+/** Couldn't finish: Retry runs the Shortcut again for this draft, from its kept caption. */
+export async function retryImport(draftId: string): Promise<boolean> {
+  return (await data()).retryDraft(draftId);
+}
+
 /** New Recipe: Save → /recipes/:recipeId. */
 export async function createRecipe(content: EditorState): Promise<SaveResult> {
   if (blockers(content).length) return { ok: false, error: "blocked" };

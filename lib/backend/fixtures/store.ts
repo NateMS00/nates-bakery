@@ -54,10 +54,7 @@ function completeImports(data: Db) {
       d.status = "ready";
       d.content = importedContent(d.reelUrl);
       d.title = d.content.title;
-      d.transcript = {
-        caption: "Kouign-amann, the butteriest pastry in Brittany. Laminated dough, lots of sugar, caramelised edges.",
-        spoken: "Laminate the dough with the butter, sprinkle sugar on every fold, roll it up, and bake until the sugar turns to caramel, about twenty-five minutes.",
-      };
+      d.caption = "Kouign-amann, the butteriest pastry in Brittany. Laminated dough, lots of sugar, caramelised edges.";
     }
   }
 }

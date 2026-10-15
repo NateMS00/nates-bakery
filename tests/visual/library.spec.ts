@@ -36,8 +36,8 @@ test("default: drafts, 30 recipes, Show more", async ({ page }) => {
   await expect(drafts.first()).toContainText("@kouign.kate's reel");
   await expect(drafts.first().getByRole("link")).toHaveCount(0);
   await expect(drafts.nth(1).getByRole("link")).toHaveAttribute("href", "/import/d-babka");
-  await page.getByRole("button", { name: "Show all drafts (4)" }).click();
-  await expect(drafts).toHaveCount(4);
+  await page.getByRole("button", { name: "Show all drafts (7)" }).click();
+  await expect(drafts).toHaveCount(7);
 
   // 30 items, then Show more loads the rest and focuses the first new one.
   await expect(items(page)).toHaveCount(30);

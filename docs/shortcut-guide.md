@@ -22,11 +22,15 @@ job reduces to one check after each of the two network calls: if `status` isn't
 
 Create a new, empty Shortcut. Open its Details (ⓘ):
 
-- **Rename it to** `Nate’s Bakery` **— with the curly apostrophe (U+2019), not a
-  straight `'`.** Copy that heading's text and paste it into the rename field rather
-  than typing it, so the character comes through exactly. This is the name Instagram's
-  share sheet will show, what `/import` names in its run-shortcut link, and what step
-  4 of Set up the Shortcut tells you to tap.
+- **Rename it to** `Nate's Bakery` **— with a plain apostrophe (U+0027), not the
+  curly one (U+2019) the app's own wordmark uses.** The curly apostrophe is what the
+  app displays everywhere else, but Shortcuts' name matching didn't find the Shortcut
+  by it (Nathan, 2026-10-15) — the plain one is what actually works. Copy that heading's
+  text and paste it into the rename field rather than typing it, so the character comes
+  through exactly, and check there's no trailing space: Shortcuts matches the name
+  exactly, so either one breaks `/import`'s hand-off with "Could not find the shortcut."
+  This is the name Instagram's share sheet will show, what `/import` names in its
+  run-shortcut link, and what step 4 of Set up the Shortcut tells you to tap.
 - **Use as Quick Action → Share Sheet**: on. **Accepted types**: URLs, Safari web
   pages, Text (Instagram's share sheet and `/import`'s hand-off can each present the
   link slightly differently; accepting all three means the Shortcut shows up either

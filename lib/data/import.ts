@@ -19,10 +19,12 @@ export const IMPORT_STAGES = ["Getting the caption", "Reading the recipe", "Conv
 
 /**
  * BONES-import "Handed to the Shortcut": the Shortcuts app's run-shortcut link
- * (docs/shortcut-guide.md). The name has a curly apostrophe (U+2019); copy it from
- * here rather than retyping it when building the real Shortcut.
+ * (docs/shortcut-guide.md). A plain apostrophe (U+0027), not the curly one the rest
+ * of the app uses — Shortcuts' name matching didn't find the Shortcut with the curly
+ * one (Nathan, 2026-10-15). Copy it from here rather than retyping it when naming the
+ * real Shortcut, and make sure there's no trailing space.
  */
-export const SHORTCUT_NAME = "Nate’s Bakery";
+export const SHORTCUT_NAME = "Nate's Bakery";
 
 /**
  * "Import again" and "Retry" are the same hand-off, but need the Shortcut to skip

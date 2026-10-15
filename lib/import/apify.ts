@@ -5,6 +5,11 @@
 // (resultsType: "reels" with no transcript or video-download add-ons requested).
 const ACTOR = "apify~instagram-scraper";
 
+// A few seconds under the start-import route's own maxDuration (60s, app/api/import/
+// start/route.ts), so a slow Apify run fails here — a normal, caught "unavailable" —
+// rather than Vercel killing the function first with an ungraceful platform timeout.
+const FETCH_TIMEOUT_MS = 55_000;
+
 export type FetchedReel = {
   caption: string | null;
   creatorHandle: string | null;
@@ -19,6 +24,7 @@ export async function fetchReel(url: string): Promise<FetchedReel> {
     method: "POST",
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({ directUrls: [url], resultsLimit: 1 }),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Apify returned ${res.status}: ${await res.text()}`);
 

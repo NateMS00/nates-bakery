@@ -7,6 +7,11 @@ import { handleStartImport } from "@/lib/import/server";
 // {url, importKey, again?} → one of StartImportResponse's shapes (lib/data/import.ts).
 // No session: the Shortcut authenticates with the owner's import key, in the body.
 
+// The live caption fetch (lib/import/apify.ts) can take several seconds; give it room
+// beyond Vercel's 10s default. fetchReel's own timeout stays a few seconds under this,
+// so a slow Apify run fails as a normal, caught "unavailable" first.
+export const maxDuration = 60;
+
 async function pickFetchCaption(): Promise<CaptionFetcher> {
   if (backendName() === "fixtures") return (await import("@/lib/backend/fixtures/data")).fixturesFetchCaption;
   return (await import("@/lib/import/apify")).fetchReel;

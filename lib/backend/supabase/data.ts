@@ -186,6 +186,7 @@ export const supabaseData: DataBackend = {
   // Import (behind BACKERY_FEATURE_IMPORT): the owner's own session.
   async getDrafts() {
     const db = await supabaseServer();
+    await db.rpc("expire_stale_drafts");
     const { data, error } = await db.from("drafts").select(DRAFT_SELECT).order("created_at", { ascending: false });
     if (error) fail("loading drafts", error);
     return (data as unknown as DraftRow[]).map(draftFromRow);
@@ -194,6 +195,7 @@ export const supabaseData: DataBackend = {
   async getDraft(id) {
     if (!UUID.test(id)) return null;
     const db = await supabaseServer();
+    await db.rpc("expire_stale_drafts");
     const { data, error } = await db.from("drafts").select(DRAFT_SELECT).eq("id", id).maybeSingle();
     if (error) fail("loading a draft", error);
     if (!data) return null;
@@ -235,8 +237,14 @@ export const supabaseData: DataBackend = {
   async discardDraft(draftId) {
     if (!UUID.test(draftId)) return;
     const db = await supabaseServer();
+    // A copied thumbnail has no recipe to carry it forward once its draft is gone
+    // (SKELETON: "deletes it with a discarded draft or recipe") — read the path before
+    // the row disappears with it.
+    const { data } = await db.from("drafts").select("content").eq("id", draftId).maybeSingle();
+    const path = (data?.content as { thumbnailPath?: string } | null)?.thumbnailPath;
     const { error } = await db.from("drafts").delete().eq("id", draftId);
     if (error) fail("discarding the draft", error);
+    if (path) await db.storage.from(THUMBNAIL_BUCKET).remove([path]);
   },
 
   // The import API routes (app/api/import/*): called by the Shortcut with its import

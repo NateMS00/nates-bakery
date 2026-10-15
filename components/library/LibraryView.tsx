@@ -20,7 +20,7 @@ import {
   writeFilters,
   type LibraryFilters,
 } from "@/lib/data/library";
-import { simulateImports, useDrafts } from "@/lib/data/store";
+import { pollImports, useDrafts } from "@/lib/data/store";
 import type { Draft, Recipe } from "@/lib/data/types";
 import { DraftsSection } from "./DraftsSection";
 import { FilterRow } from "./FilterControls";
@@ -53,7 +53,7 @@ export function LibraryView({
   const filtersButton = useRef<HTMLButtonElement>(null);
   const initiallyImporting = useMemo(() => new Set(initialDrafts.filter((d) => d.status === "importing").map((d) => d.id)), [initialDrafts]);
 
-  useEffect(() => simulateImports(initialDrafts), [initialDrafts]);
+  useEffect(() => pollImports(initialDrafts), [initialDrafts]);
 
   const sorted = useMemo(() => sortRecipes(recipes), [recipes]);
   const results = sorted.filter((r) => matches(r, query));
@@ -159,11 +159,15 @@ export function LibraryView({
             </>
           )}
 
-          {/* Drafts: hidden while searching or filtering (SKELETON) */}
-          {drafts.length > 0 && !searching && <DraftsSection drafts={drafts} initiallyImporting={initiallyImporting} />}
+          {/* Drafts: hidden while searching or filtering (SKELETON). initialDrafts, not
+              the live-filtered count, so discarding down to zero doesn't unmount the
+              section out from under its own "Draft discarded · Undo" notice. */}
+          {initialDrafts.length > 0 && !searching && <DraftsSection drafts={drafts} initiallyImporting={initiallyImporting} />}
 
           <section aria-labelledby="recipes-heading" className="mt-lg desktop:mt-xl">
-            <SectionHeading id="recipes-heading">Recipes</SectionHeading>
+            <SectionHeading id="recipes-heading" tabIndex={-1} className="outline-none">
+              Recipes
+            </SectionHeading>
             {onlyDrafts ? (
               <p className="mt-sm type-body-md text-muted">No saved recipes yet</p>
             ) : (

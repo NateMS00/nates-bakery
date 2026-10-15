@@ -110,30 +110,75 @@ test("Tips group: last, unnumbered, no time chips or Uses line", async ({ page }
 });
 
 test("Couldn't finish: a notice with Retry, and an otherwise-empty editor", async ({ page }) => {
+  // The import key first, so Retry's poll below never needs a navigation away from
+  // the draft — the whole point of BONES-import-detail 1.4.4's fix.
+  await ready(page, "/import");
+  const toggle = page.getByRole("button", { name: "Set up the Shortcut" });
+  if (await toggle.count()) await toggle.click();
+  await page.getByRole("button", { name: "Create import key" }).click();
+  const importKey = await page.getByRole("textbox", { name: "Import key" }).inputValue();
+
   await ready(page, "/import/d-failed");
   await expect(page.getByText("This import didn’t finish reading the recipe.")).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("");
   await shot(page, "05-couldnt-finish");
 
-  // Retry hands the Shortcut the same reel again (shortcuts://, a no-op here); the
-  // draft stays Couldn't finish until the Shortcut actually calls back.
+  // Retry stays on this page and polls, instead of navigating to the Library: on the
+  // iPhone, immediately navigating away in the same tick as setting location.href to
+  // shortcuts:// was the likely cause of the Shortcut never opening there (desktop
+  // Safari tolerated it). No navigation until the result is ready.
   await page.getByRole("button", { name: "Retry" }).click();
-  await expect(page).toHaveURL(/\/recipes$/);
-  await page.getByRole("button", { name: /Show all drafts/ }).click();
-  await expect(page.locator("#drafts-heading ~ ul > li").filter({ hasText: "weekend.bakes" })).toContainText("Couldn't finish");
+  await expect(page).toHaveURL(/\/import\/d-failed$/);
+  await expect(page.getByText("Retrying in the Shortcut")).toBeVisible();
+  const tryAgain = page.getByRole("button", { name: "Try again" });
+  await expect(tryAgain).toBeVisible();
+  await shot(page, "06-retrying");
 
-  // What the Shortcut's own start-import call does: import_begin finds the draft by
-  // reel_url, reuses its stored caption, and flips it back to Importing.
-  await page.goto("/import");
+  // The Shortcut's own calls, driven directly the way a real device would:
+  // import_begin finds the draft by reel_url and reuses its stored caption; finish
+  // supplies the recipe this time. The page's own poll should pick both up live.
+  const start = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/Ccouldntfinish01/", importKey, again: true } });
+  const { status, draftId } = await start.json();
+  expect(status).toBe("started");
+  expect(draftId).toBe("d-failed");
+  const reply = JSON.stringify({
+    language: "English",
+    title: "Weekend Scones",
+    category: "quick-bread",
+    yield: { quantity: 8, unit: "scone", unitPlural: "scones" },
+    totalTime: null,
+    ingredientGroups: [{ name: null, items: [{ name: "Flour", amount: "300 g", parts: [{ unit: "g", qty: "300" }], note: null }] }],
+    stepGroups: [{ name: null, steps: [{ text: "Bake.", uses: ["Flour"] }] }],
+  });
+  await page.request.post("/api/import/finish", { data: { draftId, importKey, reply } });
+
+  await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Weekend Scones", { timeout: 8000 });
+  await expect(page.getByText("Retrying in the Shortcut")).toHaveCount(0);
+  await expect(page.getByText("This import didn’t finish reading the recipe.")).toHaveCount(0);
+});
+
+test("Couldn't finish: Retry that fails again shows the notice once more, without a reload", async ({ page }) => {
+  await ready(page, "/import");
   const toggle = page.getByRole("button", { name: "Set up the Shortcut" });
   if (await toggle.count()) await toggle.click();
   await page.getByRole("button", { name: "Create import key" }).click();
   const importKey = await page.getByRole("textbox", { name: "Import key" }).inputValue();
-  const res = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/Ccouldntfinish01/", importKey, again: true } });
-  expect((await res.json()).status).toBe("started");
-  await page.goto("/recipes");
-  await page.getByRole("button", { name: /Show all drafts/ }).click();
-  await expect(page.locator("#drafts-heading ~ ul > li").filter({ hasText: "weekend.bakes" })).toContainText("Importing…");
+
+  await ready(page, "/import/d-failed");
+  await page.getByRole("button", { name: "Retry" }).click();
+  await expect(page.getByText("Retrying in the Shortcut")).toBeVisible();
+
+  const start = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/Ccouldntfinish01/", importKey, again: true } });
+  const { draftId } = await start.json();
+  // A malformed reply: the automatic retry-once (server-side) uses its one retry here
+  // too, then gives up — the page's poll should see "failed" and show the notice again.
+  await page.request.post("/api/import/finish", { data: { draftId, importKey, reply: "not json" } });
+  await page.request.post("/api/import/finish", { data: { draftId, importKey, reply: "still not json" } });
+
+  await expect(page.getByText("This import didn’t finish reading the recipe.")).toBeVisible({ timeout: 8000 });
+  await expect(page.getByText("Retrying in the Shortcut")).toHaveCount(0);
+  // Retry is available again, not a dead end.
+  await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
 });
 
 test("an ingredient group with Missing, Estimated, and Converted rows", async ({ page }) => {

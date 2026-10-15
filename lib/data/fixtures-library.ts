@@ -215,7 +215,9 @@ const madeleines: EditorState = {
 };
 
 export const DRAFTS: Draft[] = [
-  { id: "d-importing", status: "importing", title: null, creatorHandle: "kouign.kate", reelUrl: "https://www.instagram.com/reel/Ckouign01/", createdAt: "2026-09-30T08:10:00Z" },
+  // Always-recent createdAt: stays "importing" rather than expiring into "failed"
+  // (BONES-recipes.md 1.4.0's 10-minute stale timeout) no matter when it's read.
+  { id: "d-importing", status: "importing", title: null, creatorHandle: "kouign.kate", reelUrl: "https://www.instagram.com/reel/Ckouign01/", createdAt: new Date().toISOString() },
   {
     id: "d-babka",
     status: "ready",

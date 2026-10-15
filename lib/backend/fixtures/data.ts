@@ -3,7 +3,7 @@ import { OWNER_NAME } from "@/lib/auth/rules";
 import { sortLog } from "@/lib/data/bakeLog";
 import { newId, toRecipeContent, type EditorState } from "@/lib/data/editor";
 import { normalizeReelUrl, type FailReason } from "@/lib/data/import";
-import type { BakeLogEntry, Recipe, ShareLink } from "@/lib/data/types";
+import type { BakeLogEntry, Draft, Recipe, ShareLink } from "@/lib/data/types";
 import { ImportFetchFailure, type CaptionFetcher } from "@/lib/import/server";
 import type { BakeFields, DataBackend, SaveResult } from "../types";
 import { db, simulatedLatency } from "./store";
@@ -15,6 +15,17 @@ import { db, simulatedLatency } from "./store";
 const FAIL_SAVES_COOKIE = "backery_stub_fail_saves";
 async function failing() {
   return (await cookies()).get(FAIL_SAVES_COOKIE)?.value === "1";
+}
+
+// BONES-recipes.md 1.4.0: a draft stuck "importing" for more than 10 minutes (the
+// Shortcut never finished) turns into "failed" ("Couldn't finish"), mirroring the
+// Supabase backend's expire_stale_drafts (supabase/migrations/0004_stale_drafts.sql).
+const STALE_IMPORT_MS = 10 * 60 * 1000;
+export function expireStaleImports(drafts: Draft[]) {
+  const now = Date.now();
+  for (const d of drafts) {
+    if (d.status === "importing" && now - (d.startedAt ?? Date.parse(d.createdAt)) > STALE_IMPORT_MS) d.status = "failed";
+  }
 }
 
 function slug(title: string) {
@@ -56,8 +67,9 @@ function clean(f: BakeFields): BakeFields {
 }
 
 // STUB import service: reel ids starting with Cprivate, Cdeleted, or Cnorecipe fail
-// with that reason; any other link becomes a draft that finishes importing on the
-// server after SIMULATED_IMPORT_MS (see completeImports in ./store.ts).
+// with that reason; any other link becomes a draft (status "importing") that a real
+// POST to /api/import/start and /api/import/finish — the same calls a real Shortcut
+// makes — drives to "ready", mirroring the Supabase backend exactly.
 const STUB_FAILURES: [RegExp, FailReason][] = [
   [/\/Cprivate/i, "private"],
   [/\/Cdeleted/i, "deleted"],
@@ -162,12 +174,16 @@ export const fixturesData: DataBackend = {
 
   async getDrafts() {
     await simulatedLatency();
-    return (await db()).drafts;
+    const data = await db();
+    expireStaleImports(data.drafts);
+    return data.drafts;
   },
 
   async getDraft(id) {
     await simulatedLatency();
-    return (await db()).drafts.find((d) => d.id === id) ?? null;
+    const data = await db();
+    expireStaleImports(data.drafts);
+    return data.drafts.find((d) => d.id === id) ?? null;
   },
 
   async findReadyDraftByReelUrl(reelUrl) {
@@ -214,6 +230,7 @@ export const fixturesData: DataBackend = {
     if (existing?.status === "ready") return { status: "ready", draftId: existing.id };
     if (existing && existing.caption) {
       existing.status = "importing"; // "failed" (Couldn't finish) goes back to Importing, same as the Shortcut re-reading it
+      existing.startedAt = Date.now(); // resets the stale-import clock (expireStaleImports)
       return { status: "caption", draftId: existing.id, caption: existing.caption, creatorHandle: existing.creatorHandle };
     }
     const draftId = existing?.id ?? newId("d");
@@ -231,7 +248,7 @@ export const fixturesData: DataBackend = {
     draft.caption = caption;
     draft.creatorHandle = creatorHandle ?? draft.creatorHandle;
     draft.thumbnailUrl = thumbnailUrl ?? undefined;
-    draft.startedAt = Date.now(); // completeImports (./store.ts) finishes it SIMULATED_IMPORT_MS later
+    draft.startedAt = Date.now();
     return true;
   },
 

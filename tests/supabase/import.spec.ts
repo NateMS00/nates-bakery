@@ -163,6 +163,37 @@ test("a failed fetch is dropped, and a stuck one is cleaned up", async () => {
   await t.q("delete from public.drafts");
 });
 
+test("expire_stale_drafts: a draft stuck reading for 10+ minutes becomes Couldn't finish", async () => {
+  await t.as("anon");
+  const { draftId } = await begin(key, "https://www.instagram.com/reel/Stale0001/");
+  await call("import_set_caption", [key, draftId, CAPTION, null, null]);
+
+  // Not stale yet: calling it does nothing.
+  await t.as("authenticated", OWNER);
+  await t.q("select public.expire_stale_drafts()");
+  expect(await t.q("select status from public.drafts where id = $1", [draftId])).toEqual([{ status: "reading" }]);
+
+  // updated_at (drafts_touch_updated_at), not created_at: a draft retried just under
+  // the line isn't wrongly expired. The touch trigger overwrites updated_at on any
+  // ordinary update, so disable it just for this backdating.
+  await t.as("postgres");
+  await t.q("alter table public.drafts disable trigger drafts_touch_updated_at");
+  await t.q("update public.drafts set updated_at = now() - interval '11 minutes' where id = $1", [draftId]);
+  await t.q("alter table public.drafts enable trigger drafts_touch_updated_at");
+  // Scoped to the caller's own drafts: another signed-in account's call is a no-op here.
+  await t.as("authenticated", OTHER);
+  await t.q("select public.expire_stale_drafts()");
+  await t.as("postgres");
+  expect(await t.q("select status from public.drafts where id = $1", [draftId])).toEqual([{ status: "reading" }]);
+
+  await t.as("authenticated", OWNER);
+  await t.q("select public.expire_stale_drafts()");
+  expect(await t.q("select status from public.drafts where id = $1", [draftId])).toEqual([{ status: "unfinished" }]);
+
+  await t.as("postgres");
+  await t.q("delete from public.drafts");
+});
+
 test("already saved, unless importing again", async () => {
   await t.as("authenticated", OWNER);
   const saved = {
@@ -291,5 +322,14 @@ test("supabase/checks/0003_verify.sql: every row ok", async () => {
     readFileSync(join(process.cwd(), "supabase", "checks", "0003_verify.sql"), "utf8"),
   );
   expect(rows).toHaveLength(9);
+  expect(rows.filter((r) => !r.ok)).toEqual([]);
+});
+
+test("supabase/checks/0004_verify.sql: every row ok", async () => {
+  await t.as("postgres");
+  const rows = await t.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
+    readFileSync(join(process.cwd(), "supabase", "checks", "0004_verify.sql"), "utf8"),
+  );
+  expect(rows).toHaveLength(3);
   expect(rows.filter((r) => !r.ok)).toEqual([]);
 });

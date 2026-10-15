@@ -3,7 +3,7 @@
 import { dataBackend } from "@/lib/backend";
 import type { BakeFields, SaveResult } from "@/lib/backend/types";
 import { blockers, type EditorState } from "./editor";
-import type { BakeLogEntry, ShareLink } from "./types";
+import type { BakeLogEntry, Draft, ShareLink } from "./types";
 
 // Server actions. The editor's checks run here too, so a recipe with a Missing amount
 // can't be saved by any route; the backend (lib/backend) does the reading and writing.
@@ -26,6 +26,24 @@ export async function saveImport(draftId: string, content: EditorState): Promise
 /** Discard confirmation: the draft and its extracted recipe are deleted. */
 export async function discardDraft(draftId: string) {
   await (await data()).discardDraft(draftId);
+}
+
+/**
+ * The Library (lib/data/store.ts): polled for each still-importing draft row, so it
+ * becomes Ready to review or Couldn't finish without a reload (BONES-recipes.md).
+ */
+export async function getDraftStatus(draftId: string): Promise<{ status: Draft["status"]; title: string | null } | null> {
+  const draft = await (await data()).getDraft(draftId);
+  return draft ? { status: draft.status, title: draft.title } : null;
+}
+
+/**
+ * Review Import: polled while Retry waits on the Shortcut, so the editor fills in with
+ * the new recipe (or goes back to Couldn't finish) without a reload.
+ */
+export async function getDraftContent(draftId: string): Promise<{ status: Draft["status"]; content: EditorState | null } | null> {
+  const draft = await (await data()).getDraft(draftId);
+  return draft ? { status: draft.status, content: draft.content ?? null } : null;
 }
 
 /** Set up the Shortcut: when the owner's import key was made, or null if there isn't one. */

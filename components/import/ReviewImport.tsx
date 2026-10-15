@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
-import { discardDraft, saveDraftContent, saveImport } from "@/lib/data/actions";
+import { discardDraft, getDraftContent, saveDraftContent, saveImport } from "@/lib/data/actions";
 import { blockers, emptyEditor, saveStatus, type EditorState } from "@/lib/data/editor";
 import { runShortcutUrl } from "@/lib/data/import";
 import type { Draft } from "@/lib/data/types";
@@ -21,6 +21,7 @@ import { SourcePanel } from "./SourcePanel";
 // on mobile, in the page header from tablet up.
 
 const AUTOSAVE_MS = 600;
+const POLL_MS = 3000;
 
 export function ReviewImport({ draft }: { draft: Draft }) {
   const router = useRouter();
@@ -31,6 +32,13 @@ export function ReviewImport({ draft }: { draft: Draft }) {
   const [failed, setFailed] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [captionOpen, setCaptionOpen] = useState(false);
+  // recipeStatus tracks Couldn't finish independently of the draft prop (static after
+  // mount), so a Retry that succeeds — or fails again — updates this page without a
+  // reload. retrying is a separate flag: Retry keeps recipeStatus "failed" until the
+  // Shortcut actually answers, so the Couldn't finish notice is what's left if the tab
+  // is closed mid-retry.
+  const [recipeStatus, setRecipeStatus] = useState<"ready" | "failed">(draft.status === "failed" ? "failed" : "ready");
+  const [retrying, setRetrying] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const discardButton = useRef<HTMLButtonElement>(null);
   const keyboardOpen = useKeyboardOpen();
@@ -79,11 +87,33 @@ export function ReviewImport({ draft }: { draft: Draft }) {
 
   /** Couldn't finish: Retry hands the same reel off to the Shortcut again (the same
    * mechanism as Import again) — import_begin finds this draft's stored caption and
-   * skips straight back to Apple Intelligence, no new Apify call. */
+   * skips straight back to Apple Intelligence, no new Apify call. Stays on this page
+   * and polls, instead of navigating to Library: on the iPhone, a same-tick
+   * client-side navigation right after setting location.href to shortcuts:// was
+   * cancelling the hand-off before Safari finished it (desktop Safari tolerated the
+   * race; the iPhone didn't). No navigation until the result is ready. */
   function retry() {
     window.location.href = runShortcutUrl(draft.reelUrl, { again: true });
-    router.push("/recipes");
+    setRetrying(true);
   }
+
+  // Polls while retrying, the same way /import polls for a ready draft — fills the
+  // editor in with the new recipe, or goes back to Couldn't finish, without a reload.
+  useEffect(() => {
+    if (!retrying) return;
+    let cancelled = false;
+    const t = window.setInterval(async () => {
+      const found = await getDraftContent(draft.id);
+      if (cancelled || !found || found.status === "importing") return;
+      if (found.status === "ready" && found.content) setState(found.content);
+      setRecipeStatus(found.status === "ready" ? "ready" : "failed");
+      setRetrying(false);
+    }, POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(t);
+    };
+  }, [retrying, draft.id]);
 
   const saveFailed = failed && (
     <Notice tone="error" action={<Button variant="text" onClick={save} className="-my-md -ml-sm">Retry</Button>}>
@@ -129,7 +159,12 @@ export function ReviewImport({ draft }: { draft: Draft }) {
         {/* Left column: Source and Needs Your Check; sticky unless the transcript is open */}
         <div className={cx("flex flex-col gap-lg tablet:col-span-3 desktop:col-span-4 desktop:gap-xl", !captionOpen && "tablet:sticky tablet:top-base")}>
           <SourcePanel draft={draft} expanded={captionOpen} onExpandedChange={setCaptionOpen} />
-          <NeedsYourCheck state={state} problems={attempted ? problems : null} summaryRef={summaryRef} incomplete={draft.status === "failed" ? { onRetry: retry } : undefined} />
+          <NeedsYourCheck
+            state={state}
+            problems={attempted ? problems : null}
+            summaryRef={summaryRef}
+            incomplete={retrying ? { kind: "retrying", onTryAgain: retry } : recipeStatus === "failed" ? { kind: "failed", onRetry: retry } : undefined}
+          />
           {/* BONES 1.3.0: Save repeated at the end of the sticky left column, so it stays in view (not on mobile, which has the Save bar) */}
           <Button variant="primary" onClick={save} aria-busy={saving || undefined} className="w-full max-tablet:hidden">
             {saving ? "Saving…" : "Save recipe"}

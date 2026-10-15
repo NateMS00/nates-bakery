@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { EstimatedMarker, ConvertedLabel, MissingMarker } from "@/components/ui/Marker";
 import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { textLinkClass } from "@/components/ui/TextLink";
 import { cx } from "@/components/ui/cx";
 import { amountFieldId, checkItems, saveStatus, type CheckItem, type EditorState, type Problem } from "@/lib/data/editor";
 import { formatGrams } from "@/lib/format";
@@ -40,8 +41,9 @@ export function NeedsYourCheck({
   state: EditorState;
   problems: Problem[] | null;
   summaryRef: React.RefObject<HTMLDivElement | null>;
-  /** "Couldn't finish" (BONES-import-detail): the Shortcut never read the recipe. */
-  incomplete?: { onRetry: () => void };
+  /** "Couldn't finish" (BONES-import-detail): the Shortcut never read the recipe.
+   * "retrying": Retry was tapped and the Shortcut hasn't answered yet. */
+  incomplete?: { kind: "failed"; onRetry: () => void } | { kind: "retrying"; onTryAgain: () => void };
 }) {
   const items = checkItems(state);
   const [expanded, setExpanded] = useState(false);
@@ -64,7 +66,30 @@ export function NeedsYourCheck({
     previous.current = items;
   });
 
-  if (incomplete) {
+  if (incomplete?.kind === "retrying") {
+    return (
+      <section aria-labelledby="check-heading">
+        <SectionHeading id="check-heading">Needs your check</SectionHeading>
+        <div className="mt-sm">
+          <div className="flex items-center gap-sm">
+            <span aria-hidden="true" className="size-icon-sm shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent motion-reduce:animate-none" />
+            <p role="status" className="type-body-md text-ink">
+              Retrying in the Shortcut
+            </p>
+          </div>
+          <p className="mt-xs type-body-sm text-muted">Reading the recipe, converting to grams.</p>
+          <p className="mt-base type-body-sm text-muted">
+            Didn&rsquo;t start?{" "}
+            <button type="button" onClick={incomplete.onTryAgain} className={cx(textLinkClass, "inline-flex min-h-touch-min items-center")}>
+              Try again
+            </button>
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (incomplete?.kind === "failed") {
     return (
       <section aria-labelledby="check-heading">
         <SectionHeading id="check-heading">Needs your check</SectionHeading>

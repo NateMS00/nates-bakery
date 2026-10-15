@@ -53,13 +53,81 @@ test("focus rings", async ({ page, isMobile }) => {
   await expectFocusRings(page, 16);
 });
 
+/** A minimal, valid Use Model reply (lib/import/extract.ts's expected shape). */
+const VALID_REPLY = JSON.stringify({
+  language: "English",
+  title: "Kouign-amann",
+  category: "viennoiserie",
+  yield: { quantity: 12, unit: "pastry", unitPlural: "pastries" },
+  totalTime: { hours: 4, minutes: 0 },
+  ingredientGroups: [{ name: null, items: [{ name: "Flour", amount: "300 g", parts: [{ unit: "g", qty: "300" }], note: null }] }],
+  stepGroups: [{ name: null, steps: [{ text: "Laminate the dough.", uses: ["Flour"] }] }],
+});
+
 test("an importing draft becomes Ready to review without a reload", async ({ page }) => {
   test.skip(test.info().project.name !== "mobile-light", "timing test runs once");
+  // Creating the import key needs /import; d-importing's reel (Ckouign01) is seeded
+  // there already, with its status still "importing" and no caption.
+  await ready(page, "/import");
+  const toggle = page.getByRole("button", { name: "Set up the Shortcut" });
+  if (await toggle.count()) await toggle.click();
+  await page.getByRole("button", { name: "Create import key" }).click();
+  const importKey = await page.getByRole("textbox", { name: "Import key" }).inputValue();
+
   await ready(page, "/recipes");
   const row = page.locator("#drafts-heading ~ ul > li").first();
   await expect(row).toContainText("Importing…");
-  await expect(row.getByRole("link", { name: /Kouign-amann/ })).toBeVisible({ timeout: 12_000 });
+
+  // The real calls a Shortcut makes, driving d-importing (not a new draft, same id:
+  // import_begin reuses it since it already exists with that reel and no caption yet)
+  // through to ready — the same round trip the Library's polling (lib/data/store.ts)
+  // is meant to notice without a reload.
+  const start = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/Ckouign01/", importKey } });
+  const { draftId } = await start.json();
+  expect(draftId).toBe("d-importing");
+  await page.request.post("/api/import/finish", { data: { draftId, importKey, reply: VALID_REPLY } });
+
+  await expect(row.getByRole("link", { name: /Kouign-amann/ })).toBeVisible({ timeout: 8_000 });
   await expect(page.locator("#drafts-heading ~ p[role=status]")).toHaveText("Kouign-amann is ready to review.");
+});
+
+test("Discard removes the row at once, with Undo", async ({ page }) => {
+  await ready(page, "/recipes");
+  const drafts = page.locator("#drafts-heading ~ ul > li");
+  const first = drafts.first();
+  const firstTitle = await first.locator("span").first().textContent();
+  await expect(first.getByRole("button", { name: `Discard draft: ${firstTitle}` })).toBeVisible();
+
+  await first.getByRole("button", { name: `Discard draft: ${firstTitle}` }).click();
+  await expect(first).not.toContainText(firstTitle!);
+  const confirmation = page.locator("#drafts-heading ~ div[role=status]");
+  await expect(confirmation).toContainText("Draft discarded");
+  await page.waitForTimeout(300); // let the fade-in settle before the screenshot
+  await shot(page, "07-draft-discarded");
+
+  // Undo puts it back where it was, first in the list.
+  await confirmation.getByRole("button", { name: "Undo" }).click();
+  await expect(drafts.first()).toContainText(firstTitle!);
+  await expect(confirmation).toHaveCount(0);
+});
+
+test("discarding every draft moves focus to the Recipes heading", async ({ page }) => {
+  await ready(page, "/recipes");
+  // Expand first: collapsed, re-slicing the first 3 after each discard would just
+  // backfill from the rest, never actually shrinking the visible count.
+  await page.getByRole("button", { name: "Show all drafts (7)" }).click();
+  const drafts = page.locator("#drafts-heading ~ ul > li");
+  await expect(drafts).toHaveCount(7);
+
+  while ((await drafts.count()) > 0) {
+    const count = await drafts.count();
+    const label = await drafts.first().locator("span").first().textContent();
+    await drafts.first().getByRole("button", { name: `Discard draft: ${label}` }).click();
+    if (count === 1) break;
+    await expect(drafts).toHaveCount(count - 1);
+  }
+  await expect(page.getByRole("heading", { name: "Recipes" })).toBeFocused();
+  await expect(drafts).toHaveCount(0);
 });
 
 test("search by title or ingredient writes ?q= and hides Drafts", async ({ page }) => {

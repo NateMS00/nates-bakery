@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.3 · **Updated**: 2026-10-15
+> **Version**: 1.4.4 · **Updated**: 2026-10-15
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -259,6 +259,7 @@ MOBILE
 | Loading | Draft not yet loaded | Placeholders in final proportions: source row, 3 check items, the Details fields, 6 ingredient rows, 4 steps |
 | Nothing flagged | No Missing, Estimated, or Converted items | Needs Your Check reduces to one line "Everything checked" |
 | Couldn't finish | The Shortcut stopped after the caption arrived but before the recipe was read (Apple Intelligence off or unavailable, the phone went offline) | A notice at the top of Needs Your Check: "This import didn't finish reading the recipe." with Retry (runs the Shortcut again for this draft) and, below it, the editor empty except for the source link, so the recipe can be typed in while reading the original caption |
+| Retrying | Retry tapped | Replaces the notice: a spinner, "Retrying in the Shortcut", "Reading the recipe, converting to grams.", and "Didn't start? Try again" (re-opens the Shortcut, same tap, no new attempt started). Stays on this page the whole time — no navigation to the Library — and polls for the result; the editor fills in with the new recipe on success, or the Couldn't finish notice returns on a second failure. Both without a reload |
 | Save blocked | Save recipe pressed with any Missing amount, an empty title, or no category | Save stays enabled (a disabled button hides the reason). Pressing it shows an error summary at the top of Needs Your Check listing each problem as a link, moves focus to that summary, and marks each field in error. On mobile, the page scrolls to the summary |
 | Saving | Save recipe pressed with no blockers | Save shows a busy state and ignores repeat presses; on success → `/recipes/:recipeId` |
 | Save failed | Network or server error on save | A one-line error with Retry above the Save bar (mobile) or under the Page header (desktop); every edit stays in the draft |
@@ -293,12 +294,14 @@ MOBILE
 - **Decided** (2026-10-13): Packages whose size varies by country (a stick or barra of butter, a can, a packet) are Estimated, not Converted.
 - **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe go in the Tips step group (SKELETON 1.4.4).
 - **Open** (2026-10-15, for the visual upgrade round): Nathan doesn't like how the reel picture looks in Source, on desktop and on mobile (on his iPhone the tall 9:16 strip shows almost none of the dish; the handle and Watch reel float beside it). To be redesigned with the other visual upgrades, not before.
+- **Decided** (2026-10-15): Retry stays on this page instead of going to the Library. Reported live, iPhone only, Mac not: the Shortcut never opened. The old code set location.href to the Shortcut's shortcuts:// link and immediately navigated to the Library in the same tick — the likely cause, by code comparison with /import (which never navigates away and is confirmed working on the iPhone): on iOS the client-side navigation can cancel the hand-off before Safari finishes it, a race desktop Safari tolerates. Staying put and polling (the Retrying state) removes the race either way, confirmed or not.
 - **Open**: Highlight the part of the caption an item came from when you tap a check item ("125 g from 1 cup" → the words "1 cup flour")? Useful for checking, but it depends on the extraction returning positions; not drawn.
 
 ---
 
 ## CHANGE LOG
 
+- 1.4.4 (2026-10-15): Retry (Couldn't finish) stays on this page and polls instead of navigating to the Library — the iPhone never opened the Shortcut on Retry, a same-tick navigation racing the shortcuts:// hand-off by most likely cause. New Retrying state.
 - 1.4.3 (2026-10-15): Open note: the Source picture is to be redesigned in the visual upgrade round.
 - 1.4.2 (2026-10-14): Tips step group in the editor: last, unnumbered, no time chips or Uses line; rows move in and out with Move to group (SKELETON 1.4.4).
 - 1.4.1 (2026-10-13): Unknown ingredients or units arrive as Missing with the original kept ("Add grams · was ½ cup"); "—" hidden from screen readers; packages such as butter sticks are Estimated (SKELETON 1.4.1).

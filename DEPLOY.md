@@ -37,7 +37,7 @@ in Vercel's environment variables, never in the repo.
 
 - [x] **Supabase → URL Configuration: update the Site URL and redirect URLs to the Vercel address** (`https://…vercel.app` and `https://…vercel.app/**`). Reset links come back to `/auth/confirm` on the address that asked; Supabase only allows addresses in this list.
 - [x] Smoke check on the live site (2026-10-01): signed out → sign in, `/import` hidden, bad reset code → notice, functions in pdx1, manifest "Nate’s Bakery"/"Nate’s"; signed in: recipe, rating, share read-only ("Shared by Nate"), revoke, password reset through the live address.
-- [ ] Add to Home Screen on the iPhone (label "Nate’s").
+- [x] Add to Home Screen on the iPhone (label "Nate’s") — checked, the app icon looks right (2026-10-15).
 - [x] Live database tests, anonymous checks (tables denied, `save_recipe` denied, unknown token) pass.
 - [x] Live shared-recipe field check (needs `BACKERY_TEST_SHARE_TOKEN`) and live catalog RLS check (needs `BACKERY_TEST_DATABASE_URL`, Session pooler) pass (2026-10-13).
 

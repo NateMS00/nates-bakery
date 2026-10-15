@@ -64,7 +64,7 @@ Live at **https://nates-bakery.vercel.app** (private repo `NateMS00/nates-bakery
 - Supabase: `supabase/migrations/0001_init.sql` (tables, owner-only RLS, `save_recipe`, `shared_recipe` for anonymous visitors), checked by `supabase/checks/0001_verify.sql` (19/19) and `tests/supabase` (PGlite + live anonymous checks).
 - Supabase Auth: one owner, sign-ups off, minimum password 12; reset through Supabase's default email (PKCE code to `/auth/confirm`, single use, same browser).
 - Import is on in production (`BACKERY_FEATURE_IMPORT`) as of 2026-10-15 — see "Reel import live" below.
-- Smoke-tested live: sign in, recipe, rating, sharing (read-only, "Shared by Nate"), revoke, password reset. Not yet: Add to Home Screen on the iPhone.
+- Smoke-tested live: sign in, recipe, rating, sharing (read-only, "Shared by Nate"), revoke, password reset. Add to Home Screen checked on Nathan's iPhone (2026-10-15): the app icon looks right.
 
 ## Reel import live (2026-10-15)
 
@@ -82,7 +82,7 @@ Verified end to end from Nathan's iPhone (2026-10-15): Instagram → Share → N
 
 ## App icon (2026-10-15)
 
-`scripts/generate-icons.mjs` (`npm run icons`) rasterizes SKIN's `app-icon` and `favicon` components from `design-reference/icons/` into `public/`: `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, a 1024 master, `favicon.svg`, and a 32px `favicon.ico` (hand-built PNG-in-ICO; `sharp` has no native ICO encoder). Strips each source SVG's C2PA provenance block first. Wired into `app/layout.tsx`'s `metadata.icons` and `app/manifest.ts`'s `icons` (192 and 512, purpose `any` only — no maskable icon yet). Not yet checked on a real iPhone Home Screen (next deploy).
+`scripts/generate-icons.mjs` (`npm run icons`) rasterizes SKIN's `app-icon` and `favicon` components from `design-reference/icons/` into `public/`: `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, a 1024 master, `favicon.svg`, and a 32px `favicon.ico` (hand-built PNG-in-ICO; `sharp` has no native ICO encoder). Strips each source SVG's C2PA provenance block first. Wired into `app/layout.tsx`'s `metadata.icons` and `app/manifest.ts`'s `icons` (192 and 512, purpose `any` only — no maskable icon yet, BACKLOG). The wordmark's sharp cut (`SOFT 0`/`opsz 144`) was tried and reverted — its hairlines broke up at 1x — but the app icon's N is large enough to keep it; favicon follows the wordmark back to soft. Checked on Nathan's iPhone Home Screen (2026-10-15): looks right.
 
 ## Next
 

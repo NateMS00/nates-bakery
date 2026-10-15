@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.2 · **Updated**: 2026-10-14
+> **Version**: 1.4.4 · **Updated**: 2026-10-15
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -70,8 +70,8 @@ MOBILE
 ```
 
 ### Source (SKELETON section 1)
-- **Layout**: desktop left column (4 cols), top; mobile one compact row: small portrait thumbnail on the left, text on the right
-- **Content**: reel thumbnail (portrait, 9:16); creator handle; "Watch reel" opening the original in a new tab; Original caption: the post text exactly as the creator wrote it, in its own language, under the label "Original caption" plus "· Translated from Spanish" (or the language it was in) when the recipe was translated; collapsed to its first 3 lines, then "Read more" expands the full text in place and becomes "Show less". When the caption looks cut off (Instagram's length limit), a one-line notice above it: "Instagram cut this caption off. Check the reel for the rest."
+- **Layout**: desktop left column (4 cols), top; the reel picture (SKIN `recipe-picture` frame, but cropped square, 1:1, from the center, since reel covers are portrait and the dish is usually in the middle) at 128×128 on the left, and beside it, aligned to its top, one line "@creator · Watch reel" (wraps to two lines only if the handle is long). Mobile one compact row: the same square picture at 96×96, with the same line beside it; Needs Your Check still starts in the first viewport
+- **Content**: reel picture (the stored copy; the picture placeholder while it loads or if the copy failed); creator handle; "Watch reel" opening the original in a new tab; Original caption: the post text exactly as the creator wrote it, in its own language, under the label "Original caption" plus "· Translated from Spanish" (or the language it was in) when the recipe was translated; collapsed to its first 3 lines, then "Read more" expands the full text in place and becomes "Show less". When the caption looks cut off (Instagram's length limit), a one-line notice above it: "Instagram cut this caption off. Check the reel for the rest."
 - **Behavior**: the caption starts collapsed every time the page opens. Read more is a real button with its expanded state exposed to screen readers; expanding doesn't move focus. On desktop, while the caption is expanded, the left column stops being sticky and scrolls with the page, so no part of it is cut off
 
 ```text
@@ -79,8 +79,9 @@ DESKTOP (left column)
 +-------------------------------+
 | SOURCE                        |
 | +------+                      |
-| |THUMB | @CREATOR             |
-| |      | WATCH_REEL           |
+| |      | @CREATOR · WATCH_REEL|
+| | PIC  |                      |
+| | 1:1  |                      |
 | +------+                      |
 | ORIGINAL CAPTION ·            |
 | TRANSLATED FROM SPANISH       |
@@ -94,7 +95,7 @@ DESKTOP (left column)
 MOBILE
 +--------------------------------------+
 | SOURCE                               |
-| [THUMB] @CREATOR · WATCH_REEL        |
+| [PIC] @CREATOR · WATCH_REEL          |
 | ORIGINAL CAPTION · TRANSLATED FROM   |
 | SPANISH                              |
 | FIRST LINES OF THE CAPTION TEXT, AS  |
@@ -298,6 +299,8 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.4 (2026-10-15): Source picture cropped square from the center, 128×128 desktop and 96×96 mobile, so the dish is visible (Nathan's review on iPhone).
+- 1.4.3 (2026-10-15): Source uses the recipe picture (3:4, 96×128 desktop, 60×80 mobile) instead of a 9:16 thumbnail, with "@creator · Watch reel" on one line aligned to its top (build review).
 - 1.4.2 (2026-10-14): Tips step group in the editor: last, unnumbered, no time chips or Uses line; rows move in and out with Move to group (SKELETON 1.4.4).
 - 1.4.1 (2026-10-13): Unknown ingredients or units arrive as Missing with the original kept ("Add grams · was ½ cup"); "—" hidden from screen readers; packages such as butter sticks are Estimated (SKELETON 1.4.1).
 - 1.4.0 (2026-10-13): Source shows the original caption (labeled when translated) instead of the caption-and-audio transcript, with a cut-off notice; Estimated now means converted from a count at a typical weight; ingredient notes; no-steps line; Couldn't finish state (SKELETON 1.4.0).

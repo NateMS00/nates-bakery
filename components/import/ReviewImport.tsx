@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
-import { discardDraft, retryImport, saveDraftContent, saveImport } from "@/lib/data/actions";
+import { discardDraft, saveDraftContent, saveImport } from "@/lib/data/actions";
 import { blockers, emptyEditor, saveStatus, type EditorState } from "@/lib/data/editor";
+import { runShortcutUrl } from "@/lib/data/import";
 import type { Draft } from "@/lib/data/types";
 import { DiscardDialog } from "./DiscardDialog";
 import { NeedsYourCheck } from "./NeedsYourCheck";
@@ -76,11 +77,12 @@ export function ReviewImport({ draft }: { draft: Draft }) {
     else setFailed(true);
   }
 
-  /** Couldn't finish: Retry runs the Shortcut again; the draft goes back to Importing on the Library. */
-  async function retry() {
-    await retryImport(draft.id);
+  /** Couldn't finish: Retry hands the same reel off to the Shortcut again (the same
+   * mechanism as Import again) — import_begin finds this draft's stored caption and
+   * skips straight back to Apple Intelligence, no new Apify call. */
+  function retry() {
+    window.location.href = runShortcutUrl(draft.reelUrl, { again: true });
     router.push("/recipes");
-    router.refresh();
   }
 
   const saveFailed = failed && (

@@ -1,5 +1,6 @@
 import { OWNER_NAME } from "@/lib/auth/rules";
-import type { BakeLogEntry, Recipe, SharedRecipe } from "@/lib/data/types";
+import type { EditorState } from "@/lib/data/editor";
+import type { BakeLogEntry, Draft, Recipe, SharedRecipe } from "@/lib/data/types";
 
 // Database rows ↔ the app's types (lib/data/types.ts). Pure, so tests/supabase can
 // check it without a database.
@@ -7,7 +8,7 @@ import type { BakeLogEntry, Recipe, SharedRecipe } from "@/lib/data/types";
 /** The columns and parts read for a recipe (PostgREST select). */
 export const RECIPE_SELECT = `
   id, title, category, yield_quantity, yield_unit, yield_unit_plural, total_time_minutes,
-  source_creator_handle, source_reel_url, rating, favorite, created_at,
+  source_creator_handle, source_reel_url, source_thumbnail_path, rating, favorite, created_at,
   ingredient_groups ( id, name, position ),
   step_groups ( id, name, position ),
   ingredients ( id, group_id, name, grams, status, original, note, position ),
@@ -32,6 +33,7 @@ export interface RecipeRow {
   total_time_minutes: number;
   source_creator_handle: string | null;
   source_reel_url: string | null;
+  source_thumbnail_path: string | null;
   rating: number | null;
   favorite: boolean;
   created_at: string;
@@ -70,11 +72,13 @@ export function recipeFromRow(r: RecipeRow): Recipe {
     category: r.category,
     yield: { quantity: r.yield_quantity, unit: r.yield_unit, unitPlural: r.yield_unit_plural },
     totalTimeMinutes: r.total_time_minutes,
-    source: r.source_reel_url ? { creatorHandle: r.source_creator_handle ?? "", reelUrl: r.source_reel_url } : undefined,
-    // source_thumbnail_path (supabase/migrations/0002_import.sql) is a path in the
-    // private recipe-thumbnails bucket; showing it needs a signed URL, deferred until
-    // the Supabase backend is wired up for import (Import is off in production for now).
-    picture: null,
+    source: r.source_reel_url
+      ? { creatorHandle: r.source_creator_handle ?? "", reelUrl: r.source_reel_url, thumbnailPath: r.source_thumbnail_path ?? undefined }
+      : undefined,
+    // A path in the private recipe-thumbnails bucket (SKELETON 1.4.6), not a usable
+    // URL yet — resolvePicture() in ./data.ts signs it. Pure here, so tests/supabase
+    // can check the mapping without a database or Storage.
+    picture: r.source_thumbnail_path,
     ingredientGroups: byPosition(r.ingredient_groups).map(({ id, name }) => ({ id, name })),
     stepGroups: byPosition(r.step_groups).map(({ id, name }) => ({ id, name })),
     ingredients: byPosition(r.ingredients).map((i) => ({
@@ -98,6 +102,41 @@ export function recipeFromRow(r: RecipeRow): Recipe {
     bakeLog: sortBakes(r.bakes).map(bakeFromRow),
     shareLink: share ? { token: share.token, createdAt: share.created_at } : null,
     createdAt: r.created_at,
+  };
+}
+
+/** The columns read for a draft (PostgREST select) — supabase/migrations/0002_import.sql. */
+export const DRAFT_SELECT = "id, status, title, caption, caption_language, creator_handle, reel_url, thumbnail_url, content, created_at";
+
+export interface DraftRow {
+  id: string;
+  status: "fetching" | "reading" | "unfinished" | "ready";
+  title: string | null;
+  caption: string | null;
+  caption_language: string | null;
+  creator_handle: string | null;
+  reel_url: string;
+  thumbnail_url: string | null;
+  content: EditorState | null;
+  created_at: string;
+}
+
+/** Instagram's own caption length cap; there's no stored "cut off" flag to read. */
+const CAPTION_CAP = 2200;
+
+export function draftFromRow(d: DraftRow): Draft {
+  return {
+    id: d.id,
+    status: d.status === "ready" ? "ready" : d.status === "unfinished" ? "failed" : "importing",
+    title: d.title,
+    creatorHandle: d.creator_handle ?? "",
+    reelUrl: d.reel_url,
+    createdAt: d.created_at,
+    caption: d.caption ?? undefined,
+    captionCutOff: d.caption ? d.caption.length >= CAPTION_CAP : undefined,
+    captionLanguage: d.caption_language ?? undefined,
+    thumbnailUrl: d.thumbnail_url ?? undefined,
+    content: d.content ?? undefined,
   };
 }
 

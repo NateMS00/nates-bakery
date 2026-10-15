@@ -1,7 +1,16 @@
 import type { EditorState } from "@/lib/data/editor";
-import type { StartResult } from "@/lib/data/import";
 import type { BakeLogEntry, Draft, Recipe, SharedRecipe, ShareLink } from "@/lib/data/types";
 import type { Session } from "@/lib/auth/rules";
+
+/** import_begin's answer (supabase/migrations/0002_import.sql), mirrored for fixtures too. */
+export type BeginImportResult =
+  | { status: "bad-key" }
+  | { status: "invalid" }
+  | { status: "limit" }
+  | { status: "already"; recipeId: string; title: string }
+  | { status: "ready"; draftId: string }
+  | { status: "caption"; draftId: string; caption: string; creatorHandle: string | null }
+  | { status: "fetch"; draftId: string };
 
 // The two halves the app talks to, so the pages and actions don't care where data
 // lives: `fixtures` (in-memory, for development and Playwright) or `supabase`
@@ -32,16 +41,29 @@ export interface DataBackend {
   createShareLink(recipeId: string): Promise<ShareLink | null>;
   revokeShareLink(recipeId: string): Promise<void>;
 
-  // Import (behind BACKERY_FEATURE_IMPORT): drafts and the import service.
+  // Import (behind BACKERY_FEATURE_IMPORT): the owner's own session reads and edits
+  // drafts; "Open the draft" polls for one. Getting a ready draft also copies its
+  // thumbnail into Storage the first time (SKELETON 1.4.6), best-effort.
   getDrafts(): Promise<Draft[]>;
   getDraft(id: string): Promise<Draft | null>;
+  /** The newest ready draft for this reel, or null — polled while "Handed to the Shortcut" shows. */
+  findReadyDraftByReelUrl(reelUrl: string): Promise<{ id: string } | null>;
   saveDraftContent(draftId: string, content: EditorState): Promise<boolean>;
   saveImport(draftId: string, content: EditorState): Promise<SaveResult>;
   discardDraft(draftId: string): Promise<void>;
-  /** `url` is already normalized. */
-  startImport(url: string, options: { again?: boolean }): Promise<StartResult>;
-  /** Re-runs a "failed" draft's import from its kept caption. False if the draft isn't "failed". */
-  retryDraft(draftId: string): Promise<boolean>;
+
+  // The import API routes (app/api/import/*, called by the Shortcut with its import
+  // key, never a session): mirror supabase/migrations/0002_import.sql and 0003's
+  // import_* functions 1:1, so lib/import/server.ts's orchestration is backend-agnostic.
+  importBegin(key: string, url: string, again: boolean): Promise<BeginImportResult>;
+  importSetCaption(key: string, draftId: string, caption: string, creatorHandle: string | null, thumbnailUrl: string | null): Promise<boolean>;
+  /** What finish-import needs to build the recipe once a reply parses, or null if the draft isn't waiting on one. */
+  importGetCaption(key: string, draftId: string): Promise<{ caption: string; creatorHandle: string | null; reelUrl: string } | null>;
+  importFinish(key: string, draftId: string, title: string, language: string, content: EditorState): Promise<boolean>;
+  importUnfinished(key: string, draftId: string): Promise<boolean>;
+  importDrop(key: string, draftId: string): Promise<boolean>;
+  /** True the first time a draft's reply fails to parse; false every time after. */
+  importMarkRetry(key: string, draftId: string): Promise<boolean>;
 
   /** When the owner's import key was made, or null if there isn't one yet. Never the key itself. */
   getImportKeyCreatedAt(): Promise<string | null>;

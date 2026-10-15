@@ -85,7 +85,13 @@ export interface Recipe {
   yield: RecipeYield;
   totalTimeMinutes: number;
   /** Absent for recipes entered by hand. */
-  source?: { creatorHandle: string; reelUrl: string };
+  source?: {
+    creatorHandle: string;
+    reelUrl: string;
+    /** The Storage path behind `picture` (SKELETON 1.4.6). save_recipe keeps the
+     * existing one when this is absent, so editing never clears it. */
+    thumbnailPath?: string;
+  };
   /** The reel thumbnail, copied into the app's own storage (SKELETON 1.4.2). Null for a
    * hand-entered recipe or a failed copy; the Library and Recipe page show the picture
    * placeholder either way. Not on shared pages. */
@@ -116,14 +122,22 @@ export interface Draft {
   creatorHandle: string;
   reelUrl: string;
   createdAt: string;
-  /** When a stubbed import started (ms); it becomes ready IMPORT_MS later. */
+  /** When a stubbed import started (ms); it becomes ready SIMULATED_IMPORT_MS later. */
   startedAt?: number;
+  /** The automatic retry-once (SKELETON 1.4.5) has already run for this draft. */
+  retried?: boolean;
   /** The post text exactly as the creator wrote it. Absent only while "importing". */
   caption?: string;
   /** True when Instagram's length limit cut the caption off. */
   captionCutOff?: boolean;
   /** The caption's own language, in English ("Spanish"); absent or "English" shows no "Translated from" label. */
   captionLanguage?: string;
+  /**
+   * The reel's thumbnail, straight from Apify (SKELETON 1.4.6). Expires after a few
+   * days; copied into the app's own Storage the first time the draft is opened
+   * (content.thumbnailPath), not kept as the picture source itself.
+   */
+  thumbnailUrl?: string;
   /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */
   content?: import("./editor").EditorState;
 }

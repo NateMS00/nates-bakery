@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import { OWNER_NAME } from "@/lib/auth/rules";
 import { sortLog } from "@/lib/data/bakeLog";
 import { newId, toRecipeContent, type EditorState } from "@/lib/data/editor";
-import { normalizeReelUrl, type FailReason, type StartResult } from "@/lib/data/import";
+import { normalizeReelUrl, type FailReason } from "@/lib/data/import";
 import type { BakeLogEntry, Recipe, ShareLink } from "@/lib/data/types";
+import { ImportFetchFailure, type CaptionFetcher } from "@/lib/import/server";
 import type { BakeFields, DataBackend, SaveResult } from "../types";
 import { db, simulatedLatency } from "./store";
 
@@ -56,12 +57,22 @@ function clean(f: BakeFields): BakeFields {
 
 // STUB import service: reel ids starting with Cprivate, Cdeleted, or Cnorecipe fail
 // with that reason; any other link becomes a draft that finishes importing on the
-// server after IMPORT_MS (see completeImports in ./store.ts).
+// server after SIMULATED_IMPORT_MS (see completeImports in ./store.ts).
 const STUB_FAILURES: [RegExp, FailReason][] = [
   [/\/Cprivate/i, "private"],
   [/\/Cdeleted/i, "deleted"],
   [/\/Cnorecipe/i, "no-recipe"],
 ];
+
+/** A canned caption, standing in for Apify in fixtures mode (lib/import/server.ts never calls the real fetchReel here). */
+export const FIXTURE_CAPTION = "Kouign-amann, the butteriest pastry in Brittany. Laminated dough, lots of sugar, caramelised edges.";
+
+/** Stands in for lib/import/apify.ts's fetchReel: reuses STUB_FAILURES, never calls Apify. */
+export const fixturesFetchCaption: CaptionFetcher = async (url) => {
+  const failure = STUB_FAILURES.find(([re]) => re.test(url));
+  if (failure) throw new ImportFetchFailure(failure[1]);
+  return { caption: FIXTURE_CAPTION, creatorHandle: "kouign.kate", thumbnailUrl: null };
+};
 
 export const fixturesData: DataBackend = {
   async getRecipes() {
@@ -159,6 +170,11 @@ export const fixturesData: DataBackend = {
     return (await db()).drafts.find((d) => d.id === id) ?? null;
   },
 
+  async findReadyDraftByReelUrl(reelUrl) {
+    const draft = (await db()).drafts.find((d) => d.status === "ready" && normalizeReelUrl(d.reelUrl) === reelUrl);
+    return draft ? { id: draft.id } : null;
+  },
+
   async saveDraftContent(draftId, content) {
     const draft = (await db()).drafts.find((d) => d.id === draftId);
     if (!draft) return false;
@@ -183,32 +199,83 @@ export const fixturesData: DataBackend = {
     data.drafts = data.drafts.filter((d) => d.id !== draftId);
   },
 
-  async startImport(url, options): Promise<StartResult> {
+  // The import API routes (app/api/import/*, called by the Shortcut's import key):
+  // mirror supabase/migrations/0002_import.sql and 0003_retry.sql's functions.
+  async importBegin(key, url, again) {
     const data = await db();
-    if (!options.again) {
-      const saved = data.recipes.find((r) => r.source && normalizeReelUrl(r.source.reelUrl) === url);
+    if (!data.importKey || data.importKey.key !== key) return { status: "bad-key" };
+    const normalized = normalizeReelUrl(url);
+    if (!normalized) return { status: "invalid" };
+    if (!again) {
+      const saved = data.recipes.find((r) => r.source && normalizeReelUrl(r.source.reelUrl) === normalized);
       if (saved) return { status: "already", recipeId: saved.id, title: saved.title };
     }
-    const failure = STUB_FAILURES.find(([re]) => re.test(url));
-    if (failure) return { status: "failed", reason: failure[1] };
-    const draftId = newId("d");
-    data.drafts.unshift({
-      id: draftId,
-      status: "importing",
-      title: null,
-      creatorHandle: "kouign.kate",
-      reelUrl: url,
-      createdAt: new Date().toISOString(),
-      startedAt: Date.now(),
-    });
-    return { status: "started", draftId };
+    const existing = data.drafts.find((d) => normalizeReelUrl(d.reelUrl) === normalized);
+    if (existing?.status === "ready") return { status: "ready", draftId: existing.id };
+    if (existing && existing.caption) {
+      existing.status = "importing"; // "failed" (Couldn't finish) goes back to Importing, same as the Shortcut re-reading it
+      return { status: "caption", draftId: existing.id, caption: existing.caption, creatorHandle: existing.creatorHandle };
+    }
+    const draftId = existing?.id ?? newId("d");
+    if (!existing) {
+      data.drafts.unshift({ id: draftId, status: "importing", title: null, creatorHandle: "kouign.kate", reelUrl: normalized, createdAt: new Date().toISOString() });
+    }
+    return { status: "fetch", draftId };
   },
 
-  async retryDraft(draftId) {
-    const draft = (await db()).drafts.find((d) => d.id === draftId);
-    if (!draft || draft.status !== "failed") return false;
-    draft.status = "importing";
-    draft.startedAt = Date.now();
+  async importSetCaption(key, draftId, caption, creatorHandle, thumbnailUrl) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return false;
+    const draft = data.drafts.find((d) => d.id === draftId && d.status === "importing" && !d.caption);
+    if (!draft) return false;
+    draft.caption = caption;
+    draft.creatorHandle = creatorHandle ?? draft.creatorHandle;
+    draft.thumbnailUrl = thumbnailUrl ?? undefined;
+    draft.startedAt = Date.now(); // completeImports (./store.ts) finishes it SIMULATED_IMPORT_MS later
+    return true;
+  },
+
+  async importGetCaption(key, draftId) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return null;
+    const draft = data.drafts.find((d) => d.id === draftId && (d.status === "importing" || d.status === "failed") && d.caption);
+    return draft ? { caption: draft.caption!, creatorHandle: draft.creatorHandle, reelUrl: draft.reelUrl } : null;
+  },
+
+  async importFinish(key, draftId, title, _language, content) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return false;
+    const draft = data.drafts.find((d) => d.id === draftId && (d.status === "importing" || d.status === "failed"));
+    if (!draft) return false;
+    draft.status = "ready";
+    draft.title = title || null;
+    draft.content = content;
+    return true;
+  },
+
+  async importUnfinished(key, draftId) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return false;
+    const draft = data.drafts.find((d) => d.id === draftId && d.status === "importing");
+    if (!draft) return false;
+    draft.status = "failed";
+    return true;
+  },
+
+  async importDrop(key, draftId) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return false;
+    const before = data.drafts.length;
+    data.drafts = data.drafts.filter((d) => !(d.id === draftId && d.status !== "ready"));
+    return data.drafts.length < before;
+  },
+
+  async importMarkRetry(key, draftId) {
+    const data = await db();
+    if (!data.importKey || data.importKey.key !== key) return false;
+    const draft = data.drafts.find((d) => d.id === draftId && d.status === "importing" && !d.retried);
+    if (!draft) return false;
+    draft.retried = true;
     return true;
   },
 
@@ -219,10 +286,10 @@ export const fixturesData: DataBackend = {
   async createImportKey() {
     const data = await db();
     const createdAt = new Date().toISOString();
-    data.importKey = { createdAt };
     // STUB: a real-shaped key (nbk_ + 43 base64url characters), not real crypto.
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-    const key = Array.from({ length: 43 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
-    return `nbk_${key}`;
+    const key = `nbk_${Array.from({ length: 43 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")}`;
+    data.importKey = { createdAt, key };
+    return key;
   },
 };

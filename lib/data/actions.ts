@@ -3,7 +3,6 @@
 import { dataBackend } from "@/lib/backend";
 import type { BakeFields, SaveResult } from "@/lib/backend/types";
 import { blockers, type EditorState } from "./editor";
-import { normalizeReelUrl, type StartResult } from "./import";
 import type { BakeLogEntry, ShareLink } from "./types";
 
 // Server actions. The editor's checks run here too, so a recipe with a Missing amount
@@ -27,11 +26,6 @@ export async function saveImport(draftId: string, content: EditorState): Promise
 /** Discard confirmation: the draft and its extracted recipe are deleted. */
 export async function discardDraft(draftId: string) {
   await (await data()).discardDraft(draftId);
-}
-
-/** Couldn't finish: Retry runs the Shortcut again for this draft, from its kept caption. */
-export async function retryImport(draftId: string): Promise<boolean> {
-  return (await data()).retryDraft(draftId);
 }
 
 /** Set up the Shortcut: when the owner's import key was made, or null if there isn't one. */
@@ -61,11 +55,12 @@ export async function deleteRecipe(recipeId: string) {
   await (await data()).deleteRecipe(recipeId);
 }
 
-/** Import (SKELETON FLOW-01): validate the link, catch reels already saved, then start. */
-export async function startImport(link: string, options: { again?: boolean } = {}): Promise<StartResult> {
-  const url = normalizeReelUrl(link);
-  if (!url) return { status: "invalid" };
-  return (await data()).startImport(url, options);
+/**
+ * "Handed to the Shortcut" (BONES-import): polled while the page waits for the
+ * Shortcut to finish, so "Open the draft" can appear without a reload.
+ */
+export async function findReadyDraft(reelUrl: string): Promise<{ id: string } | null> {
+  return (await data()).findReadyDraftByReelUrl(reelUrl);
 }
 
 // ── Recipe page and Bake Log (owner actions) ──

@@ -15,6 +15,7 @@ const row: RecipeRow = {
   total_time_minutes: 210,
   source_creator_handle: "forno.da.rita",
   source_reel_url: "https://www.instagram.com/reel/C9nataRita01/",
+  source_thumbnail_path: null,
   rating: 4,
   favorite: true,
   created_at: "2026-10-01T10:00:00Z",
@@ -54,6 +55,13 @@ test("a recipe row becomes the app's Recipe, in the owner's order", () => {
   expect(r.yield).toEqual({ quantity: 12, unit: "tart", unitPlural: "tarts" });
   expect(r.source).toEqual({ creatorHandle: "forno.da.rita", reelUrl: "https://www.instagram.com/reel/C9nataRita01/" });
   expect(r.shareLink).toEqual({ token: "abcdefghijklmnopqrstuvwx", createdAt: "2026-09-27T10:12:00Z" });
+  expect(r.picture).toBeNull();
+});
+
+test("the thumbnail path becomes source.thumbnailPath and picture (not yet a signed URL)", () => {
+  const r = recipeFromRow({ ...row, source_thumbnail_path: "owner-1/abc.jpg" });
+  expect(r.source?.thumbnailPath).toBe("owner-1/abc.jpg");
+  expect(r.picture).toBe("owner-1/abc.jpg");
 });
 
 test("bakes: newest first, the later-logged one first on the same date; numbers are numbers", () => {

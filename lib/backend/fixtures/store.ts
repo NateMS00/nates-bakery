@@ -1,8 +1,10 @@
 import { cookies } from "next/headers";
 import { DRAFTS, LIBRARY_RECIPES, importedContent } from "@/lib/data/fixtures-library";
-import { IMPORT_MS } from "@/lib/data/import";
 import { RECIPES } from "@/lib/data/fixtures";
 import type { Draft, Recipe } from "@/lib/data/types";
+
+/** STUB: how long the fixtures backend takes to simulate the Shortcut's round trip. */
+const SIMULATED_IMPORT_MS = 4500;
 
 // The fixtures backend's store: fixture data held in server memory (development and
 // Playwright only; see lib/backend/index.ts). Writes change it until the server restarts.
@@ -17,8 +19,12 @@ export const FIXTURE_NS_COOKIE = "backery_fixture_ns";
 export interface Db {
   recipes: Recipe[];
   drafts: Draft[];
-  /** BONES-import "Add your import key": null until Create import key is pressed. */
-  importKey: { createdAt: string } | null;
+  /**
+   * BONES-import "Add your import key": null until Create import key is pressed. The
+   * real backend only ever stores a hash; fixtures keep the plaintext too, since the
+   * import routes need something to check the Shortcut's key against.
+   */
+  importKey: { createdAt: string; key: string } | null;
 }
 
 const store = globalThis as typeof globalThis & { __backeryDb?: Map<string, Db> };
@@ -50,10 +56,10 @@ export async function db(): Promise<Db> {
   return found;
 }
 
-/** STUB import service: a started import is ready IMPORT_MS after it began. */
+/** STUB import service: a started import is ready SIMULATED_IMPORT_MS after it began. */
 function completeImports(data: Db) {
   for (const d of data.drafts) {
-    if (d.status === "importing" && d.startedAt && Date.now() - d.startedAt >= IMPORT_MS) {
+    if (d.status === "importing" && d.startedAt && Date.now() - d.startedAt >= SIMULATED_IMPORT_MS) {
       d.status = "ready";
       d.content = importedContent(d.reelUrl);
       d.title = d.content.title;

@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, ChevronDown, Copy } from "lucide-react";
+import { ChevronDown, Copy } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ConfirmActions } from "@/components/ui/ConfirmDialog";
@@ -11,83 +10,94 @@ import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ExternalLink, TextLink } from "@/components/ui/TextLink";
 import { cx } from "@/components/ui/cx";
-import { createImportKey, startImport } from "@/lib/data/actions";
-import { FAIL_MESSAGES, IMPORT_MS, IMPORT_STAGES, SETUP_MESSAGES, SHORTCUT_URL, STAGE_MS, type FailReason, type SetupReason } from "@/lib/data/import";
+import { createImportKey, findReadyDraft } from "@/lib/data/actions";
+import {
+  FAIL_MESSAGES,
+  IMPORT_STAGES,
+  SETUP_MESSAGES,
+  SHORTCUT_URL,
+  normalizeReelUrl,
+  runShortcutUrl,
+  type FailReason,
+  type LandingState,
+  type SetupReason,
+} from "@/lib/data/import";
 import { formatKeyDate } from "@/lib/format";
 
 // /import (Import), BONES-import.md: one centered column (8 of 12 cols on desktop).
-// Reel Link with the status area under Import (Processing, Invalid link, Import failed,
-// Already imported), Share from Instagram, and Manual Entry. ?url= prefills the field
-// and starts the import on load. The primary action is in the flow, not a sticky bar.
+// Reel Link with the status area under Import (Handed to the Shortcut, Invalid link,
+// Import failed, Already imported), Set up the Shortcut, and Manual Entry. Import hands
+// the link to the Shortcut (shortcuts://run-shortcut) and polls for a ready draft; the
+// Shortcut itself calls the server and redirects back here on failure or success.
 
 type Status =
   | { kind: "idle" }
-  | { kind: "processing"; draftId: string; stage: number }
+  | { kind: "handedOff"; reelUrl: string; readyDraftId: string | null }
   | { kind: "failed"; reason: FailReason; url: string }
   | { kind: "already"; recipeId: string; title: string };
 
+const POLL_MS = 3000;
 const canPaste = () => typeof navigator !== "undefined" && typeof navigator.clipboard?.readText === "function";
+
+function landingToStatus(landing: LandingState | null): Status {
+  if (!landing) return { kind: "idle" };
+  if (landing.kind === "failed") return { kind: "failed", reason: landing.reason, url: landing.url };
+  return { kind: "already", recipeId: landing.recipeId, title: landing.title };
+}
 
 export function ImportView({
   initialUrl,
+  landing,
   importedBefore,
   setupReason,
   importKeyCreatedAt,
 }: {
   initialUrl: string;
+  landing: LandingState | null;
   importedBefore: boolean;
   setupReason: SetupReason | null;
   importKeyCreatedAt: string | null;
 }) {
-  const router = useRouter();
-  const [link, setLink] = useState(initialUrl);
+  const [link, setLink] = useState(landing?.url ?? initialUrl);
   const [error, setError] = useState<string>();
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<Status>(() => landingToStatus(landing));
   const field = useRef<HTMLInputElement>(null);
-  const started = useRef(false);
   const paste = useSyncExternalStore(() => () => {}, canPaste, () => false);
-  const locked = busy || status.kind === "processing" || status.kind === "failed";
+  const locked = status.kind === "handedOff" || status.kind === "failed";
 
-  async function run(url: string, again = false) {
+  /** BONES: "Import checks the link, then opens the Shortcut with it." No server call. */
+  function run(url: string, again = false) {
     if (!url.trim()) {
       setError("Paste a link to an Instagram reel.");
       field.current?.focus();
       return;
     }
-    setBusy(true);
-    setError(undefined);
-    const result = await startImport(url, { again });
-    setBusy(false);
-    if (result.status === "invalid") {
+    const normalized = normalizeReelUrl(url);
+    if (!normalized) {
       setError("That isn’t an Instagram reel or post link. Check it and try again.");
       field.current?.focus();
-    } else if (result.status === "already") {
-      setStatus({ kind: "already", recipeId: result.recipeId, title: result.title });
-    } else if (result.status === "failed") {
-      setStatus({ kind: "failed", reason: result.reason, url });
-    } else {
-      setStatus({ kind: "processing", draftId: result.draftId, stage: 0 });
+      return;
     }
+    setError(undefined);
+    window.location.href = runShortcutUrl(normalized, { again });
+    setStatus({ kind: "handedOff", reelUrl: normalized, readyDraftId: null });
   }
 
-  // ?url= starts the import on load (once, even under React's double effects in dev).
+  // Handed to the Shortcut: poll for a ready draft, so "Open the draft" can appear
+  // without a reload (BONES: "If the page is still open when the draft is ready").
+  const reelUrl = status.kind === "handedOff" && !status.readyDraftId ? status.reelUrl : null;
   useEffect(() => {
-    if (initialUrl && !started.current) {
-      started.current = true;
-      void run(initialUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once for the URL the page opened with
-  }, []);
-
-  // Processing: walk through the stages, then open Review Import on its own.
-  const draftId = status.kind === "processing" ? status.draftId : null;
-  useEffect(() => {
-    if (!draftId) return;
-    const timers = IMPORT_STAGES.map((_, i) => window.setTimeout(() => setStatus({ kind: "processing", draftId, stage: i + 1 }), STAGE_MS * (i + 1)));
-    timers.push(window.setTimeout(() => router.push(`/import/${draftId}`), IMPORT_MS + 150));
-    return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [draftId, router]);
+    if (!reelUrl) return;
+    let cancelled = false;
+    const t = window.setInterval(async () => {
+      const found = await findReadyDraft(reelUrl);
+      if (found && !cancelled) setStatus({ kind: "handedOff", reelUrl, readyDraftId: found.id });
+    }, POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(t);
+    };
+  }, [reelUrl]);
 
   return (
     <div className="mx-auto desktop:max-w-[calc(var(--col)*8+var(--gutter)*7)]">
@@ -99,7 +109,7 @@ export function ImportView({
         className="mt-lg grid gap-sm tablet:grid-cols-[minmax(0,1fr)_calc(var(--col)*2+var(--gutter))] tablet:items-start desktop:grid-cols-[minmax(0,1fr)_calc(var(--col)*2+var(--gutter))]"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!locked) void run(link);
+          if (!locked) run(link);
         }}
       >
         <ReelField
@@ -115,14 +125,14 @@ export function ImportView({
           }}
         />
         {/* From tablet up, Import sits beside the field: offset by the label's height (SKIN label: 13px × 1.2) */}
-        <Button type="submit" variant="primary" disabled={locked} aria-busy={busy || undefined} className="w-full tablet:mt-[calc(13px*1.2+var(--spacing-xs))]">
+        <Button type="submit" variant="primary" disabled={locked} className="w-full tablet:mt-[calc(13px*1.2+var(--spacing-xs))]">
           Import
         </Button>
       </form>
 
       <StatusArea
         status={status}
-        onAgain={() => void run(link, true)}
+        onAgain={() => run(link, true)}
         onTryAnother={() => {
           setStatus({ kind: "idle" });
           setLink("");
@@ -215,44 +225,72 @@ function ReelField({
 }
 
 /** BONES: all states render here, directly under Import, so the first viewport shows them. */
+/** BONES-import "Import failed"/"No recipe in this caption"/"Daily limit reached": the
+ * reason's message plus the actions that make sense for it. The limit is the owner's,
+ * not the reel's, so it skips "Try another link"; no-recipe adds Watch the reel. */
+const FAIL_ACTIONS: Record<FailReason, { watchReel: boolean; tryAnother: boolean }> = {
+  private: { watchReel: false, tryAnother: true },
+  deleted: { watchReel: false, tryAnother: true },
+  unavailable: { watchReel: false, tryAnother: true },
+  "no-recipe": { watchReel: true, tryAnother: true },
+  limit: { watchReel: false, tryAnother: false },
+};
+
 function StatusArea({ status, onAgain, onTryAnother }: { status: Status; onAgain: () => void; onTryAnother: () => void }) {
   if (status.kind === "idle") return <div className="mt-base" />;
 
-  if (status.kind === "processing") {
-    const current = IMPORT_STAGES[Math.min(status.stage, IMPORT_STAGES.length - 1)];
+  if (status.kind === "handedOff") {
     return (
       <div className="mt-lg">
-        <ol role="list" className="flex flex-col gap-sm" aria-label="Import progress">
-          {IMPORT_STAGES.map((name, i) => (
-            <ProgressStage key={name} name={name} state={i < status.stage ? "done" : i === status.stage ? "current" : "pending"} />
+        <p role="status" className="type-body-md text-ink">
+          Importing in the Shortcut
+        </p>
+        <ol role="list" aria-label="What the Shortcut does" className="mt-sm flex flex-col gap-sm">
+          {IMPORT_STAGES.map((name) => (
+            <li key={name} className="flex items-center gap-sm type-body-md text-muted">
+              <span aria-hidden="true" className="size-icon-sm shrink-0 rounded-full border-2 border-border" />
+              {name}
+            </li>
           ))}
         </ol>
-        <p role="status" className="sr-only">
-          {status.stage >= IMPORT_STAGES.length ? "Import finished. Opening the review." : `${current}…`}
-        </p>
         <p className="mt-base type-body-sm text-body">
           You can leave: it will wait in your Library under Drafts.{" "}
           <TextLink href="/recipes" className="inline-flex min-h-touch-min items-center">
             Go to Library
           </TextLink>
         </p>
+        {status.readyDraftId && (
+          <p role="status" className="mt-base">
+            <TextLink href={`/import/${status.readyDraftId}`} className="inline-flex min-h-touch-min items-center font-bold">
+              Open the draft
+            </TextLink>
+          </p>
+        )}
       </div>
     );
   }
 
   if (status.kind === "failed") {
+    const actions = FAIL_ACTIONS[status.reason];
     return (
       <div role="alert" aria-labelledby="import-failed" className="mt-lg rounded-md border-l-4 border-error bg-error-wash px-base py-md">
         <p id="import-failed" className="type-body-md text-ink">
           {FAIL_MESSAGES[status.reason]}
         </p>
         <div className="mt-md flex flex-col gap-sm tablet:flex-row">
+          {actions.watchReel && (
+            <ExternalLink href={status.url} className="inline-flex min-h-touch-min items-center">
+              Watch the reel
+            </ExternalLink>
+          )}
           <ButtonLink href={`/recipes/new?source=${encodeURIComponent(status.url)}`} variant="primary" className="w-full tablet:w-auto">
             Enter it manually
           </ButtonLink>
-          <Button variant="secondary" onClick={onTryAnother} className="w-full tablet:w-auto">
-            Try another link
-          </Button>
+          {actions.tryAnother && (
+            <Button variant="secondary" onClick={onTryAnother} className="w-full tablet:w-auto">
+              Try another link
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -271,30 +309,6 @@ function StatusArea({ status, onAgain, onTryAnother }: { status: Status; onAgain
         Import again
       </Button>
     </div>
-  );
-}
-
-/** SKIN progress-stage: empty circle pending, spinning ring current, olive check done. */
-function ProgressStage({ name, state }: { name: string; state: "pending" | "current" | "done" }) {
-  return (
-    <li className={cx("flex items-center gap-sm type-body-md", state === "pending" ? "text-muted" : state === "current" ? "text-ink" : "text-success")}>
-      <span aria-hidden="true" className="grid size-icon-sm shrink-0 place-items-center">
-        {state === "done" ? (
-          <Check className="size-icon-sm" strokeWidth={3} />
-        ) : state === "current" ? (
-          <span className="size-icon-sm animate-spin rounded-full border-2 border-primary border-t-transparent motion-reduce:animate-none" />
-        ) : (
-          <span className="size-icon-sm rounded-full border-2 border-border" />
-        )}
-      </span>
-      {name}
-      <span className="sr-only">{state === "done" ? ", done" : state === "current" ? ", in progress" : ""}</span>
-      {state === "current" && (
-        <span aria-hidden="true" className="hidden type-caption text-muted motion-reduce:inline">
-          In progress
-        </span>
-      )}
-    </li>
   );
 }
 

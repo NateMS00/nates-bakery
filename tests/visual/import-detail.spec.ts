@@ -105,8 +105,23 @@ test("Couldn't finish: a notice with Retry, and an otherwise-empty editor", asyn
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("");
   await shot(page, "05-couldnt-finish");
 
+  // Retry hands the Shortcut the same reel again (shortcuts://, a no-op here); the
+  // draft stays Couldn't finish until the Shortcut actually calls back.
   await page.getByRole("button", { name: "Retry" }).click();
   await expect(page).toHaveURL(/\/recipes$/);
+  await page.getByRole("button", { name: /Show all drafts/ }).click();
+  await expect(page.locator("#drafts-heading ~ ul > li").filter({ hasText: "weekend.bakes" })).toContainText("Couldn't finish");
+
+  // What the Shortcut's own start-import call does: import_begin finds the draft by
+  // reel_url, reuses its stored caption, and flips it back to Importing.
+  await page.goto("/import");
+  const toggle = page.getByRole("button", { name: "Set up the Shortcut" });
+  if (await toggle.count()) await toggle.click();
+  await page.getByRole("button", { name: "Create import key" }).click();
+  const importKey = await page.getByRole("textbox", { name: "Import key" }).inputValue();
+  const res = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/Ccouldntfinish01/", importKey, again: true } });
+  expect((await res.json()).status).toBe("started");
+  await page.goto("/recipes");
   await page.getByRole("button", { name: /Show all drafts/ }).click();
   await expect(page.locator("#drafts-heading ~ ul > li").filter({ hasText: "weekend.bakes" })).toContainText("Importing…");
 });

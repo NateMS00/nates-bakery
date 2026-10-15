@@ -38,6 +38,9 @@ export interface EditorState {
   minutes: string;
   sourceUrl: string;
   creatorHandle?: string;
+  /** Set once the draft's thumbnail is copied into Storage (SKELETON 1.4.6, at first
+   * open, not save). Undefined if there's nothing to copy yet, or the copy failed. */
+  thumbnailPath?: string;
   ingredientGroups: Group[];
   stepGroups: Group[];
   ingredients: EditorIngredient[];
@@ -214,7 +217,7 @@ export function toRecipeContent(state: EditorState): Omit<Recipe, "id" | "rating
     category: state.category as Category,
     yield: yieldValue,
     totalTimeMinutes: (Number(state.hours) || 0) * 60 + (Number(state.minutes) || 0),
-    source: url ? { creatorHandle: handle ?? "source", reelUrl: url } : undefined,
+    source: url ? { creatorHandle: handle ?? "source", reelUrl: url, thumbnailPath: state.thumbnailPath } : undefined,
     ingredientGroups: state.ingredientGroups.filter((g) => keep.some((i) => i.groupId === g.id)),
     stepGroups: state.stepGroups.filter((g) => state.steps.some((s) => s.groupId === g.id && s.text.trim())),
     ingredients: keep.map((i) => ({

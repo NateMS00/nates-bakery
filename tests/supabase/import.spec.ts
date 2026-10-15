@@ -112,7 +112,7 @@ test("couldn't finish, then Retry reuses the caption", async () => {
   const { draftId } = await begin(key, "https://www.instagram.com/reel/Retry0001/");
   await call("import_set_caption", [key, draftId, CAPTION, null, "javascript:alert(1)"]);
   expect(await call("import_unfinished", [key, draftId])).toBe(true);
-  expect(await call("import_retry", [key, draftId])).toEqual({ status: "caption", draftId, caption: CAPTION, creatorHandle: null });
+  expect(await call("import_retry", [key, draftId])).toEqual({ status: "caption", draftId, caption: CAPTION, creatorHandle: null, reelUrl: "https://www.instagram.com/reel/Retry0001/" });
   await t.as("postgres");
   const [row] = await t.q("select status, thumbnail_url from public.drafts where id = $1", [draftId]);
   expect(row).toEqual({ status: "reading", thumbnail_url: null }); // only https image links are kept
@@ -121,6 +121,29 @@ test("couldn't finish, then Retry reuses the caption", async () => {
   expect(await call("import_retry", [key, "00000000-0000-0000-0000-000000000001"])).toEqual({ status: "gone" });
   expect(await call("import_drop", [key, draftId])).toBe(true);
   expect(await call("import_retry", [key, draftId])).toEqual({ status: "gone" });
+});
+
+test("the automatic retry-once: the first bad reply retries, the second gives up", async () => {
+  await t.as("anon");
+  const { draftId } = await begin(key, "https://www.instagram.com/reel/Retry0002/");
+  await call("import_set_caption", [key, draftId, CAPTION, "chef.ana", null]);
+
+  // First malformed reply: retry, same caption, draft stays "reading".
+  expect(await call("import_mark_retry", [key, draftId])).toBe(true);
+  await t.as("postgres");
+  expect(await t.q("select status, retried from public.drafts where id = $1", [draftId])).toEqual([{ status: "reading", retried: true }]);
+
+  // Second malformed reply: no more retries; the caller marks it unfinished.
+  await t.as("anon");
+  expect(await call("import_mark_retry", [key, draftId])).toBe(false);
+  expect(await call("import_unfinished", [key, draftId])).toBe(true);
+
+  // A wrong key or an unknown draft never retries.
+  expect(await call("import_mark_retry", ["nbk_wrong", draftId])).toBe(false);
+  expect(await call("import_mark_retry", [key, "00000000-0000-0000-0000-000000000001"])).toBe(false);
+
+  await t.as("authenticated", OWNER);
+  expect(await t.fails("update public.drafts set retried = false where id = $1", [draftId])).toMatch(/permission denied/);
 });
 
 test("a failed fetch is dropped, and a stuck one is cleaned up", async () => {
@@ -256,5 +279,14 @@ test("supabase/checks/0002_verify.sql: every row ok", async () => {
     readFileSync(join(process.cwd(), "supabase", "checks", "0002_verify.sql"), "utf8"),
   );
   expect(rows).toHaveLength(21);
+  expect(rows.filter((r) => !r.ok)).toEqual([]);
+});
+
+test("supabase/checks/0003_verify.sql: every row ok", async () => {
+  await t.as("postgres");
+  const rows = await t.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
+    readFileSync(join(process.cwd(), "supabase", "checks", "0003_verify.sql"), "utf8"),
+  );
+  expect(rows).toHaveLength(6);
   expect(rows.filter((r) => !r.ok)).toEqual([]);
 });

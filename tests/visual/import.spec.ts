@@ -1,14 +1,36 @@
 import { expect, test, type Page } from "@playwright/test";
 import { capture, expectFocusRings, expectPageBasics, expectPageTop, expectTouchTargets, ready } from "./helpers";
 
-// /import (Import), BONES-import.md. The import service is a stub: reel ids starting
-// with Cprivate, Cdeleted, or Cnorecipe fail; others import in 4.5 seconds. Each test
-// has its own copy of the fixtures (namespace cookie).
+// /import (Import), BONES-import.md. Import hands the link to the Shortcut
+// (shortcuts://, a no-op in a test browser) and polls for a ready draft; the fixtures
+// backend's caption fetch fails for reel ids starting with Cprivate, Cdeleted, or
+// Cnorecipe. The real Shortcut's own calls (app/api/import/*) are simulated with
+// page.request, the same way a real device would call them. Each test has its own
+// copy of the fixtures (namespace cookie).
 
 const shot = (page: Page, name: string) => capture(page, "import", name);
 const NEW_REEL = "https://www.instagram.com/reel/Ckouign99/";
 const field = (page: Page) => page.getByRole("textbox", { name: "Reel link" });
 const importButton = (page: Page) => page.getByRole("button", { name: "Import", exact: true });
+
+/** A minimal, valid Use Model reply (lib/import/extract.ts's expected shape). */
+const VALID_REPLY = JSON.stringify({
+  language: "English",
+  title: "Kouign-amann",
+  category: "viennoiserie",
+  yield: { quantity: 12, unit: "pastry", unitPlural: "pastries" },
+  totalTime: { hours: 4, minutes: 0 },
+  ingredientGroups: [{ name: null, items: [{ name: "Flour", amount: "300 g", parts: [{ unit: "g", qty: "300" }], note: null }] }],
+  stepGroups: [{ name: null, steps: [{ text: "Laminate the dough.", uses: ["Flour"] }] }],
+});
+
+/** Creates an import key via the UI, for simulated Shortcut calls below to authenticate with. */
+async function makeImportKey(page: Page) {
+  const toggle = page.getByRole("button", { name: "Set up the Shortcut" });
+  if (await toggle.count()) await toggle.click(); // collapsed to a plain disclosure: open it first
+  await page.getByRole("button", { name: "Create import key" }).click();
+  return page.getByRole("textbox", { name: "Import key" }).inputValue();
+}
 
 test.beforeEach(async ({ context }, info) => {
   const value = `${info.project.name}-${info.testId}`;
@@ -129,44 +151,63 @@ test("empty field and invalid link show the field error", async ({ page }) => {
   await shot(page, "03-invalid-link");
 });
 
-test("processing: stages, leave safely, then Review Import on its own", async ({ page }) => {
+test("Handed to the Shortcut: leave safely, then Open the draft appears once the Shortcut finishes", async ({ page }) => {
   await ready(page, "/import");
+  const importKey = await makeImportKey(page);
+
   await field(page).fill(NEW_REEL);
   await importButton(page).click();
-  const progress = page.getByRole("list", { name: "Import progress" });
-  await expect(progress).toBeVisible();
+  await expect(page.getByText("Importing in the Shortcut")).toBeVisible();
   await expect(importButton(page)).toBeDisabled();
   await expect(field(page)).toHaveAttribute("readonly", "");
-  await expect(progress.getByRole("listitem").first()).toContainText("in progress");
+  for (const stage of ["Getting the caption", "Reading the recipe", "Converting to grams"]) await expect(page.getByText(stage)).toBeVisible();
   await expect(page.getByText("You can leave: it will wait in your Library under Drafts.")).toBeVisible();
-  await expect(progress.getByRole("listitem").nth(1)).toContainText("in progress", { timeout: 3000 });
-  await shot(page, "04-processing");
-  await page.waitForURL(/\/import\/d-/, { timeout: 10_000 });
+  await shot(page, "04-handed-off");
+
+  // What the Shortcut itself does (docs/shortcut-guide.md): start-import, Use Model
+  // (stood in for by VALID_REPLY), then finish-import.
+  const start = await page.request.post("/api/import/start", { data: { url: NEW_REEL, importKey } });
+  const { status: startStatus, draftId, caption } = await start.json();
+  expect(startStatus).toBe("started");
+  expect(caption).toBeTruthy();
+  const finish = await page.request.post("/api/import/finish", { data: { draftId, importKey, reply: VALID_REPLY } });
+  expect((await finish.json()).status).toBe("ready");
+
+  const openDraft = page.getByRole("link", { name: "Open the draft" });
+  await expect(openDraft).toBeVisible({ timeout: 6000 }); // polling interval
+  await openDraft.click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Review import");
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Kouign-amann");
 });
 
-test("?url= prefills the link and starts the import on load", async ({ page }) => {
+test("?url= prefills the link; Import still needs to be pressed", async ({ page }) => {
   await page.goto(`/import?url=${encodeURIComponent(NEW_REEL)}`);
-  await expect(page.getByRole("list", { name: "Import progress" })).toBeVisible();
   await expect(field(page)).toHaveValue(NEW_REEL);
+  await expect(page.getByText("Importing in the Shortcut")).toHaveCount(0);
+  await expect(importButton(page)).toBeEnabled();
   await page.evaluate(() => document.fonts.ready);
-  await shot(page, "05-url-autostart");
-  // Leaving is safe: the draft waits in the Library.
-  await page.getByRole("link", { name: "Go to Library" }).click();
-  await page.waitForURL(/\/recipes$/);
-  await expect(page.locator("#drafts-heading ~ ul > li").first()).toContainText(/Importing…|Kouign-amann/);
+  await shot(page, "05-url-prefilled");
 });
 
-test("import failed: Enter it manually or Try another link", async ({ page }) => {
-  const link = "https://www.instagram.com/reel/Cprivate42/";
+test("start-import: a private, deleted, or no-recipe reel fails with its own reason", async ({ page }) => {
   await ready(page, "/import");
-  await field(page).fill(link);
-  await importButton(page).click();
+  const importKey = await makeImportKey(page);
+  for (const [id, reason] of [
+    ["Cprivate42", "private"],
+    ["Cdeleted42", "deleted"],
+    ["Cnorecipe42", "no-recipe"],
+  ] as const) {
+    const res = await page.request.post("/api/import/start", { data: { url: `https://www.instagram.com/reel/${id}/`, importKey } });
+    expect(await res.json(), id).toEqual({ status: "failed", reason });
+  }
+});
+
+test("Import failed: Enter it manually or Try another link", async ({ page }) => {
+  const link = "https://www.instagram.com/reel/Cprivate42/";
+  await ready(page, `/import?error=private&url=${encodeURIComponent(link)}`);
   const failed = page.getByRole("alert").filter({ hasText: "private" });
   await expect(failed).toContainText("This reel is private, so Nate’s Bakery can’t read it.");
   await expect(failed.getByRole("link", { name: "Enter it manually" })).toHaveAttribute("href", `/recipes/new?source=${encodeURIComponent(link)}`);
-  await expect(importButton(page)).toBeDisabled();
   await expectTouchTargets(page);
   await shot(page, "06-import-failed");
   await failed.getByRole("button", { name: "Try another link" }).click();
@@ -175,15 +216,40 @@ test("import failed: Enter it manually or Try another link", async ({ page }) =>
   await expect(importButton(page)).toBeEnabled();
 });
 
-test("already imported links to the recipe, with Import again", async ({ page }) => {
+test("No recipe in this caption: Watch the reel, Enter it manually, or Try another link", async ({ page }) => {
+  const link = "https://www.instagram.com/reel/Cnorecipe42/";
+  await ready(page, `/import?error=no-recipe&url=${encodeURIComponent(link)}`);
+  const failed = page.getByRole("alert").filter({ hasText: "couldn’t find a recipe" });
+  await expect(failed).toContainText("Nate’s Bakery couldn’t find a recipe in this reel.");
+  await expect(failed.getByRole("link", { name: "Watch the reel" })).toHaveAttribute("href", link);
+  await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
+  await expect(failed.getByRole("button", { name: "Try another link" })).toBeVisible();
+});
+
+test("Daily limit reached: Enter it manually only, no Try another link", async ({ page }) => {
+  const link = "https://www.instagram.com/reel/Ckouign99/";
+  await ready(page, `/import?error=limit&url=${encodeURIComponent(link)}`);
+  const failed = page.getByRole("alert").filter({ hasText: "today’s 30 imports" });
+  await expect(failed).toContainText("You’ve used today’s 30 imports. It resets in a few hours.");
+  await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
+  await expect(failed.getByRole("button", { name: "Try another link" })).toHaveCount(0);
+});
+
+test("start-import: an already-saved reel answers already, title and recipeId included", async ({ page }) => {
   await ready(page, "/import");
-  await field(page).fill("instagram.com/reel/C9nataRita01");
-  await importButton(page).click();
+  const importKey = await makeImportKey(page);
+  const res = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/C9nataRita01/", importKey } });
+  expect(await res.json()).toEqual({ status: "already", recipeId: "pasteis-de-nata", title: "Pastéis de nata" });
+});
+
+test("Already imported: links to the recipe, Import again hands the Shortcut the link once more", async ({ page }) => {
+  const link = "https://www.instagram.com/reel/C9nataRita01/";
+  await ready(page, `/import?error=already&recipeId=pasteis-de-nata&title=${encodeURIComponent("Pastéis de nata")}&url=${encodeURIComponent(link)}`);
   await expect(page.getByText("You already saved this reel as")).toBeVisible();
   await expect(page.getByRole("link", { name: "Pastéis de nata" })).toHaveAttribute("href", "/recipes/pasteis-de-nata");
   await shot(page, "07-already-imported");
   await page.getByRole("button", { name: "Import again" }).click();
-  await expect(page.getByRole("list", { name: "Import progress" })).toBeVisible();
+  await expect(page.getByText("Importing in the Shortcut")).toBeVisible();
 });
 
 test("Paste reads the clipboard into the field", async ({ page, context, isMobile }) => {

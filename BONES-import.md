@@ -4,7 +4,7 @@
 > **Primary Action**: Import → hands the link to the Nate’s Bakery Shortcut, which opens `/import/:draftId` when done
 > **Primary Device**: mobile, because most imports start from Instagram's share menu on the iPhone; the Shortcut does the import itself, so this page mostly handles pasted links, setup, and errors
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.3 · **Updated**: 2026-10-15
+> **Version**: 1.1.4 · **Updated**: 2026-10-15
 
 ---
 
@@ -112,11 +112,12 @@ All states render in the Reel Link status area, directly under Import, so the fi
 
 | Name | Trigger | Layout change |
 |---|---|---|
-| Handed to the Shortcut | Import pressed with a valid link | The status area says "Importing in the Shortcut" and lists its stages: "Getting the caption", "Reading the recipe", "Converting to grams". The Shortcut shows its own progress and opens the draft when done. The line "You can leave: it will wait in your Library under Drafts" and a "Go to Library" link → `/recipes`. If the page is still open when the draft is ready, a link "Open the draft" appears. Announced politely to screen readers |
+| Handed to the Shortcut | Import pressed with a valid link | The status area says "Importing in the Shortcut" with one in-progress indicator — not three separate steps, since the page can't see which stage the Shortcut is actually in — and a plain sentence below naming them: "Getting the caption, reading the recipe, converting to grams." The line "You can leave: it will wait in your Library under Drafts" and a "Go to Library" link → `/recipes`. Below that, "Didn't start?" with Try again (re-runs the hand-off) and a link to Set up the Shortcut, in case the Shortcut never opened |
+| Draft ready while the page is open | The draft becomes ready while still on `/import` | The whole status is replaced by "Your draft is ready" with Open the draft as the primary action, announced to screen readers — not a small link added under Go to Library |
 | Invalid link | The text isn't an Instagram reel or post link | Error text under the field, field marked in error, focus stays in the field; nothing else changes |
 | Import failed | Reel is private or deleted, or the caption service is unavailable (Shortcut opens `/import?error=…&url=`) | The status area shows the reason in one sentence ("Couldn't reach this reel. It may be private or deleted, or the import service is down.") and two actions: "Enter it manually" → `/recipes/new?source=<reel link>` (the more prominent one) and "Try another link", which clears the field |
 | No recipe in this caption | The caption has no ingredients (the recipe is on a website, or only spoken) | "This reel's caption doesn't include the recipe." with Watch the reel (external), "Enter it manually" (more prominent) and "Try another link" |
-| Daily limit reached | 30 caption fetches already used in the last 24 hours, so a leaked key can't spend more of the Apify credit (Shortcut opens `/import?error=limit&url=`) | The status area shows "You've used today's 30 imports. It resets in a few hours." with "Enter it manually" → `/recipes/new?source=<reel link>`. No "Try another link": the limit isn't about this reel |
+| Daily limit reached | 30 caption fetches already used in the last 24 hours, so a leaked key can't spend more of the Apify credit (Shortcut opens `/import?error=limit&url=`) | A warning notice (not the error style the other failures use) shows "You've reached today's import limit. Try again tomorrow, or enter this one by hand." with "Enter it manually" → `/recipes/new?source=<reel link>`. No "Try another link": the limit isn't about this reel |
 | Setup needed | The Shortcut found no import key, or the key was revoked | The Set up the Shortcut section opens expanded and takes focus, with one line on top: "Add your import key to the Shortcut to start importing." (or "Your import key no longer works. Create a new one.") |
 | Already imported | The reel matches a saved recipe | The status area shows "You already saved this reel as <recipe title>" with a link to `/recipes/:recipeId`, and "Import again" as a secondary action that runs the Shortcut again with the link (the same hand-off as Import), creating a new draft |
 | Signed out | Opened without a session | Handled by the App area guard: `/login?next=/import?url=<reel link>` (SKELETON FLOW-01) |
@@ -138,6 +139,7 @@ All states render in the Reel Link status area, directly under Import, so the fi
 
 ## CHANGE LOG
 
+- 1.1.4 (2026-10-15): Handed to the Shortcut: one in-progress indicator instead of three static steps, "Didn't start?" with Try again, and Draft ready while the page is open replaces the whole status instead of adding a small link. Daily limit reached's wording and warning tone (build review).
 - 1.1.3 (2026-10-15): New state, Daily limit reached (the 30-fetches-in-24-hours cap).
 - 1.1.2 (2026-10-15): The new key stays visible until Done or leaving the page; copying no longer hides it (build review).
 - 1.1.1 (2026-10-13): "Import again" runs the Shortcut again instead of starting Processing.

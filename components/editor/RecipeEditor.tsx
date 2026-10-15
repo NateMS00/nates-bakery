@@ -181,8 +181,8 @@ export function RecipeEditor({ state, setState, errors }: { state: EditorState; 
             </ol>
             <Button variant="text" onClick={() => add("step", group?.id ?? null)} className="mt-xs -ml-sm self-start">
               <Plus aria-hidden="true" />
-              Add step
-              {group && <span className="sr-only"> to {group.name}</span>}
+              {group?.name === "Tips" ? "Add tip" : "Add step"}
+              {group && group.name !== "Tips" && <span className="sr-only"> to {group.name}</span>}
             </Button>
           </GroupBlock>
         ))}
@@ -520,11 +520,19 @@ function StepRow({
   const used = step.ingredientIds.map((id) => state.ingredients.find((i) => i.id === id)).filter((i): i is EditorIngredient => Boolean(i?.name.trim()));
   const shownNames = used.slice(0, USES_LIMIT).map((i) => i.name.trim());
 
+  // Tips has no number, so its rows skip the number column entirely (on every
+  // breakpoint, not just desktop) — otherwise the row menu is left stranded alone
+  // on mobile, above an empty cell where the number would have been.
   return (
     <li className="border-t border-hairline py-sm first:border-t-0">
-      <div className="grid grid-cols-[minmax(2ch,1fr)_auto] items-start gap-x-sm gap-y-xs tablet:grid-cols-[minmax(2ch,auto)_minmax(0,1fr)_auto]">
-        <span className="pt-md type-amount font-bold text-primary">{number}</span>
-        <div className="col-span-2 row-start-2 tablet:col-span-1 tablet:col-start-2 tablet:row-start-1">
+      <div
+        className={cx(
+          "grid items-start gap-x-sm gap-y-xs",
+          isTips ? "grid-cols-[minmax(0,1fr)_auto]" : "grid-cols-[minmax(2ch,1fr)_auto] tablet:grid-cols-[minmax(2ch,auto)_minmax(0,1fr)_auto]",
+        )}
+      >
+        {!isTips && <span className="pt-md type-amount font-bold text-primary">{number}</span>}
+        <div className={isTips ? "col-start-1 row-start-1" : "col-span-2 row-start-2 tablet:col-span-1 tablet:col-start-2 tablet:row-start-1"}>
           <Textarea id={`step-${step.id}`} aria-label={label} value={step.text} onChange={(e) => setState((s) => updateRow(s, "step", step.id, { text: e.target.value }))} />
           {times.length > 0 && (
             <div className="mt-sm flex flex-wrap items-center gap-sm">
@@ -571,7 +579,7 @@ function StepRow({
             </div>
           )}
         </div>
-        <div className="col-start-2 row-start-1 justify-self-end tablet:col-start-3">
+        <div className={cx("justify-self-end", isTips ? "col-start-2 row-start-1" : "col-start-2 row-start-1 tablet:col-start-3")}>
           <ActionMenu label={`More actions, ${label.toLowerCase()}`} title={label} items={rowActions(state, setState, "step", step.id, step.groupId, onDelete)} />
         </div>
       </div>

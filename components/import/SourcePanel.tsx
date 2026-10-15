@@ -48,7 +48,8 @@ export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draf
             </Notice>
           )}
           <div id={id} className="mt-xs type-body-sm text-body">
-            <p className={expanded ? undefined : "line-clamp-3"}>{caption}</p>
+            {/* Keep the caption's own line breaks — checking it line by line is the point of showing it. */}
+            <p className={cx("whitespace-pre-line", !expanded && "line-clamp-3")}>{caption}</p>
           </div>
           <Button variant="text" aria-expanded={expanded} aria-controls={id} onClick={() => onExpandedChange(!expanded)} className="-ml-sm">
             {expanded ? "Show less" : "Read more"}

@@ -1,6 +1,6 @@
-# Backery
+# Nate’s Bakery
 
-A personal baking app for Nathan: import a recipe from an Instagram reel, get it in grams, bake it step by step with timers, and log what changed each time. Friends can view shared recipes read-only. React web app, mobile-first, used mostly on an iPhone in the kitchen.
+A personal baking app for Nathan (the repo is still named `backery`): import a recipe from an Instagram reel, get it in grams, bake it step by step with timers, and log what changed each time. Friends can view shared recipes read-only. React web app, mobile-first, used mostly on an iPhone in the kitchen, often from the Home Screen. Live at https://nates-bakery.vercel.app.
 
 ## Working rules
 
@@ -22,15 +22,20 @@ The product is fully specified in three layers. Read them before building anythi
 
 - When two specs disagree, the owner of that layer wins (see the orchestrator skill). Build the closest faithful version and **report the conflict**; don't edit spec files unless Nathan asks.
 - The spec skills (`skeleton-generator`, `bones-generator`, `skin-generator`) are for revising the specs when Nathan asks for a structural or visual change. Update the spec first, then the code.
-- `design-reference/` holds an approved static preview of the Recipe page (`recipe-preview.html`, with screenshots). Use it as the visual reference for how SKIN.md looks when applied. Its markup is a sketch, not production code.
+- `design-reference/` holds the self-hosted fonts (`fonts/`), the app icon and favicon artwork (`icons/`), and an early static preview of the Recipe page (`recipe-preview.html`, with screenshots). The preview predates the October 2026 visual round (porcelain canvas, cover photo, no tile marks before headings): it's history now, not the reference. SKIN.md and the BONES files win.
+- **Impeccable** (design skill) is installed. Its `DESIGN.md` and `PRODUCT.md` are derived from SKIN.md and SKELETON.md; when they disagree, SKIN.md and SKELETON.md win. The italic Fraunces wordmark and the app icon's N are brand choices, not AI tells.
 
 ## Build decisions already made
 
-- **Stack**: React. Unless Nathan decides otherwise, use the orchestrator's default for an empty project: Next.js (App Router), TypeScript, Tailwind, with the theme generated from SKIN.md's YAML as CSS custom properties that keep SKIN's token names.
+- **Stack**: Next.js 16 (App Router), React 19, TypeScript, Tailwind 4. The theme is generated from SKIN.md's YAML as CSS custom properties that keep SKIN's token names (`npm run theme`); rerun it whenever SKIN.md's tokens change.
 - **Dark mode**: follows `prefers-color-scheme`, using SKIN's `colors-dark`.
-- **Fonts**: Fraunces, Atkinson Hyperlegible Next, and Atkinson Hyperlegible Mono from Google Fonts (import URL in SKIN.md). Atkinson's slashed zero is intentional.
-- **Data**: no backend yet. Use typed fixtures from one module, including the pastel de nata recipe from the design reference, a long recipe with several component groups, a manual recipe without a source, and empty cases. The backend (auth, database, reel extraction, timer notifications) is a later, separate decision; don't build it until Nathan chooses it.
-- **Auth**: stub the owner session at the route boundary with the redirects SKELETON defines, and mark it clearly as a stub.
+- **Fonts**: Fraunces, Atkinson Hyperlegible Next, and Atkinson Hyperlegible Mono, self-hosted from `design-reference/fonts/` (SKIN.md, Font Import), not Google Fonts. Atkinson's slashed zero is intentional.
+- **Backend**: Supabase (Postgres, Auth, Storage; project in Oregon) and Vercel (hosting, functions in `pdx1`). Two backends behind one interface in `lib/backend/`: `npm run dev` uses typed fixtures (`BACKERY_BACKEND=fixtures`, never allowed in production), `npm run dev:supabase` and production use Supabase. Keep both working: every data change needs its fixture too, including the empty cases.
+- **Auth**: Supabase Auth, one owner account, sign-ups off; route protection in `proxy.ts` with the redirects SKELETON defines.
+- **Reel import**: live behind `BACKERY_FEATURE_IMPORT`. Captions come from Apify (server-only `APIFY_TOKEN`); the recipe is read by Apple Intelligence in the iOS Shortcut, which calls `/api/import/start` and `/api/import/finish` with the owner's import key. Keep those endpoints working unchanged.
+- **Database changes**: write each as a numbered SQL file in `supabase/migrations/` with a matching check in `supabase/checks/`. Nathan runs them in the Supabase SQL editor himself and ticks them off in `DEPLOY.md`.
+- **Security**: never ask for or use the Supabase service_role key, the database password, or the connection string; never read or edit `.env.local`; secrets live only there and in Vercel. The import key must never ship inside a shared Shortcut.
+- **Where things stand**: `PROGRESS.md` (what's built), `BACKLOG.md` (what's deferred), `DEPLOY.md` (what's been run and configured). Update `PROGRESS.md` after each reviewed change.
 - **Mobile first**: build and check the iPhone layout first (390px wide), then desktop (1440px).
 
 ## Definition of done for every page

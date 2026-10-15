@@ -1,10 +1,12 @@
 # BONES: `/recipes/:recipeId/log` (Bake Log)
 
-> **Source**: SKELETON.md v1.3.2, `/recipes/:recipeId/log`
+> **Source**: SKELETON.md v1.5.0, `/recipes/:recipeId/log`
 > **Primary Action**: Log a bake → `?new=1`
 > **Primary Device**: mobile, because bakes are logged on the iPhone right after finishing in Bake Mode, while the result is on the counter
-> **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.0 · **Updated**: 2026-09-30
+> **Shell**: BONES-shell.md, App variant (no tab bar)
+
+This file also defines the **Log sheet**, the one form for logging or editing a bake, opened from this page, from the Recipe page (Log bake), from Bake Mode's Finish, and from the Bakes diary.
+> **Version**: 1.2.0 · **Updated**: 2026-10-15
 
 ---
 
@@ -20,8 +22,10 @@ MAIN
 ├── ENTRIES
 │   ├── ENTRY × n (newest first)
 │   │   ├── DATE · SCALE                    H2
-│   │   ├── WHAT_CHANGED
+│   │   ├── STARS (when rated)
+│   │   ├── PHOTO (when added) + COVER mark
 │   │   ├── HOW_IT_TURNED_OUT
+│   │   ├── WHAT_CHANGED
 │   │   └── ENTRY_MENU (Edit, Delete)
 │   └── SHOW_MORE
 └── LOG_BAR (sticky, mobile)
@@ -60,16 +64,19 @@ MOBILE
 
 ### Entries (SKELETON section 1)
 - **Layout**: one block per entry, stacked with a medium gap, on both devices; the entry menu sits at the end of the entry's first line
-- **Content**: first line: date ("Sat 26 Sep") and scale used ("1.5×", hidden at 1×) as the entry heading; then "What changed" and "How it turned out", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
+- **Content**: first line: date ("Sat 26 Sep") and scale used ("1.5×", hidden at 1×) as the entry heading, with that bake's stars at the end of the line when rated; the bake photo when there is one, full width of the column at 4:3, with a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
 - **Behavior**: a newly saved entry appears at the top and briefly draws attention with a cobalt wash that fades over about 2.4 s (no animation under reduced motion), and focus moves to its heading. The highlight is never the only feedback: "Bake saved" is announced politely to screen readers
 
 ```text
 DESKTOP (centered column)
 +-----------------------------------------------------+
-| SAT 26 SEP · 1.5×                              [:]  |
-| WHAT CHANGED                                        |
-| FULL_TEXT .......................................   |
+| SAT 26 SEP · 1.5×                   ★★★★☆      [:]  |
+| +-----------------------------------------------+   |
+| |                 PHOTO 4:3        [COVER]      |   |
+| +-----------------------------------------------+   |
 | HOW IT TURNED OUT                                   |
+| FULL_TEXT .......................................   |
+| WHAT CHANGED                                        |
 | FULL_TEXT .......................................   |
 +-----------------------------------------------------+
 | TUE 15 SEP                                     [:]  |
@@ -82,10 +89,13 @@ DESKTOP (centered column)
 ```text
 MOBILE
 +--------------------------------------+
-| SAT 26 SEP · 1.5×               [:]  |
-| WHAT CHANGED                         |
-| FULL_TEXT ....................       |
+| SAT 26 SEP · 1.5×      ★★★★☆    [:]  |
+| +----------------------------------+ |
+| |          PHOTO 4:3      [COVER]  | |
+| +----------------------------------+ |
 | HOW IT TURNED OUT                    |
+| FULL_TEXT ....................       |
+| WHAT CHANGED                         |
 | FULL_TEXT ....................       |
 +--------------------------------------+
 | TUE 15 SEP                      [:]  |
@@ -114,10 +124,10 @@ MOBILE
 | Loading | Entries not yet loaded | Page header renders; Entries shows 3 placeholder entries in final proportions |
 | Empty | No entries | Entries reduces to "No bakes logged yet" and one sentence on why ("Note what you change each time, and the next bake gets better"); Log a bake stays the primary action |
 | Not found | Unknown `:recipeId` | System not-found page (SKELETON) |
-| Entry form | `?new=1` (new), or `?edit=<entryId>` from Edit in an entry menu or Add notes | Mobile: full-screen sheet, because two text fields and the keyboard don't fit a partial sheet; desktop: centered modal, 6 cols wide. Order: title ("Log a bake" or "Edit bake") with a close X; Date (defaults to today; required; can't be later than today in the owner's local time, so an evening bake in Cali isn't rejected as "tomorrow" by a UTC clock); Scale (a number with a visible "×" suffix that screen readers skip, decimal keypad on phones, prefilled from Bake Mode or 1×); What changed (multi-line); How it turned out (multi-line); Save and Cancel, pinned to the bottom of the sheet on mobile. Closing removes `?new=1` or `?edit=` from the URL (replacing the history entry, not adding one); an unknown entry id opens the log without the form and drops the param, no error. Focus starts on What changed, for new entries and edits (date and scale are usually right, and notes are what you come back to change), and returns to what opened the form |
-| Discard changes | Cancel, Esc, close X, or backdrop tap on the entry form after any change (typed text, or a changed date or scale) | A confirmation inside the form following the Destructive confirmations rule (BONES-shell): "Discard this entry?", Discard first, Keep editing last and focused; with no changes the form just closes |
-| Delete confirmation | Delete in an entry menu | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. "Delete this bake?"; when it's the only entry, a second line: "The recipe will show as Not baked yet."; Delete (destructive) first, Cancel last, following the Destructive confirmations rule (BONES-shell). Focus starts on Cancel |
-| Rating prompt | A new entry was saved (SKELETON FLOW-02 step 6) | Same layout as the Rating prompt in BONES-recipes-detail.md, except that it opens after every new entry and shows the current rating when there is one, so it can be kept or changed. Title "How was this bake?" |
+| Log sheet | `?new=1` (new), or `?edit=<entryId>` from Edit in an entry menu, Add notes, a bake in Recipe's Bakes section, or a bake in the Bakes diary | **Mobile**: a bottom sheet with the tile band on its top edge, opening at its content height (most of the screen), and growing to full height while the keyboard is open, with Save pinned just above the keyboard (SKIN Mobile Browser Viewport); **desktop**: centered modal, 6 cols wide. Order: header row with "Log this bake" (or "Edit bake") and a close X; one row of two compact controls, "Baked on" (shows "Today", or the date; opens the date picker; can't be later than today in the owner's local time) and the scale ("1×", a number with a visible "×" suffix that screen readers skip, decimal keypad, prefilled from Bake Mode or the Recipe page); the five stars at the prompt size (SKIN `star-rating`, 40px), centered, optional, pressing the current one clears it; "How it turned out" (multi-line); "What changed" (multi-line); a photo slot: "Add a photo" with "Can become the recipe's cover", which offers the camera or the photo library (the phone's own picker); once a photo is added it shows as a 4:3 preview with Replace and Remove, and a "Use as recipe cover" toggle under it (on by default for a recipe whose cover is still the reel thumbnail, off otherwise); Save (`button-primary`, full width), and under it one muted line "Only the date is required." There is no Cancel button: the close X cancels. Closing removes `?new=1` or `?edit=` from the URL (replacing the history entry); an unknown entry id opens the log without the sheet and drops the param, no error. Focus starts on the first star for a new bake (rating is the quickest thing to give) and on "How it turned out" when editing; it returns to what opened the sheet. Save with nothing but the date is the one-tap "I baked it" path |
+| Discard changes | Esc, close X, backdrop tap or swipe down on the Log sheet after any change (stars, typed text, a photo, or a changed date or scale) | A confirmation inside the form following the Destructive confirmations rule (BONES-shell): "Discard this entry?", Discard first, Keep editing last and focused; with no changes the form just closes |
+| Delete confirmation | Delete in an entry menu | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. "Delete this bake?"; when it's the only entry, a second line: "The recipe will show as Not baked yet."; when its photo is the cover: "Its photo is the recipe's cover; the reel picture comes back."; Delete (destructive) first, Cancel last, following the Destructive confirmations rule (BONES-shell). Focus starts on Cancel |
+| Photo uploading | Save pressed while the photo is still uploading | Save shows a busy state with "Uploading photo…"; the entry is saved when the upload ends. If the upload fails, the entry saves without the photo and the sheet stays open with "Photo didn't upload. Try again" and a Retry |
 
 ---
 
@@ -126,17 +136,22 @@ MOBILE
 - **Assumed**: A page header with a back link named after the recipe, the H1 "Bake log", and a bake count (SKELETON's stack has only Entries).
 - **Assumed**: Each entry's date is an H2, so screen reader users can jump between bakes.
 - **Assumed**: Notes show in full on this page (they are truncated only in the Recipe page's Latest Bake).
-- **Assumed**: The entry form is full-screen on mobile.
-- **Assumed**: Focus starts on What changed in both new and edited entries.
+- **Decided** (2026-10-15, Nathan): One Log sheet holds everything about a bake: date, scale, stars, notes, photo. Marking a bake no longer shows only the stars and sends you to Edit for the notes (references: Letterboxd's diary entry, where the review is optional and can come later; Day One's photo entries).
+- **Decided** (2026-10-15, Nathan): Stars belong to the bake (SKELETON 1.5.0); there is no separate Rating prompt after saving.
+- **Assumed**: "How it turned out" comes before "What changed": right after a bake, the result is what's on your mind; what to change follows from it.
+- **Assumed**: The sheet grows to full height only while the keyboard is open, so on its own it reads as a light sheet, but typing never fights the keyboard (the reason the old form was full screen).
+- **Assumed**: Focus starts on the first star for a new bake and on How it turned out when editing.
+- **Assumed**: "Use as recipe cover" is on by default only while the recipe still shows its reel thumbnail, so the first bake photo fixes a bad reel cover without an extra tap, and later photos don't silently replace a chosen cover.
 - **Assumed**: Editing an entry has its own URL (`?edit=<entryId>`, SKELETON 1.3.2), so Add notes is one tap and edit links survive a refresh.
 - **Assumed**: A Discard changes confirmation for the entry form (not in SKELETON), so a half-written note, or a changed date or scale, isn't lost by an accidental tap outside.
 - **Assumed**: Future dates are rejected; a bake can't be logged before it happens.
 - **Assumed**: 20 entries, then Show more.
-- **Open**: Photos on log entries (SKELETON open question). If added, each entry gets a photo row under its notes and the form gets an Add photo control.
+- **Assumed**: One photo per bake; more would turn the log into a gallery.
 
 ---
 
 ## CHANGE LOG
 
+- 1.2.0 (2026-10-15): Visual upgrade round: the entry form becomes the Log sheet (shared by Recipe, Bake Mode, Bakes): Baked on and scale as compact controls, stars per bake, How it turned out before What changed, one photo with "Use as recipe cover", Save only (close X cancels); entries show their stars and photo; the Rating prompt is removed (SKELETON 1.5.0).
 - 1.1.0 (2026-09-30): After the first build review: `?edit=<entryId>` for one-tap Add notes and Edit; Discard check covers date and scale changes; edit focus on What changed; no future dates (local date); highlight timing plus a "Bake saved" announcement; scale field details; confirmations follow BONES-shell's Destructive rule.
 - 1.0.0 (2026-09-29): Initial wireframe.

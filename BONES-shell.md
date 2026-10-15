@@ -1,9 +1,9 @@
 # BONES: Shell
 
-> **Source**: SKELETON.md v1.3.0, Navigation
+> **Source**: SKELETON.md v1.5.0, Navigation
 > **Breakpoints**: from SKIN.md: mobile under 768, tablet 768 to 1279, desktop 1280 and up
 > **Grid**: from SKIN.md: mobile 4 columns, tablet 8 columns, desktop 12 columns; content max width 1200, centered
-> **Version**: 1.6.1 · **Updated**: 2026-10-01
+> **Version**: 1.7.0 · **Updated**: 2026-10-15
 
 ---
 
@@ -11,8 +11,9 @@
 
 Used by every owner route except Bake Mode (see Focus variant).
 
-- **Header**: logo (links to `/recipes`), then primary navigation in SKELETON order: Library (`/recipes`), Import (`/import`); utility navigation at the far end: account menu (Timer alerts, Sign out, Privacy). The current route's navigation item is marked as current. The header scrolls away with the page on every device, because pages own their sticky elements (Recipe's sticky Start baking bar) and a second sticky bar would take too much of a phone screen.
-- **Mobile navigation**: no tab bar and no hamburger menu. With only two primary items, both fit in the top bar: the logo is Library, Import is a compact link, and the account menu is last. This leaves the bottom edge of the screen free for each page's primary action.
+- **Header**: logo (links to `/recipes`), then primary navigation in SKELETON order: Library (`/recipes`), Import (`/import`), Bakes (`/bakes`); utility navigation at the far end: account menu (Timer alerts, Sign out, Privacy). The current route's navigation item is marked as current. The header scrolls away with the page on every device, because pages own their sticky elements (Recipe's sticky Start baking bar) and a second sticky bar would take too much of a phone screen. On the Recipe page with a cover, the header is replaced by the cover itself (BONES-recipes-detail.md).
+- **Mobile navigation, in Safari**: no tab bar and no hamburger menu. The logo is Library, Import is a compact link, and the account menu is last; Bakes moves into the account menu on phones (under 768px), because a third link doesn't fit beside the wordmark at 320px. This leaves the bottom edge of the screen free for each page's primary action, above Safari's own toolbar.
+- **Mobile navigation, installed** (opened from the Home Screen, so there is no Safari toolbar): a bottom **tab bar** (SKIN `tab-bar`) with Library, Import, Bakes, Account, on the four top-level pages only (Library, Import, Bakes, Account). The top header keeps only the logo, with the tile band under it; the Import link and account menu leave it, since the tabs cover them. Detail and task pages (Recipe, Review Import, New and Edit, Bake Log, Bake Mode) hide the tab bar and use a back link, so their sticky action never stacks with it. Top-level pages that have their own sticky action (Library's Import from a reel) drop that bar here: the Import tab is the same action. Tablet and desktop keep the top header in both modes.
 - **Footer**: one group: Privacy (`/privacy`).
 - **Landmarks and order**: skip link to main content, `header` containing `nav`, `main`, `footer`. DOM order matches visual order on every breakpoint.
 
@@ -30,7 +31,7 @@ DESKTOP
 ```
 
 ```text
-MOBILE
+MOBILE (Safari)
 +--------------------------------------+
 | [LOGO]              IMPORT [ACCT v]  |
 +--------------------------------------+
@@ -42,7 +43,23 @@ MOBILE
 +--------------------------------------+
 ```
 
-**Account menu**: a small dropdown anchored to the account button on every device, with Timer alerts, Sign out, and Privacy in that order; dismissed by selecting an item, Esc, or tapping outside. Timer alerts opens the Timer alerts sheet (below) over the current page.
+```text
+MOBILE (installed, top-level page)
++--------------------------------------+
+| [LOGO]                               |
+| ~~~~~~~~~~~~ TILE BAND ~~~~~~~~~~~~~ |
++--------------------------------------+
+|                                      |
+|                MAIN                  |
+|                                      |
++--------------------------------------+
+| LIBRARY   IMPORT   BAKES   ACCOUNT   |
++--------------------------------------+
+```
+
+**Tab bar** (installed mode, mobile): four equal items, icon over label, pinned to the bottom above the home indicator; the current page's item is cobalt and bold and carries `aria-current="page"`. It is a `nav` labeled "Main", after `main` in the DOM so the skip link still lands on content. No footer on these pages: Privacy lives on the Account page. The page reserves space at its end so the bar never covers content. Hidden while the on-screen keyboard is open.
+
+**Account menu** (Safari): a small dropdown anchored to the account button on every device, with Bakes (phones only), Timer alerts, Sign out, and Privacy in that order; dismissed by selecting an item, Esc, or tapping outside. Timer alerts opens the Timer alerts sheet (below) over the current page.
 
 **Timer alerts sheet** (shared overlay, SKELETON FLOW-05; opened from the account menu or Bake Mode's card): mobile bottom sheet sized to its content; desktop centered modal, 5 cols wide. A header row holds the title and a close X. Its content depends on where the app stands:
 - **Not on the Home Screen**: title "Get timer alerts on a locked phone"; one sentence on why ("iPhone only sends alerts to apps on your Home Screen"); 3 numbered steps: tap Share in Safari, choose Add to Home Screen, open Nate’s Bakery from the new icon.
@@ -137,7 +154,9 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## ASSUMPTIONS & OPEN QUESTIONS
 
-- **Assumed**: A top bar instead of a bottom tab bar on mobile, because there are only two primary items and the bottom edge is reserved for page actions.
+- **Decided** (2026-10-15, Nathan): A bottom tab bar only when the app is opened from the Home Screen; in Safari it would stack with Safari's toolbar and each page's sticky action. Safari keeps the top bar.
+- **Assumed**: Tabs show only on the four top-level pages; detail and task pages hide them, as native iOS apps do, so a page's own sticky action is never stacked on the tabs.
+- **Assumed**: Library's sticky Import from a reel bar is dropped in installed mode, because the Import tab sits in the same spot and does the same thing.
 - **Assumed**: The header is not sticky, so page-level sticky actions don't stack with it.
 - **Assumed**: A skip link to main content (not in SKELETON; added for keyboard and screen reader users).
 - **Assumed**: The Share variant's logo is not a link; linking it would lead friends to the owner's sign-in page.
@@ -146,6 +165,7 @@ Reserved for Bake Mode (`/recipes/:recipeId/bake`), where SKELETON removes prima
 
 ## CHANGE LOG
 
+- 1.7.0 (2026-10-15): Installed-app tab bar (Library, Import, Bakes, Account) on top-level pages; Bakes in the header and, on phones in Safari, in the account menu; the Recipe page's cover replaces the header (SKELETON 1.5.0).
 - 1.6.1 (2026-10-01): App renamed to Nate’s Bakery.
 - 1.6.0 (2026-10-01): Page action bars hide while the on-screen keyboard is open (iPhone testing).
 - 1.5.0 (2026-09-30): Share variant also used by the auth pages, and by Privacy, Not found and Error when signed out (BONES-system.md); footer kept at the bottom on short pages.

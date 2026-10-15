@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.4.6 · **Updated**: 2026-10-15
+> **Version**: 1.5.0 · **Updated**: 2026-10-15
 
 ---
 
@@ -34,6 +34,8 @@
 │       └── /recipes/:recipeId/log
 ├── /import
 │   └── /import/:draftId
+├── /bakes
+├── /account
 ├── /r/:shareToken
 ├── /r/expired
 ├── /privacy
@@ -69,7 +71,7 @@ Default access: owner; signed-out → `/login?next=` plus the requested path (in
 
 - `/recipes` - **Library**
   - Goal: Find a saved recipe fast (by name, category, baked status, favorite, or rating) and pick up unfinished imports.
-  - Params: `?q=` search text; `?category=` one category slug (`bread`, `cake`…); `?status=baked` or `?status=not-baked`; `?favorite=1`; `?rating=` minimum rating 1–5. All combine; invalid values are ignored.
+  - Params: `?view=` `recipes` (default), `favorites`, or `drafts`; `?q=` search text; `?category=` one category slug (`bread`, `cake`…); `?status=baked` or `?status=not-baked`; `?rating=` minimum rating 1–5 (the latest bake's rating, see Assumptions). Search and filters combine with the Recipes and Favorites views and are ignored on Drafts; invalid values are ignored. The old `?favorite=1` still works and opens the Favorites view.
 - `/import` - **Import**
   - Goal: Turn a reel link into a recipe draft in as few taps as possible.
   - Params: `?url=` prefills the link (the page hands it to the Shortcut; it never imports on its own)
@@ -90,7 +92,13 @@ Default access: owner; signed-out → `/login?next=` plus the requested path (in
   - Params: `?scale=` carried from Recipe; `?step=` is the current step (default 1), so a refresh keeps your place
 - `/recipes/:recipeId/log` - **Bake Log**
   - Goal: Record what changed and how each bake turned out, so the next bake is better.
-  - Params: `?new=1` opens the new entry form; `?edit=<entryId>` opens that entry's form (an unknown id opens the log and drops the param, no error)
+  - Params: `?new=1` opens the Log sheet for a new bake; `?edit=<entryId>` opens that entry in the Log sheet (an unknown id opens the log and drops the param, no error)
+- `/bakes` - **Bakes**
+  - Goal: See every bake across all recipes as a diary, newest first, to remember what was made, how it went, and whether changes helped.
+  - Params: none
+- `/account` - **Account**
+  - Goal: Reach the owner's settings from the tab bar of the installed app: Timer alerts, the Shortcut setup and import key, Privacy, and Sign out.
+  - Entry: the Account tab (Home Screen mode); in Safari the account menu holds the same items
 
 ### Share
 
@@ -119,11 +127,14 @@ Default access: public.
 
 ## 4. NAVIGATION
 
-- **Primary** (owner): `/recipes`, `/import`
-- **Utility** (owner): account menu with Timer alerts (opens the Timer alerts sheet), Sign out (ends the session → `/login`), and `/privacy`
+- **Primary** (owner): `/recipes`, `/import`, `/bakes`
+- **Tab bar** (owner, only when opened from the Home Screen): Library (`/recipes`), Import (`/import`), Bakes (`/bakes`), Account (`/account`). Shown on those four top-level pages only; detail and task pages (Recipe, Review Import, New and Edit, Bake Mode, Bake Log) hide it and keep their own sticky action. In Safari the top bar is used instead, because a bottom bar would stack with Safari's toolbar and the page's sticky action.
+- **Utility** (owner, in Safari): account menu with Bakes (on mobile, where the top bar has no room for it), Timer alerts (opens the Timer alerts sheet), Sign out (ends the session → `/login`), and `/privacy`
 - **Footer**: `/privacy`
 - **Contextual**:
-  - Library → recipe (`/recipes/:recipeId`) and draft (`/import/:draftId`)  - Recipe → Bake Mode (keeping `?scale=`), Bake Log, Edit, Share dialog, and the original reel (external)
+  - Library → recipe (`/recipes/:recipeId`) and draft (`/import/:draftId`)
+  - Recipe → Bake Mode (keeping `?scale=`), Log sheet, Bake Log, Edit, Share dialog, and the original reel (external)
+  - Bakes → a bake's entry in its recipe's Bake Log (`/recipes/:recipeId/log?edit=<entryId>`), and the recipe
   - Bake Mode → Exit returns to Recipe (keeping `?scale=`); Finish → `/recipes/:recipeId/log?new=1`
   - Import error → New Recipe (`/recipes/new?source=`)
   - Shared Recipe → the original reel (external) only; no links into the owner area
@@ -162,21 +173,22 @@ Default access: public.
 ### FLOW-02: Bake and log it
 - **Role**: Owner
 - **Entry**: `/recipes/:recipeId`
-- **Success**: A bake log entry is saved with the scale used; owner lands on `/recipes/:recipeId/log`
+- **Success**: A bake log entry is saved with the scale used (and, if given, its rating, notes and photo); owner lands on `/recipes/:recipeId/log`
 
 1. Owner sets the scale on `/recipes/:recipeId` (`?scale=1.5`).
 2. Owner starts baking → `/recipes/:recipeId/bake?scale=1.5&step=1`.
 3. Owner moves through the steps and taps detected times ("bake 25 minutes") to start timers.
-4. Owner finishes the last step → `/recipes/:recipeId/log?new=1`, with the date and scale prefilled.
-5. Owner optionally writes what changed and how it turned out, and saves → `/recipes/:recipeId/log`. The recipe now counts as Baked.
-6. System offers to set or update the recipe's rating; owner rates or skips.
+4. Owner finishes the last step → `/recipes/:recipeId/log?new=1`: the Log sheet, with "Baked on" (today) and the scale prefilled.
+5. In the same sheet, owner optionally rates this bake (1–5 stars), writes how it turned out and what changed, and adds a photo; saves → `/recipes/:recipeId/log`. The recipe now counts as Baked, and its rating is this bake's rating when one was given.
 
 **Alternate paths**
-- Owner baked without the app → "Mark as baked" on `/recipes/:recipeId` saves an entry with today's date and the current scale, no notes; the recipe counts as Baked, the rating prompt appears if the recipe is unrated, and an Undo is offered. Notes can be added later on `/recipes/:recipeId/log`.
+- Owner baked without the app → "Log bake" on `/recipes/:recipeId` opens the same Log sheet with today's date and the current scale; Save right away logs it with nothing else. The recipe counts as Baked. There is no separate rating prompt anymore: the stars are in the sheet.
+- Owner adds a photo and turns on "Use as cover" → the photo becomes the recipe's picture everywhere (Library, Recipe, Bakes) instead of the reel thumbnail. Turning it off on that entry returns to the previous cover.
 - Recipe still has Estimated amounts at step 2 → notice at the start of Bake Mode; baking can continue.
 - Owner exits Bake Mode with a timer running → confirmation; confirming stops the timers → `/recipes/:recipeId`.
 - Owner skips the log at step 4 → form dismissed → `/recipes/:recipeId`.
-- Owner logs a bake without Bake Mode → New entry on `/recipes/:recipeId/log`, same as steps 4–5.
+- Owner logs a bake without Bake Mode → Log a bake on `/recipes/:recipeId/log`, same as steps 4–5.
+- Owner changes a past bake's rating → edit that entry; if it is the latest rated bake, the recipe's rating changes with it.
 
 ### FLOW-03: Share a recipe with a friend
 - **Role**: Owner → Friend
@@ -228,10 +240,10 @@ Default access: public.
 - **Primary Action**: Import from a reel → `/import`
 - **Section Stack** (order = priority):
   1. `Search`: search by recipe title and ingredient (`?q=`).
-  2. `Filters`: Category (`?category=`), Status (All, Baked, Not baked yet: `?status=`), Favorites (`?favorite=1`), and minimum rating (`?rating=`); shows which filters are active and a Clear filters action. Categories with no recipes are not offered.
-  3. `Drafts`: unsaved imports, each linking to `/import/:draftId`; shown only when drafts exist and no filter is active.
-  4. `Recipes`: every recipe matching search and filters, most recently baked or added first; each shows its picture (or a placeholder), category, favorite mark, rating (or unrated), and last-baked date (or "Not baked yet").
-- **States**: Empty (no recipes) → the page reduces to a prompt to import the first reel, with how to set up the Shortcut. No results (search or filters match nothing) → message plus Clear search and Clear filters actions.
+  2. `Filters`: Category (`?category=`), Status (All, Baked, Not baked yet: `?status=`), and minimum rating (`?rating=`); shows which filters are active and a Clear filters action. Categories with no recipes are not offered.
+  3. `Views`: Recipes, Favorites, Drafts (`?view=`), with the number of drafts on the Drafts view.
+  4. `Recipes`: every recipe matching the view, search and filters, most recently baked or added first, as a photo grid; each shows its picture (or a tile placeholder), category, title, and, only when they exist, rating, favorite mark and last-baked date. On the Drafts view: unsaved imports, each linking to `/import/:draftId`.
+- **States**: Empty (no recipes) → the page reduces to a prompt to import the first reel, with how to set up the Shortcut. No results (search or filters match nothing) → message plus Clear search and Clear filters actions. No favorites, no drafts → one line each.
 
 ### `/import` (Import)
 - **Primary Action**: Import → `/import/:draftId`
@@ -245,8 +257,8 @@ Default access: public.
 ### `/import/:draftId` (Review Import)
 - **Primary Action**: Save recipe → `/recipes/:recipeId`
 - **Section Stack**:
-  1. `Source`: the reel thumbnail, creator handle, link to the original, and the **original caption** (in its own language, labeled when the recipe was translated) for checking the extraction without leaving the app; a notice when Instagram cut the caption off.
-  2. `Needs Your Check`: every Missing, Estimated, and Converted item, each jumping to its field.
+  1. `Source`: a card with the reel (thumbnail with a play badge), creator handle, link to the original, and the **original caption** (in its own language, labeled when the recipe was translated) for checking the extraction without leaving the app; a notice when Instagram cut the caption off.
+  2. `Needs Your Check`: every Missing, Estimated, and Converted item as a checklist: each Estimated or Converted item can be confirmed in place, each item jumps to its field, and one "These look right" action confirms every remaining Estimated and Converted item at once (Missing items still need an amount).
   3. `Recipe Editor`: title, category (suggested by the extraction), yield, ingredients (grams, with the original stated amount kept for Converted items), and steps, with ingredients and steps sorted into component groups by the extraction.
 - **Overlays**: Discard draft confirmation → `/recipes`.
 - **States**: Save blocked while any ingredient is Missing. Nothing flagged → `Needs Your Check` reduces to one line.
@@ -279,29 +291,47 @@ Default access: public.
 ### `/recipes/:recipeId` (Recipe)
 - **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 - **Section Stack**:
-  1. `Header`: the recipe picture (when it has one), category, title, favorite toggle, rating (1–5, set or changed in place, can be cleared), yield at the current scale, total time, and source credit (creator handle, link to the reel).
-  2. `Scale`: the batch multiplier (`?scale=`); every amount updates.
-  3. `Ingredients`: scaled grams, with Estimated and Converted markers, under component group headings when the recipe has them.
-  4. `Steps`: numbered steps, under component group headings when the recipe has them.
-  5. `Latest Bake`: the most recent log entry (date, scale, notes if any), a "Mark as baked" action, and a link to `/recipes/:recipeId/log`.
-- **Overlays**: Share dialog (create or copy the link, revoke it). Rating prompt after Mark as baked.
-- **States**: Has estimates → a notice pointing to Edit. Never baked → `Latest Bake` becomes a prompt to bake it, with Mark as baked.
+  1. `Header`: the cover (a bake photo chosen as cover, else the reel thumbnail; none for recipes without one), category, title, favorite toggle, the recipe's rating (read-only: the latest rated bake's stars), yield at the current scale, total time, and source credit (creator handle, link to the reel).
+  2. `Section Tabs`: Ingredients, Steps, Bakes, jumping to those sections of the page.
+  3. `Scale`: the batch multiplier (`?scale=`); every amount updates.
+  4. `Ingredients`: scaled grams, with Estimated and Converted markers, under component group headings when the recipe has them.
+  5. `Steps`: numbered steps, under component group headings when the recipe has them.
+  6. `Bakes`: the latest bakes of this recipe (up to 3), each with its date, scale, stars, photo and notes, and a link to `/recipes/:recipeId/log`.
+- **Secondary Action**: Log bake → the Log sheet (`/recipes/:recipeId/log?new=1`).
+- **Overlays**: Share dialog (create or copy the link, revoke it).
+- **States**: Has estimates → a notice pointing to Edit. Never baked → `Bakes` becomes one line, "Not baked yet".
 
 ### `/recipes/:recipeId/bake` (Bake Mode)
 - **Primary Action**: Next step (Finish on the last step → `/recipes/:recipeId/log?new=1`)
 - **Section Stack**:
-  1. `Current Step`: the step text (`?step=`), with the scaled ingredients that step uses.
-  2. `Timers`: timers started from detected times, running together; each can be paused or cleared.
-  3. `All Ingredients`: the full scaled list as a checklist for weighing before starting.
+  1. `Progress`: where the bake is, as segments per step grouped by component (Base · Filling · Baking), plus "3 of 7".
+  2. `Current Step`: the step text (`?step=`), with its detected times as tap-to-start timers inside the sentence, and the scaled ingredients that step uses.
+  3. `Timers`: timers started from detected times, running together; each can be paused or cleared; on phones, pinned near the top so the next one to finish is always in view.
+  4. `All Ingredients`: the full scaled list as a checklist for weighing before starting.
 - **Overlays**: Exit with running timers confirmation. Timer alerts sheet (FLOW-05).
 - **States**: Timer finished → an alert that holds until dismissed. Has estimates → notice on step 1. Timer alerts off → a dismissible card offering FLOW-05, until alerts are on or the card is dismissed. The screen stays awake while this route is open.
 
 ### `/recipes/:recipeId/log` (Bake Log)
 - **Primary Action**: Log a bake → `?new=1`
 - **Section Stack**:
-  1. `Entries`: every bake, newest first: date, scale used, and, when written, what changed and how it turned out.
-- **Overlays**: New or edit entry form (`?new=1` for new, `?edit=<entryId>` to edit; only the date is required, and it can't be later than today in the owner's local time); Delete entry confirmation (deleting the last entry makes the recipe Not baked yet again); Rating prompt after a new entry is saved.
+  1. `Entries`: every bake of this recipe, newest first: date, scale used, and, when given, its stars, photo, how it turned out, and what changed.
+- **Overlays**: Log sheet (`?new=1` for new, `?edit=<entryId>` to edit): Baked on (only required field; can't be later than today in the owner's local time), scale, stars, how it turned out, what changed, one photo with "Use as cover". Delete entry confirmation (deleting the last entry makes the recipe Not baked yet again; deleting the cover's entry returns the cover to the reel thumbnail).
 - **States**: Empty → a prompt to log the first bake.
+
+### `/bakes` (Bakes)
+- **Primary Action**: none; it's a reading page (logging happens from a recipe)
+- **Section Stack**:
+  1. `Summary`: bakes this year and how many recipes they cover.
+  2. `Diary`: every bake across recipes, newest first, grouped by month; bakes with a photo as photo tiles, bakes without as compact rows with a note preview; each shows the date, recipe title, its stars, and "2nd bake" (the count for that recipe) or the scale. Each opens that bake's entry; the recipe title links to the recipe.
+- **States**: Empty → a prompt explaining bakes appear here once logged from a recipe, with a link to the Library.
+
+### `/account` (Account)
+- **Primary Action**: none
+- **Section Stack**:
+  1. `Timer alerts`: current state and the action to turn them on (opens the Timer alerts sheet).
+  2. `Shortcut`: link to `/import`'s Set up the Shortcut section (setup and import key).
+  3. `About`: Privacy (`/privacy`).
+  4. `Sign out`.
 
 ### `/r/:shareToken` (Shared Recipe)
 - **Primary Action**: Watch the original reel → external link (credit to the creator)
@@ -340,11 +370,13 @@ Default access: public.
 - **Decided** (2026-10-14): Creator tips that aren't about one ingredient ("they'll finish setting as they cool") import into one step group named exactly "Tips", always last, however the model ordered it. Bake Mode shows it unnumbered, after the last numbered step.
 - **Assumed**: Scaling is a multiplier kept in the URL and carried into Bake Mode and the log entry.
 - **Assumed**: One revocable share link per recipe. Friends can read and scale but never see the bake log.
-- **Assumed**: A bake log entry holds date, scale used, what changed, and how it turned out; only the date is required, so marking a bake takes one tap.
+- **Assumed**: A bake log entry holds the date, scale used, its rating, how it turned out, what changed, and one photo; only the date is required, so logging a bake is one tap on Save.
 - **Assumed**: Baked is derived, not stored: a recipe is Baked when its log has at least one entry. There is no separate "done" checkbox, so status and log can't disagree (discussed with Nathan).
-- **Assumed**: One rating per recipe (1–5), not per bake; the app offers to update it after each bake.
+- **Decided** (2026-10-15, Nathan): Ratings belong to each bake (1–5, optional), like a film diary, so the log shows whether changes made the recipe better. The recipe's rating, shown on the Library, Recipe and Shared pages and used by the rating filter, is the **latest rated bake's** rating, not an average: the latest version of a recipe is the one he'd make again. Moving from per-recipe ratings: each recipe's current rating is copied onto its latest bake entry; a recipe rated but never logged keeps that rating as its displayed rating until its first rated bake.
 - **Assumed**: Favorite is separate from rating (a go-to recipe isn't always the top-rated one) and is private: friends see the rating, not the favorite.
 - **Assumed**: The rating filter means "this many stars or more"; unrated recipes only appear when no rating filter is set.
+- **Decided** (2026-10-15, Nathan): The installed app (opened from the Home Screen) gets a bottom tab bar with Library, Import, Bakes and Account; Safari keeps the top bar. iOS reports which mode the page runs in, so one build serves both.
+- **Decided** (2026-10-15, Nathan): A general Bakes diary across all recipes (`/bakes`), in addition to each recipe's Bake Log. A separate "Bake later" list was considered and dropped: the Library already is that list.
 - **Assumed**: Timer alerts on a locked iPhone use web notifications, which iOS only allows for web apps opened from the Home Screen. Because the page is paused when the phone locks, the server schedules each alert from the timer's end time; timers are therefore saved on the server, not only on the device.
 - **Assumed**: Each step links to the ingredients it uses; the importer proposes the links and the owner can change them in the editor.
 - **Assumed**: Ingredient groups and step groups are separate lists that often share names ("Crust" in both; "Baking" only in steps). Each ingredient and each step belongs to at most one group of its own list; "Add step group" offers the recipe's ingredient group names first, then Assembly, Baking, and Finishing.
@@ -355,7 +387,8 @@ Default access: public.
 - **Assumed**: Every imported recipe keeps the creator handle and reel link, including on shared pages.
 - **Open**: Scale by pan size or servings, not just a multiplier? This would change the Scale section.
 - **Decided** (2026-10-13, Nathan): Recipes keep the reel thumbnail as their picture, shown in the Library and on the Recipe page; not on shared pages for now. Instagram's image links expire within days, so the app copies the thumbnail into its own storage the first time the draft is opened (see the 2026-10-15 decision) and deletes it with a discarded draft or recipe; if the copy fails, the placeholder shows.
-- **Open**: Photos on bake log entries?
+- **Decided** (2026-10-15, Nathan): One optional photo per bake log entry, taken or chosen in the Log sheet, resized on the device before upload (long edge about 1600px) and stored in the app's own Storage. A bake photo can be made the recipe's cover, which fixes reel thumbnails that show a person instead of the bake.
+- **Open**: Choosing the crop's focal point for a picture (default is the centre). Not in this round.
 - **Assumed**: One category per recipe from a fixed list of nine, required on save and suggested by the importer; the Library filter picks one category at a time.
 - **Open**: Custom categories, or more than one category per recipe? The fixed list keeps filters clean; revisit if many recipes land in Other.
 - **Open**: Should friends get Bake Mode on shared recipes?
@@ -365,6 +398,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.5.0 (2026-10-15): Visual upgrade round. Ratings per bake (the recipe shows the latest rated bake); a photo per bake that can become the recipe cover; the Log sheet replaces the separate rating prompt, and Mark as baked becomes Log bake; new `/bakes` diary and `/account` page; tab bar in the installed app; Library views (Recipes, Favorites, Drafts); Recipe section tabs; Bake Mode progress; Review Import confirms all at once.
 - 1.4.6 (2026-10-15): Decided: the reel thumbnail copies into Storage when its draft is first opened, not at save, since the Instagram link can expire first.
 - 1.4.5 (2026-10-14): Decided: a structured-data reply that doesn't parse gets one automatic retry (same caption) before the draft reaches "Couldn't finish" (FLOW-01).
 - 1.4.4 (2026-10-14): Decided: creator tips land in one step group named "Tips", always last, shown unnumbered in Bake Mode.

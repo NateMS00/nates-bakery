@@ -1,9 +1,9 @@
 # BONES: Auth and System pages
 
-> **Source**: SKELETON.md v1.4.1: `/login`, `/forgot-password`, `/reset-password`, `/privacy`, not-found, error; FLOW-04
+> **Source**: SKELETON.md v1.5.0: `/login`, `/forgot-password`, `/reset-password`, `/account`, `/privacy`, not-found, error; FLOW-04
 > **Primary Device**: mobile for the auth pages, because a sign-in usually interrupts something started on the iPhone (an import from Instagram's share menu, a link opened from Messages); the system pages have no single primary device
 > **Shell**: BONES-shell.md. Auth pages use the Share variant (public shell). Privacy, Not found and Error use the App variant when signed in and the Share variant otherwise, so a guest or friend never sees owner navigation
-> **Version**: 1.2.0 · **Updated**: 2026-10-13
+> **Version**: 1.3.0 · **Updated**: 2026-10-15
 > **Note**: Written after the build (prompt 8) to record the layout as reviewed and approved, so later changes and the accessibility audit have a spec to check against.
 
 ---
@@ -111,6 +111,46 @@ MAIN
 
 ---
 
+## `/account` (Account)
+
+> **Primary Action**: none
+> **Shell**: App variant; in the installed app, the Account tab's page (tab bar shown)
+
+```text
+MAIN
+├── PAGE_TITLE "Account"                    H1
+├── SIGNED_IN_AS (email, muted)
+├── SETTINGS (list of rows)
+│   ├── TIMER_ALERTS ("On" / "Off") → Timer alerts sheet
+│   ├── SHORTCUT_AND_IMPORT_KEY → /import#set-up-the-shortcut
+│   └── PRIVACY → /privacy
+└── SIGN_OUT
+```
+
+- **Layout**: reading column, 8 of 12 cols on desktop, full width on mobile. Settings as one glazed `card` with hairline-separated rows, each 56px tall: label on the left, its state in muted text and a chevron on the right. Sign out below the card, as a `button-secondary`, full width on mobile
+- **Content**: "Account"; "Signed in as nathan@…" (muted); Timer alerts with its state ("On", "Off", "Blocked"); "Shortcut and import key"; "Privacy"; Sign out
+- **Behavior**: Timer alerts opens the Timer alerts sheet (BONES-shell) over this page; Sign out ends the session → `/login`, with no confirmation (signing back in is easy and nothing is lost)
+
+```text
+MOBILE
++--------------------------------------+
+| ACCOUNT                              |
+| SIGNED IN AS EMAIL                   |
+| +----------------------------------+ |
+| | TIMER ALERTS             OFF   > | |
+| | SHORTCUT AND IMPORT KEY        > | |
+| | PRIVACY                        > | |
+| +----------------------------------+ |
+| [            SIGN OUT            ]   |
++--------------------------------------+
+| LIBRARY   IMPORT   BAKES   ACCOUNT   |
++--------------------------------------+
+```
+
+- **Assumed**: The Account page exists for the installed app's tab bar; in Safari the account menu holds the same items, and `/account` still works if opened directly.
+
+---
+
 ## `/privacy` (Privacy)
 
 > **Primary Action**: none; a reading page
@@ -128,7 +168,7 @@ MAIN
 
 - **Layout**: reading column, 8 of 12 cols on desktop, full width on mobile; body at reading size with comfortable line length
 - **Content**:
-  - **What Nate’s Bakery stores**: the owner's email and password (the password stored only as a hash); recipes, ratings, favorites and the bake log; reel links, creator handles, captions and a copy of each reel's thumbnail; the import key for the Shortcut, stored only in a form that can't be read back; the timer-alert subscription; a sign-in cookie, with no advertising or tracking cookies.
+  - **What Nate’s Bakery stores**: the owner's email and password (the password stored only as a hash); recipes, favorites and the bake log, including each bake's rating and the bake photos you add; reel links, creator handles, captions and a copy of each reel's thumbnail; the import key for the Shortcut, stored only in a form that can't be read back; the timer-alert subscription; a sign-in cookie, with no advertising or tracking cookies.
   - **What a share link shows**: what a friend can and can't see; revoking stops the link at once.
   - **Reels**: when you import, the app sends the reel link to Apify, a web-scraping service, which returns the reel's caption, creator handle and thumbnail. The recipe is read from the caption by Apple Intelligence through the Shortcut, on your device or on Apple's Private Cloud Compute, not by Nate’s Bakery's servers. The audio and video are never downloaded.
   - **Where it is stored**: the database is Supabase, in the United States (Oregon); the app runs on Vercel.
@@ -190,6 +230,7 @@ MAIN
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-10-15): New `/account` page for the installed app's Account tab; Privacy lists ratings per bake and bake photos (SKELETON 1.5.0).
 - 1.2.0 (2026-10-13): Privacy names Apify and Apple Intelligence for reel imports, lists captions, thumbnails and the import key, and adds where data is stored (SKELETON 1.4.1).
 - 1.1.2 (2026-10-01): App renamed to Nate’s Bakery.
 - 1.1.1 (2026-10-01): Restored "Send a new one below." in the Link expired notice; sign-in now recorded as Supabase Auth.

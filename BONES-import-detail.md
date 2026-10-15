@@ -1,10 +1,10 @@
 # BONES: `/import/:draftId` (Review Import)
 
-> **Source**: SKELETON.md v1.4.4, `/import/:draftId`, and the Recipe editor template
+> **Source**: SKELETON.md v1.5.0, `/import/:draftId`, and the Recipe editor template
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.4 · **Updated**: 2026-10-15
+> **Version**: 1.5.0 · **Updated**: 2026-10-15
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -18,15 +18,18 @@ MAIN
 │   ├── PAGE_TITLE "Review import"          H1
 │   ├── DRAFT_STATUS ("Draft saved")
 │   └── DISCARD
-├── SOURCE                                  H2
-│   ├── REEL_THUMBNAIL
-│   ├── CREATOR_HANDLE
-│   ├── WATCH_REEL (external)
+├── SOURCE                                  H2, visually hidden
+│   └── SOURCE_CARD
+│       ├── REEL (9:16, play badge → reel)
+│       ├── CREATOR_HANDLE
+│       ├── CAPTION_PREVIEW (2 lines) → Read more
+│       └── WATCH_REEL (external)
 │   ├── CUT_OFF_NOTICE (when Instagram cut the caption)
-│   └── ORIGINAL_CAPTION (collapsed, Read more; "Translated from Spanish")
-├── NEEDS_YOUR_CHECK                        H2
-│   ├── CHECK_SUMMARY (missing · estimated · converted)
-│   └── CHECK_ITEM × n (max 5, then Show all)
+│   └── ORIGINAL_CAPTION (expanded by Read more; "Translated from Spanish")
+├── NEEDS_YOUR_CHECK                        H2 "Check 6 amounts"
+│   ├── MISSING rows (need an amount)
+│   ├── CHECK_ROW × n (estimated, converted; max 5, then Show n more)
+│   └── THESE_LOOK_RIGHT
 ├── RECIPE_EDITOR                           H2
 │   ├── DETAILS                             H3
 │   ├── INGREDIENTS                         H3
@@ -42,7 +45,7 @@ MAIN
 └── SAVE_BAR (sticky, mobile)
 ```
 
-**First viewport (mobile)**: page title with Discard, Source as one compact row with the collapsed original caption (3 lines), the Needs Your Check summary and its first items, and the sticky Save bar showing what still blocks saving.
+**First viewport (mobile)**: page title with Discard, the source card, the check list heading and its first rows, and the sticky Save bar showing what still blocks saving.
 
 ---
 
@@ -70,22 +73,19 @@ MOBILE
 ```
 
 ### Source (SKELETON section 1)
-- **Layout**: desktop left column (4 cols), top; mobile one compact row: small portrait thumbnail on the left, text on the right
-- **Content**: reel thumbnail (portrait, 9:16); creator handle; "Watch reel" opening the original in a new tab; Original caption: the post text exactly as the creator wrote it, in its own language, under the label "Original caption" plus "· Translated from Spanish" (or the language it was in) when the recipe was translated; collapsed to its first 3 lines, then "Read more" expands the full text in place and becomes "Show less". When the caption looks cut off (Instagram's length limit), a one-line notice above it: "Instagram cut this caption off. Check the reel for the rest."
-- **Behavior**: the caption starts collapsed every time the page opens. Read more is a real button with its expanded state exposed to screen readers; expanding doesn't move focus. On desktop, while the caption is expanded, the left column stops being sticky and scrolls with the page, so no part of it is cut off
+- **Layout**: desktop left column (4 cols), top; mobile full width. One `source-card` (SKIN): the reel as a 64px-wide 9:16 frame on the left with a round play badge on it, and on the right the creator handle (bold), the first 2 lines of the original caption, and Watch reel
+- **Content**: reel frame (the thumbnail; the frame and its play badge together are one link to the reel, labeled "Watch @creator's reel", opening in a new tab); creator handle; caption preview (2 lines of the original caption, in its own language); "Watch reel" text link. Below the card: when the caption looks cut off (Instagram's length limit), a one-line notice: "Instagram cut this caption off. Check the reel for the rest."; then "Read more" (a button), which expands the full Original caption under the card with its label "Original caption" plus "· Translated from Spanish" (or the language it was in) when the recipe was translated, and becomes "Show less"
+- **Behavior**: the caption starts collapsed every time the page opens. Read more exposes its expanded state to screen readers; expanding doesn't move focus. On desktop, while the caption is expanded, the left column stops being sticky and scrolls with the page, so no part of it is cut off
 
 ```text
 DESKTOP (left column)
 +-------------------------------+
-| SOURCE                        |
-| +------+                      |
-| |THUMB | @CREATOR             |
-| |      | WATCH_REEL           |
-| +------+                      |
-| ORIGINAL CAPTION ·            |
-| TRANSLATED FROM SPANISH       |
-| FIRST LINES OF THE CAPTION    |
-| TEXT, AS WRITTEN ...          |
+| +---------------------------+ |
+| | +---+ @CREATOR            | |
+| | |(▶)| FIRST TWO LINES OF  | |
+| | |   | THE CAPTION...      | |
+| | +---+ WATCH REEL          | |
+| +---------------------------+ |
 | READ MORE                     |
 +-------------------------------+
 ```
@@ -93,31 +93,36 @@ DESKTOP (left column)
 ```text
 MOBILE
 +--------------------------------------+
-| SOURCE                               |
-| [THUMB] @CREATOR · WATCH_REEL        |
-| ORIGINAL CAPTION · TRANSLATED FROM   |
-| SPANISH                              |
-| FIRST LINES OF THE CAPTION TEXT, AS  |
-| WRITTEN ...                          |
+| +----------------------------------+ |
+| | +---+ @CREATOR                   | |
+| | |(▶)| FIRST TWO LINES OF THE     | |
+| | |   | CAPTION, AS WRITTEN...     | |
+| | +---+ WATCH REEL                 | |
+| +----------------------------------+ |
 | READ MORE                            |
 +--------------------------------------+
 ```
 
 ### Needs Your Check (SKELETON section 2)
-- **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a to-do list next to the form, and ends with Save recipe (`button-primary`, full column width) so saving stays in view however long the form is; mobile full width under Source, with no Save here (mobile has the Save bar)
-- **Content**: a summary line "2 missing · 3 estimated · 1 converted"; then items in this order: Missing (no amount in the caption, or an ingredient or unit the grams table doesn't know; must get an amount or "To taste" to save), Estimated (converted from a count or a package at a typical weight, like "1 egg" → 50 g or "1 barra" of butter → 113 g; should be confirmed), Converted (from a volume; check the conversion); each item shows the ingredient name, its current value ("— g", "Add grams · was ½ cup" for a Missing item that kept its original amount, "50 g from 1 egg", "125 g from 1 cup"), and its type; the "—" is hidden from screen readers, which hear "no amount" instead; each item jumps to that field in the editor and moves focus into it; at most 5 items on mobile, then "Show all (n)" expands in place; desktop shows all
-- **Behavior**: items leave the list as soon as they are resolved (amount entered, Confirm pressed) and the summary updates; the change is announced to screen readers
+- **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a checklist next to the form, and ends with Save recipe (`button-primary`, full column width) so saving stays in view however long the form is; mobile full width under Source, with no Save here (mobile has the Save bar)
+- **Content**: heading "Check 6 amounts" (the count of what's still open); one muted line under it, "Tap a row to fix it."; then rows in this order:
+  - **Missing** (no amount in the caption, or an ingredient or unit the grams table doesn't know): a `check-row` with the `marker-missing` tag ("! Missing") in place of the check control, the name, "was ½ cup" when an original was kept, and "— g" (the "—" hidden from screen readers, which hear "no amount"); tapping it jumps to the amount field. These must get an amount or "To taste" to save
+  - **Estimated** (from a count or a package at a typical weight, "50 g from 1 egg") and **Converted** (from a volume, "360 g from 3 cups"): a `check-row` each: a round check control that confirms that amount in place, the name with "from 3 cups" in muted caption under it, the grams on the right, and a chevron; tapping anywhere but the check control jumps to the field. An Estimated row also shows a small "~ Est." tag after the name, so the two kinds stay apart without colour
+  - at most 5 rows on mobile, then "Show n more" expands in place; desktop shows all
+  - **These look right** (`button-secondary`, full width, with a double-check icon) after the rows, shown while any Estimated or Converted row is unchecked: confirms all of them at once. It never touches Missing rows
+- **Behavior**: a confirmed row turns into a filled olive check and stays in place (screen readers hear "Confirmed"), so the list doesn't jump under your thumb, and the heading count drops; rows leave the list when the page next opens. Missing rows leave as soon as they get an amount or To taste. Every change is announced politely ("Flour confirmed. 5 left"). These look right is announced as "4 amounts confirmed"
 
 ```text
 DESKTOP (left column, sticky)
 +-------------------------------+
-| NEEDS YOUR CHECK              |
-| 2 MISSING · 3 EST. · 1 CONV.  |
-| ! BUTTER          — g         |
-| ! SALT            — g         |
-| ~ SUGAR         120 g         |
-| ~ CREAM         200 g         |
-| = FLOUR  125 g from 1 cup     |
+| CHECK 6 AMOUNTS               |
+| Tap a row to fix it.          |
+| [! MISSING] BUTTER    — g   > |
+| (✓) FLOUR           360 g   > |
+|     from 3 cups               |
+| ( ) EGGS ~EST.      150 g   > |
+|     from 3 eggs               |
+| [ ✓✓ THESE LOOK RIGHT       ] |
 | [        SAVE RECIPE        ] |
 +-------------------------------+
 ```
@@ -125,16 +130,17 @@ DESKTOP (left column, sticky)
 ```text
 MOBILE
 +--------------------------------------+
-| NEEDS YOUR CHECK                     |
-| 2 missing · 3 estimated · 1 conv.    |
-| ! BUTTER                      — g    |
-| ! SALT                        — g    |
-| ~ SUGAR                     120 g    |
-| SHOW ALL (6)                         |
+| CHECK 6 AMOUNTS                      |
+| Tap a row to fix it.                 |
+| [! MISSING] BUTTER          — g    > |
+| ( ) FLOUR                 360 g    > |
+|     from 3 cups                      |
+| ( ) BAKING POWDER          12 g    > |
+|     from 1 tbsp                      |
+| SHOW 3 MORE                          |
+| [       ✓✓ THESE LOOK RIGHT        ] |
 +--------------------------------------+
 ```
-
-(`!` Missing, `~` Estimated, `=` Converted stand for the markers; their look comes from SKIN.md.)
 
 ### Recipe Editor (SKELETON section 3; shared template)
 - **Layout**: desktop right column (8 cols), a single form column; mobile full width. Three subsections in order: Details, Ingredients, Steps
@@ -166,9 +172,9 @@ MOBILE
 ```
 
 #### Ingredients
-- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), a status area of fixed width reserved for the marker plus Confirm or the To taste toggle (left empty when the row has nothing to check), row menu; every row uses the same columns whether or not it has a marker. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); the name field wraps to a second line inside itself when the name is long (it grows with its content as many lines as the name needs, never truncates and never scrolls inside itself), so the full name is always readable; a second line of controls only when the ingredient needs it (marker with Confirm, or marker with To taste), so clean ingredients take one line. On desktop, inside the fixed status area, Confirm and the To taste toggle sit at its right edge, so they line up down the group whatever the marker's width
+- **Layout**: each group is a bordered block with its name as the legend and a group menu at its end. Desktop: one row per ingredient on fixed columns so the grams line up down the whole group: name (flexes), amount (fixed width), row menu; the "from 3 cups" line or the Missing tag with To taste sits under the row, aligned with the name. Mobile: name, amount, and row menu on the first line (name flexes, amount fixed at about 96px); the name field wraps to a second line inside itself when the name is long (it grows with its content as many lines as the name needs, never truncates and never scrolls inside itself), so the full name is always readable; a second line only when the ingredient needs it (the muted "from" line, or Missing with To taste), so clean and confirmed ingredients take one line
 - **Empty rows**: a new or empty row shows placeholders, "Ingredient" in the name and "—" in the amount (never "0", which reads as an entered value), so it doesn't read as two blank boxes; Missing amounts show the same "—", matching Needs Your Check; each field keeps its precise screen-reader name ("Caster sugar, grams") instead of a visible label per row
-- **Content**: name (text, in English); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); marker Missing, Estimated, or Converted; Confirm (for Estimated and Converted, removes the marker without changing the value); for Converted, Estimated, and Missing items that kept one, the original amount as written, in its own language ("was ½ taza", "was 1 egg", "was 1 barra"), on a line under the row, always visible here; an optional **note** for a creator's remark about that ingredient ("Creator: 100 g makes it less sweet"), shown as a muted line under the row and editable from the row menu (Add note / Edit note), also shown under the ingredient on the Recipe page; row menu: Move up, Move down, Move to group, Add or Edit note, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
+- **Content**: name (text, in English); amount (number with a fixed "g" suffix) or "To taste" (a toggle that replaces the amount); for an unconfirmed Estimated or Converted row, one muted line under it with the marker glyph and the original amount as written, in its own language ("= from ½ taza", "~ from 1 egg"), and no Confirm button here (confirming happens in Needs Your Check); a Missing row keeps its "! Missing" tag and the To taste toggle on that line, plus "was 1 barra" when an original was kept. Once confirmed, the line goes; the original stays available on the Recipe page's Converted marker; an optional **note** for a creator's remark about that ingredient ("Creator: 100 g makes it less sweet"), shown as a muted line under the row and editable from the row menu (Add note / Edit note), also shown under the ingredient on the Recipe page; row menu: Move up, Move down, Move to group, Add or Edit note, Delete; "Add ingredient" at the end of each group; "Add ingredient group" after the last group. A recipe with no groups shows one unnamed block and "Add ingredient group" turns the existing rows into the first group
 - **Behavior**: reordering uses the row menu (and drag on desktop as a shortcut); a deleted row offers Undo; no limit on rows or groups
 
 ```text
@@ -176,9 +182,10 @@ DESKTOP (editor column)
 +---------------------------------------+
 | INGREDIENTS                           |
 | +- CRUST ---------------------- [...] |
-| | [NAME       ][000 g] ~EST [OK]  [:] |
-| | [NAME       ][000 g] =CNV [OK]  [:] |
-| |   was 1 cup                         |
+| | [NAME       ][000 g]            [:] |
+| |   ~ from 1 egg                      |
+| | [NAME       ][000 g]            [:] |
+| |   = from 1 cup                      |
 | | [NAME       ][000 g]            [:] |
 | | + ADD INGREDIENT                    |
 | +-------------------------------------+
@@ -193,7 +200,7 @@ MOBILE
 | +- CRUST --------------------- [...] |
 | | [NAME              ][000 g]  [:]   |
 | | [NAME              ][000 g]  [:]   |
-| |   ~ ESTIMATED  [CONFIRM]           |
+| |   ~ from 1 egg                     |
 | | [NAME              ][ — g ]  [:]   |
 | |   ! MISSING  [TO TASTE]            |
 | | + ADD INGREDIENT                   |
@@ -257,7 +264,7 @@ MOBILE
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Draft not yet loaded | Placeholders in final proportions: source row, 3 check items, the Details fields, 6 ingredient rows, 4 steps |
-| Nothing flagged | No Missing, Estimated, or Converted items | Needs Your Check reduces to one line "Everything checked" |
+| Nothing flagged | No Missing, Estimated, or Converted items, or all confirmed | Needs Your Check reduces to one line with an olive check, "All amounts checked" |
 | Couldn't finish | The Shortcut stopped after the caption arrived but before the recipe was read (Apple Intelligence off or unavailable, the phone went offline) | A notice at the top of Needs Your Check: "This import didn't finish reading the recipe." with Retry (runs the Shortcut again for this draft) and, below it, the editor empty except for the source link, so the recipe can be typed in while reading the original caption |
 | Retrying | Retry tapped | Replaces the notice: a spinner, "Retrying in the Shortcut", "Reading the recipe, converting to grams.", and "Didn't start? Try again" (re-opens the Shortcut, same tap, no new attempt started). Stays on this page the whole time — no navigation to the Library — and polls for the result; the editor fills in with the new recipe on success, or the Couldn't finish notice returns on a second failure. Both without a reload |
 | Save blocked | Save recipe pressed with any Missing amount, an empty title, or no category | Save stays enabled (a disabled button hides the reason). Pressing it shows an error summary at the top of Needs Your Check listing each problem as a link, moves focus to that summary, and marks each field in error. On mobile, the page scrolls to the summary |
@@ -278,8 +285,8 @@ MOBILE
 - **Assumed**: Edits autosave to the draft, so leaving and coming back loses nothing (SKELETON says leaving keeps the draft; autosave makes that include the edits).
 - **Assumed**: Save stays enabled and explains what blocks it, rather than being disabled, so the reason is always reachable, including by screen reader.
 - **Assumed**: Needs Your Check is sticky beside the editor on desktop and works as a jump list on both devices.
-- **Assumed**: A Confirm action per Estimated and Converted item (SKELETON says markers stay "until the owner confirms"; this is the confirming control).
-- **Assumed**: No "Confirm all" bulk action, so every guessed amount gets looked at once. Revisit if reviews feel slow.
+- **Decided** (2026-10-15, Nathan): Confirming moves out of the editor rows into one checklist (Needs Your Check), with a check per row and "These look right" for all of them. The old pattern repeated a marker chip, an outlined Confirm button and a "was" line on every converted ingredient, which he disliked. This reverses the earlier "no Confirm all" assumption: the list itself makes every amount visible before the bulk confirm, so it's still looked at once.
+- **Assumed**: Missing items are never included in "These look right", because they have no number to confirm.
 - **Assumed**: Reordering by row menu, with drag as a desktop-only shortcut, because drag alone isn't usable by keyboard or screen reader.
 - **Assumed**: Undo after deleting a row or step.
 - **Assumed**: Detected times shown as chips under each step, so wrong detections are visible before Bake Mode.
@@ -293,7 +300,7 @@ MOBILE
 - **Decided** (2026-10-13): An ingredient or unit the grams table doesn't know arrives as Missing with its original amount kept ("Add grams · was ½ cup"), never with a guessed density. Not "— g from ½ cup", which screen readers read as "dash g".
 - **Decided** (2026-10-13): Packages whose size varies by country (a stick or barra of butter, a can, a packet) are Estimated, not Converted.
 - **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe go in the Tips step group (SKELETON 1.4.4).
-- **Open** (2026-10-15, for the visual upgrade round): Nathan doesn't like how the reel picture looks in Source, on desktop and on mobile (on his iPhone the tall 9:16 strip shows almost none of the dish; the handle and Watch reel float beside it). To be redesigned with the other visual upgrades, not before.
+- **Decided** (2026-10-15, Nathan, visual upgrade round): Source becomes a card: the reel is a small 9:16 frame with a play badge, read as a reference to open rather than as the recipe's picture, with the handle and caption preview beside it. The recipe's own picture is handled by the cover (a bake photo, later).
 - **Decided** (2026-10-15): Retry stays on this page instead of going to the Library. Reported live, iPhone only, Mac not: the Shortcut never opened. The old code set location.href to the Shortcut's shortcuts:// link and immediately navigated to the Library in the same tick — the likely cause, by code comparison with /import (which never navigates away and is confirmed working on the iPhone): on iOS the client-side navigation can cancel the hand-off before Safari finishes it, a race desktop Safari tolerates. Staying put and polling (the Retrying state) removes the race either way, confirmed or not.
 - **Open**: Highlight the part of the caption an item came from when you tap a check item ("125 g from 1 cup" → the words "1 cup flour")? Useful for checking, but it depends on the extraction returning positions; not drawn.
 
@@ -301,6 +308,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.5.0 (2026-10-15): Visual upgrade round: Source as a card (reel frame with play badge, handle, 2-line caption preview); Needs Your Check becomes a checklist ("Check 6 amounts") with a check per Estimated and Converted row and "These look right" for all; editor rows lose the marker chip and Confirm button, keeping one muted "from 3 cups" line until confirmed (SKELETON 1.5.0).
 - 1.4.4 (2026-10-15): Retry (Couldn't finish) stays on this page and polls instead of navigating to the Library — the iPhone never opened the Shortcut on Retry, a same-tick navigation racing the shortcuts:// hand-off by most likely cause. New Retrying state.
 - 1.4.3 (2026-10-15): Open note: the Source picture is to be redesigned in the visual upgrade round.
 - 1.4.2 (2026-10-14): Tips step group in the editor: last, unnumbered, no time chips or Uses line; rows move in and out with Move to group (SKELETON 1.4.4).

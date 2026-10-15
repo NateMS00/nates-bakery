@@ -4,7 +4,7 @@
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.1.4 · **Updated**: 2026-10-14
+> **Version**: 1.1.5 · **Updated**: 2026-10-15
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -39,7 +39,7 @@ MAIN
 
 ### Header (SKELETON section 1)
 - **Layout**: desktop full width: title block 9 cols, Watch the original reel 3 cols right-aligned; mobile single column, with Watch the original reel full width at the end of the header
-- **Content**: category label; title (wraps, never truncates); "Shared by Nate"; rating as stars, read-only, labeled "Rated 4 out of 5" for screen readers, hidden when unrated; "@creator"; yield at the current scale and total time; Watch the original reel, opening the reel in a new tab. No back link, favorite, share, or edit
+- **Content**: category label; title (wraps, never truncates); "Shared by Nate"; rating as stars, read-only, labeled "Rated 4 out of 5" for screen readers, hidden when unrated (since SKELETON 1.5.0 this is the latest rated bake's rating; friends never see the bakes themselves); "@creator"; yield at the current scale and total time; Watch the original reel, opening the reel in a new tab. No back link, favorite, share, or edit
 - **Behavior**: yield updates with the scale
 
 ```text
@@ -125,6 +125,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.5 (2026-10-15): The rating shown is the latest rated bake's (SKELETON 1.5.0); styling follows the new SKIN (porcelain canvas, no tile marks before headings).
 - 1.1.4 (2026-10-14): Shared pages show the Tips group, last and unnumbered (SKELETON 1.4.4).
 - 1.1.3 (2026-10-13): The recipe picture isn't shown on shared pages for now (open question).
 - 1.1.2 (2026-10-13): Ingredient notes aren't shown on shared pages.

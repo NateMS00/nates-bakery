@@ -15,6 +15,14 @@ import type { Draft } from "@/lib/data/types";
 // lines, with Read more / Show less. Starts collapsed every time; expanding doesn't
 // move focus.
 
+/** Blank lines would otherwise waste lines of the collapsed 3-line preview. */
+function withoutBlankLines(text: string): string {
+  return text
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .join("\n");
+}
+
 export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draft; expanded: boolean; onExpandedChange: (v: boolean) => void }) {
   const { caption, captionCutOff, captionLanguage } = draft;
   const translatedFrom = captionLanguage && captionLanguage !== "English" ? captionLanguage : null;
@@ -48,8 +56,9 @@ export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draf
             </Notice>
           )}
           <div id={id} className="mt-xs type-body-sm text-body">
-            {/* Keep the caption's own line breaks — checking it line by line is the point of showing it. */}
-            <p className={cx("whitespace-pre-line", !expanded && "line-clamp-3")}>{caption}</p>
+            {/* Keep the caption's own line breaks — checking it line by line is the point of showing it.
+                Collapsed, blank lines are dropped first so all 3 lines are real text. */}
+            <p className={cx("whitespace-pre-line", !expanded && "line-clamp-3")}>{expanded ? caption : withoutBlankLines(caption)}</p>
           </div>
           <Button variant="text" aria-expanded={expanded} aria-controls={id} onClick={() => onExpandedChange(!expanded)} className="-ml-sm">
             {expanded ? "Show less" : "Read more"}

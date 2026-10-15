@@ -4,7 +4,7 @@
 > **Primary Action**: Import → hands the link to the Nate’s Bakery Shortcut, which opens `/import/:draftId` when done
 > **Primary Device**: mobile, because most imports start from Instagram's share menu on the iPhone; the Shortcut does the import itself, so this page mostly handles pasted links, setup, and errors
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.2 · **Updated**: 2026-10-15
+> **Version**: 1.1.3 · **Updated**: 2026-10-15
 
 ---
 
@@ -116,6 +116,7 @@ All states render in the Reel Link status area, directly under Import, so the fi
 | Invalid link | The text isn't an Instagram reel or post link | Error text under the field, field marked in error, focus stays in the field; nothing else changes |
 | Import failed | Reel is private or deleted, or the caption service is unavailable (Shortcut opens `/import?error=…&url=`) | The status area shows the reason in one sentence ("Couldn't reach this reel. It may be private or deleted, or the import service is down.") and two actions: "Enter it manually" → `/recipes/new?source=<reel link>` (the more prominent one) and "Try another link", which clears the field |
 | No recipe in this caption | The caption has no ingredients (the recipe is on a website, or only spoken) | "This reel's caption doesn't include the recipe." with Watch the reel (external), "Enter it manually" (more prominent) and "Try another link" |
+| Daily limit reached | 30 caption fetches already used in the last 24 hours, so a leaked key can't spend more of the Apify credit (Shortcut opens `/import?error=limit&url=`) | The status area shows "You've used today's 30 imports. It resets in a few hours." with "Enter it manually" → `/recipes/new?source=<reel link>`. No "Try another link": the limit isn't about this reel |
 | Setup needed | The Shortcut found no import key, or the key was revoked | The Set up the Shortcut section opens expanded and takes focus, with one line on top: "Add your import key to the Shortcut to start importing." (or "Your import key no longer works. Create a new one.") |
 | Already imported | The reel matches a saved recipe | The status area shows "You already saved this reel as <recipe title>" with a link to `/recipes/:recipeId`, and "Import again" as a secondary action that runs the Shortcut again with the link (the same hand-off as Import), creating a new draft |
 | Signed out | Opened without a session | Handled by the App area guard: `/login?next=/import?url=<reel link>` (SKELETON FLOW-01) |
@@ -137,6 +138,7 @@ All states render in the Reel Link status area, directly under Import, so the fi
 
 ## CHANGE LOG
 
+- 1.1.3 (2026-10-15): New state, Daily limit reached (the 30-fetches-in-24-hours cap).
 - 1.1.2 (2026-10-15): The new key stays visible until Done or leaving the page; copying no longer hides it (build review).
 - 1.1.1 (2026-10-13): "Import again" runs the Shortcut again instead of starting Processing.
 - 1.1.0 (2026-10-13): Import runs in the Nate’s Bakery Shortcut (caption via the app, recipe read by Apple Intelligence); Import hands pasted links to the Shortcut; setup gains Apple Intelligence and the import key; new states No recipe in this caption and Setup needed; audio stage removed (SKELETON 1.4.0).

@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.5.0 · **Updated**: 2026-10-13
+> **Version**: 1.5.1 · **Updated**: 2026-10-14
 
 ---
 
@@ -127,7 +127,7 @@ MOBILE
 
 ### Steps (SKELETON section 4)
 - **Layout**: desktop right column (8 of 12 cols; 4 of 8 on tablet, about 340px at 768, still a comfortable reading width); mobile full width below Ingredients
-- **Content**: numbered steps in order, full text, no truncation; times detected in the text ("25 minutes") are marked inline but are not interactive here (they become timers in Bake Mode). When the recipe has step groups (Crust, Filling, Assembly, Baking…), each gets a heading; numbering continues across groups (1–12, not 1–4 per group), so "step 7" means one thing everywhere, including Bake Mode's `?step=`
+- **Content**: numbered steps in order, full text, no truncation; times detected in the text ("25 minutes") are marked inline but are not interactive here (they become timers in Bake Mode). When the recipe has step groups (Crust, Filling, Assembly, Baking…), each gets a heading; numbering continues across groups (1–12, not 1–4 per group), so "step 7" means one thing everywhere, including Bake Mode's `?step=`. The exception is the **Tips** group (creator tips about the whole recipe, SKELETON 1.4.4): always last, headed "Tips", its items a plain unnumbered list in body text, with no time marks; they don't count in the step numbering
 - **Behavior**: none
 
 ```text
@@ -215,7 +215,7 @@ MOBILE
 
 - **Assumed**: A "Library" back link in the Header (not in SKELETON's Contextual navigation; added because on mobile the logo alone doesn't read as "back").
 - **Assumed**: The category label is not a link to the filtered Library; SKELETON defines no such contextual link, and the back link already returns to Library.
-- **Assumed**: Step numbers continue across groups, so Bake Mode's `?step=` stays a single sequence.
+- **Assumed**: Step numbers continue across groups, so Bake Mode's `?step=` stays a single sequence. Tips are outside the sequence, so a tip never becomes "step 13".
 - **Assumed**: Mark as baked lives in Latest Bake, not next to Start baking, so it never competes with the primary action. The trade-off: on a long recipe it's at the end of the page.
 - **Assumed**: The Rating prompt appears after Mark as baked only when the recipe is unrated; a rated recipe is changed directly in the Header. (Bake Mode's finish flow prompts from the log page instead, per SKELETON.)
 - **Assumed**: An Undo confirmation for Mark as baked (not in SKELETON), because a one-tap action that changes Baked status needs a way back.
@@ -235,6 +235,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.5.1 (2026-10-14): Tips group: last, unnumbered, no time marks (SKELETON 1.4.4).
 - 1.5.0 (2026-10-13): Recipe picture in the Header, beside the title block (96×128 mobile, 144×192 desktop); none for recipes without one (SKELETON 1.4.2).
 - 1.4.1 (2026-10-13): Ingredient notes show as a muted line under the ingredient (SKELETON 1.4.0).
 - 1.4.0 (2026-09-30): Tablet split is 4 + 4 columns (Scale and Ingredients / Steps), after the accessibility audit found the Scale control overflowing at 3 columns.

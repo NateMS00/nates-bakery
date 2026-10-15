@@ -1,10 +1,10 @@
 # BONES: `/import/:draftId` (Review Import)
 
-> **Source**: SKELETON.md v1.4.1, `/import/:draftId`, and the Recipe editor template
+> **Source**: SKELETON.md v1.4.4, `/import/:draftId`, and the Recipe editor template
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.4.1 · **Updated**: 2026-10-13
+> **Version**: 1.4.2 · **Updated**: 2026-10-14
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -204,7 +204,7 @@ MOBILE
 
 #### Steps
 - **Layout**: same group blocks as Ingredients; desktop one row per step: number 1 of 8 cols, text 6, row menu 1; mobile number and row menu on the first line, text full width below
-- **Content**: step number (continuous across groups); step text (multi-line, grows with content); detected times shown under the text as read-only chips ("25 min"), so the owner can see which times will become timers in Bake Mode; "Uses:" followed by the linked ingredient names (at most 2 lines, then "+n"), or "No ingredients" when none, with an Edit control that opens the Ingredients used picker; row menu: Move up, Move down, Move to group, Delete; "Add step" at the end of each group; "Add step group" after the last group, offering the ingredient group names plus Assembly, Baking, and Finishing
+- **Content**: step number (continuous across groups; none in the Tips group); step text (multi-line, grows with content); detected times shown under the text as read-only chips ("25 min"), so the owner can see which times will become timers in Bake Mode; "Uses:" followed by the linked ingredient names (at most 2 lines, then "+n"), or "No ingredients" when none, with an Edit control that opens the Ingredients used picker; row menu: Move up, Move down, Move to group, Delete; "Add step" at the end of each group; "Add step group" after the last group, offering the ingredient group names plus Assembly, Baking, and Finishing, and Tips when the recipe has none. **Tips group**: always the last block, whatever order the import gave; its rows have no number, no detected-time chips and no "Uses:" line, since a tip isn't something you do at a point in the bake; Move to group can move a row into or out of Tips, which is how a misplaced tip or step is fixed
 - **Behavior**: detected times update as the text changes; reordering and Undo as in Ingredients
 - **No steps in the caption**: when the import found no steps, the Steps subsection shows one line in place of the first group, "The caption has no steps. Watch the reel, or add them here.", with Watch reel and Add step; it isn't a save blocker
 
@@ -291,13 +291,14 @@ MOBILE
 - **Assumed**: An ingredient the caption gives no amount for ("caramel sauce", "cocoa powder for dusting") arrives as Missing with the "—" placeholder, never with an invented amount; "To taste" resolves it in one tap.
 - **Decided** (2026-10-13): An ingredient or unit the grams table doesn't know arrives as Missing with its original amount kept ("Add grams · was ½ cup"), never with a guessed density. Not "— g from ½ cup", which screen readers read as "dash g".
 - **Decided** (2026-10-13): Packages whose size varies by country (a stick or barra of butter, a can, a packet) are Estimated, not Converted.
-- **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe stay in the caption for now (SKELETON open question).
+- **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe go in the Tips step group (SKELETON 1.4.4).
 - **Open**: Highlight the part of the caption an item came from when you tap a check item ("125 g from 1 cup" → the words "1 cup flour")? Useful for checking, but it depends on the extraction returning positions; not drawn.
 
 ---
 
 ## CHANGE LOG
 
+- 1.4.2 (2026-10-14): Tips step group in the editor: last, unnumbered, no time chips or Uses line; rows move in and out with Move to group (SKELETON 1.4.4).
 - 1.4.1 (2026-10-13): Unknown ingredients or units arrive as Missing with the original kept ("Add grams · was ½ cup"); "—" hidden from screen readers; packages such as butter sticks are Estimated (SKELETON 1.4.1).
 - 1.4.0 (2026-10-13): Source shows the original caption (labeled when translated) instead of the caption-and-audio transcript, with a cut-off notice; Estimated now means converted from a count at a typical weight; ingredient notes; no-steps line; Couldn't finish state (SKELETON 1.4.0).
 - 1.3.2 (2026-09-30): No line cap on ingredient names on mobile; the field grows as needed (build review).

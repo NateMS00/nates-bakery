@@ -1,10 +1,10 @@
 # BONES: `/recipes/:recipeId/bake` (Bake Mode)
 
 > **Source**: SKELETON.md v1.3.0, `/recipes/:recipeId/bake`
-> **Primary Action**: Next step (Finish on the last step → `/recipes/:recipeId/log?new=1`)
+> **Primary Action**: Next step (Finish on the last screen → `/recipes/:recipeId/log?new=1`)
 > **Primary Device**: mobile, because the iPhone sits propped on the counter and is read from about an arm's length away, often touched with floury hands; a propped-up iPad (tablet) is the second case
 > **Shell**: BONES-shell.md, Focus variant
-> **Version**: 1.2.1 · **Updated**: 2026-09-30
+> **Version**: 1.3.0 · **Updated**: 2026-10-14
 
 ---
 
@@ -139,7 +139,7 @@ MOBILE
 
 ### Step nav (primary action)
 - **Layout**: pinned to the bottom edge on every device, full width of the content area, above the home indicator on phones; Previous takes about a third, Next step about two thirds; the page reserves space so nothing is covered
-- **Content**: Previous (hidden on step 1); Next step, which becomes Finish on the last step
+- **Content**: Previous (hidden on step 1); Next step, which becomes Finish on the last screen (the Tips screen when the recipe has tips, otherwise the last step)
 - **Behavior**: Next step and Previous write `?step=`; Finish → `/recipes/:recipeId/log?new=1` with date and scale prefilled. If any timer is still running when Finish is pressed (a last "cool 30 minutes" is common), Finish first asks "Stop timers and finish?" using the Destructive confirmations rule in BONES-shell; the safe action is Keep baking. Both targets are large enough to hit with a knuckle (SKIN.md's minimum or more)
 
 ```text
@@ -164,7 +164,8 @@ MOBILE
 |---|---|---|
 | Loading | Recipe not yet loaded | Focus header and Step nav render; Current Step shows placeholders for heading, 4 lines of text, and 2 ingredient rows |
 | Has estimates | Recipe has Estimated amounts; shown on step 1 only | One-line notice at the top of Current Step: "Some amounts are estimates", dismissible; baking continues (SKELETON FLOW-02) |
-| Last step | `?step=` is the last step | Next step becomes Finish |
+| Last step | `?step=` is the last step | Next step becomes Finish, or "Next: Tips" when the recipe has tips |
+| Tips | `?step=tips`, after the last numbered step, only when the recipe has a Tips group | One screen with every tip: eyebrow "TIPS" as the H1 (no step number), the tips as a plain list at step-text size, no "For this step" and no timer buttons ("let it cool overnight" isn't a timer). The focus header's progress reads "Tips" instead of "12/12". Running timers stay in their strip. Next step becomes Finish |
 | Invalid step | `?step=` missing, not a number, or out of range | Opens the nearest valid step and corrects the URL; no error shown |
 | Timer finished | A timer reaches zero | A banner across the top of the viewport, above everything, on every device: "Step 3 · Filling timer is done" with Dismiss; it stays until dismissed, plays a sound, and is announced immediately to screen readers. Several finished timers stack in the banner, newest first. The timer row shows 00:00 until dismissed |
 | Exit confirmation | Exit pressed with a timer running | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. "Stop timers and leave?", Leave (stops timers → `/recipes/:recipeId?scale=`) and Keep baking. Focus starts on Keep baking and returns to Exit |
@@ -177,6 +178,7 @@ MOBILE
 
 ## 4. ASSUMPTIONS & OPEN QUESTIONS
 
+- **Assumed**: Creator tips get one screen at the end rather than a line on each step, because most are about the end (cooling, resting, serving) and Bake Mode shows one thing at a time. Their times never become timers.
 - **Assumed**: The step eyebrow ("FILLING · STEP 3") is the page's H1 and changes with each step, because it's what the page is about at any moment; it's visually small on purpose so the step text dominates. The recipe title is in the focus header.
 - **Assumed**: "For this step" lists the ingredients linked to the step in the editor (BONES-import-detail.md, "Uses:"); it is hidden for steps with no linked ingredients.
 - **Assumed**: Step nav is sticky on every device, including desktop, because it's the main control in this mode.
@@ -194,6 +196,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.3.0 (2026-10-14): A Tips screen after the last step (`?step=tips`), unnumbered, with no timers; Finish moves to it (SKELETON 1.4.4).
 - 1.2.1 (2026-09-30): Timers sorted by time remaining, soonest first (recorded from the build).
 - 1.2.0 (2026-09-30): After the first build review: one step eyebrow line ("FILLING · STEP 3") as the H1; compact two-line timers in the mobile strip; started timer buttons show a live "Running · 29:12" status; Timer alerts card appears when the first timer starts; Finish asks before stopping running timers.
 - 1.1.0 (2026-09-29): Added the Timer alerts card and sheet; "For this step" now reads the editor's ingredient links (SKELETON 1.3.0).

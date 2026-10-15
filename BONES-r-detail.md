@@ -4,7 +4,7 @@
 > **Primary Action**: Watch the original reel → external link (credit to the creator)
 > **Primary Device**: mobile, because friends open the link from a message on their phone
 > **Shell**: BONES-shell.md, Share variant
-> **Version**: 1.1.3 · **Updated**: 2026-10-13
+> **Version**: 1.1.4 · **Updated**: 2026-10-14
 
 This page reuses the Scale, Ingredients, and Steps layouts from BONES-recipes-detail.md. Only the differences are described here.
 
@@ -73,7 +73,7 @@ MOBILE
 - **Behavior**: sticky beside Steps on desktop and tablet, as on the Recipe page, with the same column split: 4 of 12 on desktop and 4 of 8 on tablet (Steps takes the other 8 or 4), so the Scale presets never overflow
 
 ### Steps (SKELETON section 4)
-- **Layout and content**: as in BONES-recipes-detail.md: numbered continuously across groups, full text, detected times marked but not interactive
+- **Layout and content**: as in BONES-recipes-detail.md: numbered continuously across groups, full text, detected times marked but not interactive; the Tips group shows last and unnumbered, as there. Tips are the creator's, so friends see them
 
 ```text
 DESKTOP (below the Header)
@@ -125,6 +125,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.1.4 (2026-10-14): Shared pages show the Tips group, last and unnumbered (SKELETON 1.4.4).
 - 1.1.3 (2026-10-13): The recipe picture isn't shown on shared pages for now (open question).
 - 1.1.2 (2026-10-13): Ingredient notes aren't shown on shared pages.
 - 1.1.1 (2026-10-01): App renamed to Nate’s Bakery; "Shared by Nate".

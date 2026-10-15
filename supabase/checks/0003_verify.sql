@@ -16,8 +16,14 @@ with checks(check_name, result, expected) as (
   union all
   select 'signed-in users can change a draft''s retried flag', has_column_privilege('authenticated', 'public.drafts', 'retried', 'update')::text, 'false'
   union all
-  select 'import_retry is still SECURITY DEFINER with search_path "" after redefining it',
+  select 'import_retry no longer exists', (to_regprocedure('public.import_retry(text,uuid)') is null)::text, 'true'
+  union all
+  select 'import_get_caption is SECURITY DEFINER with search_path ""',
     (prosecdef and array_to_string(proconfig, ',') = 'search_path=""')::text, 'true'
-  from pg_proc where oid = 'public.import_retry(text,uuid)'::regprocedure
+  from pg_proc where oid = 'public.import_get_caption(text,uuid)'::regprocedure
+  union all
+  select 'anon can run import_get_caption', has_function_privilege('anon', 'public.import_get_caption(text,uuid)', 'execute')::text, 'true'
+  union all
+  select 'signed-in users can run import_get_caption', has_function_privilege('authenticated', 'public.import_get_caption(text,uuid)', 'execute')::text, 'true'
 )
 select check_name, result, expected, result = expected as ok from checks;

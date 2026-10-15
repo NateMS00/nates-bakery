@@ -175,6 +175,7 @@ test("Handed to the Shortcut: leave safely, then Open the draft appears once the
 
   const openDraft = page.getByRole("link", { name: "Open the draft" });
   await expect(openDraft).toBeVisible({ timeout: 6000 }); // polling interval
+  await shot(page, "04b-handed-off-open-the-draft");
   await openDraft.click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Review import");
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Kouign-amann");
@@ -224,6 +225,7 @@ test("No recipe in this caption: Watch the reel, Enter it manually, or Try anoth
   await expect(failed.getByRole("link", { name: "Watch the reel" })).toHaveAttribute("href", link);
   await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
   await expect(failed.getByRole("button", { name: "Try another link" })).toBeVisible();
+  await shot(page, "07-no-recipe");
 });
 
 test("Daily limit reached: Enter it manually only, no Try another link", async ({ page }) => {
@@ -233,6 +235,7 @@ test("Daily limit reached: Enter it manually only, no Try another link", async (
   await expect(failed).toContainText("You’ve used today’s 30 imports. It resets in a few hours.");
   await expect(failed.getByRole("link", { name: "Enter it manually" })).toBeVisible();
   await expect(failed.getByRole("button", { name: "Try another link" })).toHaveCount(0);
+  await shot(page, "08-daily-limit-reached");
 });
 
 test("start-import: an already-saved reel answers already, title and recipeId included", async ({ page }) => {

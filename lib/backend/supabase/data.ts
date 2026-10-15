@@ -236,7 +236,7 @@ export const supabaseData: DataBackend = {
 
   async importGetCaption(key, draftId) {
     const db = supabasePublic();
-    const { data, error } = await db.rpc("import_retry", { p_key: key, p_draft: draftId });
+    const { data, error } = await db.rpc("import_get_caption", { p_key: key, p_draft: draftId });
     if (error || !data) return null;
     const r = data as { status: string; caption?: string; creatorHandle?: string | null; reelUrl?: string };
     if (r.status !== "caption" || !r.caption || !r.reelUrl) return null;

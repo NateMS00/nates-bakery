@@ -64,7 +64,7 @@ test("wrong or malformed keys get nothing", async () => {
   await t.as("anon");
   for (const bad of ["", "nbk_short", `nbk_${"A".repeat(43)}`, key.slice(0, -1) + (key.endsWith("A") ? "B" : "A"), null]) {
     expect(await begin(bad as string, REEL)).toEqual({ status: "bad-key" });
-    expect(await call("import_retry", [bad, "00000000-0000-0000-0000-000000000001"])).toEqual({ status: "bad-key" });
+    expect(await call("import_get_caption", [bad, "00000000-0000-0000-0000-000000000001"])).toEqual({ status: "bad-key" });
   }
   expect(await t.fails("select public.import_key_owner($1)", [key])).toMatch(/permission denied/);
   await t.as("postgres");
@@ -112,15 +112,15 @@ test("couldn't finish, then Retry reuses the caption", async () => {
   const { draftId } = await begin(key, "https://www.instagram.com/reel/Retry0001/");
   await call("import_set_caption", [key, draftId, CAPTION, null, "javascript:alert(1)"]);
   expect(await call("import_unfinished", [key, draftId])).toBe(true);
-  expect(await call("import_retry", [key, draftId])).toEqual({ status: "caption", draftId, caption: CAPTION, creatorHandle: null, reelUrl: "https://www.instagram.com/reel/Retry0001/" });
+  expect(await call("import_get_caption", [key, draftId])).toEqual({ status: "caption", draftId, caption: CAPTION, creatorHandle: null, reelUrl: "https://www.instagram.com/reel/Retry0001/" });
   await t.as("postgres");
   const [row] = await t.q("select status, thumbnail_url from public.drafts where id = $1", [draftId]);
   expect(row).toEqual({ status: "reading", thumbnail_url: null }); // only https image links are kept
 
   await t.as("anon");
-  expect(await call("import_retry", [key, "00000000-0000-0000-0000-000000000001"])).toEqual({ status: "gone" });
+  expect(await call("import_get_caption", [key, "00000000-0000-0000-0000-000000000001"])).toEqual({ status: "gone" });
   expect(await call("import_drop", [key, draftId])).toBe(true);
-  expect(await call("import_retry", [key, draftId])).toEqual({ status: "gone" });
+  expect(await call("import_get_caption", [key, draftId])).toEqual({ status: "gone" });
 });
 
 test("the automatic retry-once: the first bad reply retries, the second gives up", async () => {
@@ -221,7 +221,7 @@ test("drafts and the import tables are private", async () => {
   await t.as("anon");
   expect(await call("import_set_caption", [otherKey, draftId, "x", null, null])).toBe(false);
   expect(await call("import_drop", [otherKey, draftId])).toBe(false);
-  expect(await call("import_retry", [otherKey, draftId])).toEqual({ status: "gone" });
+  expect(await call("import_get_caption", [otherKey, draftId])).toEqual({ status: "gone" });
 });
 
 test("the thumbnail path is saved and kept while the reel stays the same", async () => {
@@ -274,8 +274,11 @@ test("the thumbnail bucket is private, one folder per owner", async () => {
 });
 
 test("supabase/checks/0002_verify.sql: every row ok", async () => {
-  await t.as("postgres");
-  const rows = await t.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
+  // A snapshot of the schema right after 0002, before 0003 renamed import_retry —
+  // its own isolated database, since the shared one above is fully current.
+  const t2 = await open({ upTo: "0002" });
+  await t2.as("postgres");
+  const rows = await t2.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
     readFileSync(join(process.cwd(), "supabase", "checks", "0002_verify.sql"), "utf8"),
   );
   expect(rows).toHaveLength(21);
@@ -287,6 +290,6 @@ test("supabase/checks/0003_verify.sql: every row ok", async () => {
   const rows = await t.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
     readFileSync(join(process.cwd(), "supabase", "checks", "0003_verify.sql"), "utf8"),
   );
-  expect(rows).toHaveLength(6);
+  expect(rows).toHaveLength(9);
   expect(rows.filter((r) => !r.ok)).toEqual([]);
 });

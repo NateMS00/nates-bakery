@@ -35,10 +35,13 @@ $$;
 revoke all on function public.import_mark_retry(text, uuid) from public;
 grant execute on function public.import_mark_retry(text, uuid) to anon, authenticated;
 
--- import_retry (0002) also backs the finish-import route's caption lookup (it needs
--- the reel's URL too, to build the recipe's source once the reply parses), so this
--- adds reelUrl to its answer. Same signature, same behavior otherwise.
-create or replace function public.import_retry(p_key text, p_draft uuid)
+-- import_retry (0002) turned out to serve a different purpose than its name: it backs
+-- the finish-import route's caption lookup, called on every import (not just a
+-- retry), to get what's needed to build the recipe once a reply parses. Renamed to
+-- import_get_caption for that; same checks (key, owner) and shape, plus reelUrl.
+drop function public.import_retry(text, uuid);
+
+create function public.import_get_caption(p_key text, p_draft uuid)
 returns jsonb
 language plpgsql
 volatile
@@ -63,3 +66,6 @@ begin
   return jsonb_build_object('status', 'caption', 'draftId', v_draft.id, 'caption', v_draft.caption, 'creatorHandle', v_draft.creator_handle, 'reelUrl', v_draft.reel_url);
 end;
 $$;
+
+revoke all on function public.import_get_caption(text, uuid) from public;
+grant execute on function public.import_get_caption(text, uuid) to anon, authenticated;

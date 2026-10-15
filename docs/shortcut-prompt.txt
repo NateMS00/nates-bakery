@@ -40,12 +40,12 @@ Rules:
   full sentence or sentences for each instruction — when the caption gives a short
   numbered heading followed by a longer sentence for that same instruction ("3.
   Incorporate the mascarpone.\nAdd the mascarpone and work it in..."), the step's
-  text is all of it, not just the heading. "uses" lists the ingredient names,
+  instruction is all of it, not just the heading. "uses" lists the ingredient names,
   exactly as you wrote them above, that the step uses.
 - A creator's tip or aside that isn't one of the numbered instructions and isn't
   about a single ingredient (serving advice, storage, encouragement) goes into one
-  extra step group at the very end named exactly "Tips", one tip per step, its text
-  translated in full with any label the creator used to introduce it dropped
+  extra step group at the very end named exactly "Tips", one tip per step, its
+  instruction translated in full with any label the creator used to introduce it dropped
   ("CONSEJO:", "TIP:", "NOTA:" never survive translation); never mixed into the
   numbered steps.
 - "title": the dish's name only, translated to English — what's being made
@@ -68,6 +68,6 @@ Rules:
   all unless its value is false).
 
 Format:
-{"language":"Portuguese","title":"Corn bread","category":"bread","yield":{"quantity":8,"unit":"slice","unitPlural":"slices"},"totalTime":null,"ingredientGroups":[{"name":"Massa","items":[{"name":"butter","amount":"1 xícara (200 g)","parts":[{"qty":"200","unit":"g"}],"note":null},{"name":"eggs","amount":"2 ovos","parts":[{"qty":"2","unit":"piece"}],"note":null},{"name":"flaky salt","amount":null,"parts":[],"note":null}]}],"stepGroups":[{"name":null,"steps":[{"text":"Beat the butter and sugar for 3 minutes.","uses":["butter"]}]},{"name":"Tips","steps":[{"text":"It keeps well at room temperature for three days.","uses":[]}]}]}
+{"language":"Portuguese","title":"Corn bread","category":"bread","yield":{"quantity":8,"unit":"slice","unitPlural":"slices"},"totalTime":null,"ingredientGroups":[{"name":"Massa","items":[{"name":"butter","amount":"1 xícara (200 g)","parts":[{"qty":"200","unit":"g"}],"note":null},{"name":"eggs","amount":"2 ovos","parts":[{"qty":"2","unit":"piece"}],"note":null},{"name":"flaky salt","amount":null,"parts":[],"note":null}]}],"stepGroups":[{"name":null,"steps":[{"instruction":"Beat the butter and sugar for 3 minutes.","uses":["butter"]}]},{"name":"Tips","steps":[{"instruction":"It keeps well at room temperature for three days.","uses":[]}]}]}
 
 Caption:

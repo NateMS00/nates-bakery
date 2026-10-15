@@ -53,13 +53,32 @@ test("inCaption: loose match on case, accents, and spacing", () => {
   expect(inCaption("12 yemas", caption)).toBe(false);
 });
 
-test("extractRecipe: reports broken JSON as malformed, not a crash", () => {
-  // milo-brownies and tres-leches: a step's "text" key came back broken
-  // ({ + tab + ext") — real round-1 failures, kept as-is.
+test("extractRecipe: round 1's dropped-character corruption ({ + tab + ext\") is repaired, not reported malformed", () => {
+  // milo-brownies and tres-leches: a step's "text" key came back as
+  // { + tab + ext" instead of {"text" — on Nathan's real Shortcut this happened on
+  // every reply, so it's now repaired rather than only reported.
   for (const name of ["milo-brownies", "tres-leches"]) {
     const { caption, reply } = load(name);
-    expect(extractRecipe(reply, caption), name).toEqual({ status: "malformed", reason: expect.any(String) });
+    const result = extractRecipe(reply, caption);
+    expect(result.status, name).toBe("ok");
+    if (result.status !== "ok") continue;
+    expect(result.recipe.stepGroups.some((g) => g.items.length > 0), name).toBe(true);
   }
+});
+
+test("extractRecipe: reports genuinely broken JSON as malformed, with the reason and ~80 characters around the break", () => {
+  // Valid padding first, so the break (an unquoted property name) lands well past
+  // character 80 — proving the logged context is centered on the break, not a flat
+  // prefix that would miss it entirely.
+  const padding = `"${"x".repeat(90)}", `;
+  const reply = `{"ingredientGroups": [], "stepGroups": [${padding}{bad:1}]}`;
+  const result = extractRecipe(reply, "caption");
+  expect(result.status).toBe("malformed");
+  if (result.status !== "malformed") return;
+  expect(result.reason).toMatch(/position \d+/i);
+  expect(result.context).toBeDefined();
+  expect(result.context).toContain("{bad");
+  expect(result.context!.length).toBeLessThanOrEqual(80);
 });
 
 // Round 3 (2026-10-15): a real reply from Nathan's Shortcut in production, against

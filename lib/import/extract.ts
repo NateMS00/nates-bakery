@@ -11,10 +11,17 @@ import type { AmountPart } from "./grams";
 //   (`dropEmpty`);
 // - an extra top-level key or a stray "recipe": true showed up (ignored: only the
 //   fields below are ever read);
-// - two captions' JSON was simply broken (a dropped character). `extractRecipe`
-//   never throws on bad input; a reply that doesn't parse, or where any group, item,
-//   or step doesn't have the shape the prompt asked for, is reported as "malformed"
-//   (with a `reason` for Vercel's logs) rather than guessed at or partially used;
+// - two captions' JSON was simply broken: a step's "text" key arrived missing its
+//   opening `"t`, replaced by a single tab character. On Nathan's real Shortcut
+//   (2026-10-15) this happened on every reply, not just occasionally, so the step
+//   key is now called "instruction" in docs/shortcut-prompt.txt (the pattern can't
+//   recur if the key doesn't start '"t') — `readStep` still accepts the old "text"
+//   for the round-1/round-2 fixtures, and the exact old byte pattern is repaired as
+//   a narrow safety net (`repairBrokenTextKey`) rather than relied on;
+// - `extractRecipe` never throws on bad input; a reply that still doesn't parse, or
+//   where any group, item, or step doesn't have the shape the prompt asked for, is
+//   reported as "malformed" (with a `reason`, and for a parse failure a `context` —
+//   both for Vercel's logs) rather than guessed at or partially used;
 // - a reply wrapped in a markdown code fence (```json ... ```) is tolerated and
 //   unwrapped before parsing, a known quirk of asking a chat model for JSON.
 
@@ -63,10 +70,12 @@ export type ExtractResult =
   /** The model replied {"recipe": false}: no recipe in this caption. */
   | { status: "no-recipe" }
   /** The reply wasn't valid JSON, or didn't have the shape the prompt asked for.
-   * `reason` is for Vercel's function logs (handleFinishImport), not shown to the
-   * owner — a real production "retry" is otherwise undiagnosable after the fact,
-   * since the Shortcut's exact reply is never stored anywhere once it's rejected. */
-  | { status: "malformed"; reason: string };
+   * `reason` and `context` (for a parse failure: ~80 characters of the text actually
+   * handed to JSON.parse, centered on where it broke) are for Vercel's function logs
+   * (handleFinishImport), not shown to the owner — a real production "retry" is
+   * otherwise undiagnosable after the fact, since the Shortcut's exact reply is
+   * never stored anywhere once it's rejected. */
+  | { status: "malformed"; reason: string; context?: string };
 
 const WEIGHT_UNITS = new Set(["g", "kg", "oz", "lb"]);
 const METRIC_WEIGHT_UNITS = new Set(["g", "kg"]);
@@ -149,7 +158,9 @@ function readIngredient(raw: unknown, caption: string): ExtractedIngredient | nu
 
 function readStep(raw: unknown): ExtractedStep | null {
   if (!isRecord(raw)) return null;
-  const text = raw.text;
+  // "instruction" is the prompt's current key; "text" still read for round-1/round-2
+  // fixtures (and in case an older build of the Shortcut's prompt is still in use).
+  const text = raw.instruction ?? raw.text;
   const uses = raw.uses;
   if (typeof text !== "string" || !text.trim()) return null;
   if (!Array.isArray(uses) || !uses.every((u) => typeof u === "string")) return null;
@@ -199,12 +210,31 @@ function stripCodeFence(text: string): string {
   return match ? match[1].trim() : trimmed;
 }
 
+/**
+ * Round 1's exact corruption: a step's `"text"` key arrived as `{` + TAB + `ext"`
+ * — the leading `"t` dropped and replaced by one tab character. Repairs only that
+ * literal byte sequence, nothing broader that might paper over a different break.
+ */
+function repairBrokenTextKey(text: string): string {
+  return text.replaceAll('{\text"', '{"text"');
+}
+
+/** ~80 characters of `text` centered on a JSON.parse SyntaxError's reported position. */
+function contextAroundError(text: string, message: string): string | undefined {
+  const match = /position (\d+)/.exec(message);
+  if (!match) return undefined;
+  const pos = Number(match[1]);
+  return text.slice(Math.max(0, pos - 40), pos + 40);
+}
+
 export function extractRecipe(reply: string, caption: string): ExtractResult {
+  const candidate = repairBrokenTextKey(stripCodeFence(reply));
   let raw: unknown;
   try {
-    raw = JSON.parse(stripCodeFence(reply));
+    raw = JSON.parse(candidate);
   } catch (err) {
-    return { status: "malformed", reason: err instanceof Error ? err.message : "invalid JSON" };
+    const message = err instanceof Error ? err.message : "invalid JSON";
+    return { status: "malformed", reason: message, context: contextAroundError(candidate, message) };
   }
   if (!isRecord(raw)) return { status: "malformed", reason: "the reply's top level isn't a JSON object" };
   if (raw.recipe === false) return { status: "no-recipe" };

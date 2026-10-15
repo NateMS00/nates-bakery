@@ -95,10 +95,14 @@ export async function handleFinishImport(
   if (extracted.status === "malformed") {
     // The Shortcut's exact reply is never stored once it's rejected, so this is the
     // only trace of a production "malformed" left after the fact — log enough to
-    // diagnose it without needing the owner to paste the reply back manually.
+    // diagnose it without needing the owner to paste the reply back manually. A
+    // parse failure's `context` (~80 chars around where it broke) is far more useful
+    // than a flat prefix once the break is past character 500.
     console.error(
       `import finish: malformed reply for draft ${body.draftId}: ${extracted.reason}`,
-      `reply (first 500 chars): ${body.reply.slice(0, 500)}`,
+      extracted.context
+        ? `around the error: ${extracted.context}`
+        : `reply (first 500 chars): ${body.reply.slice(0, 500)}`,
     );
     if (await backend.importMarkRetry(body.importKey, body.draftId)) return { status: "retry" };
     await backend.importUnfinished(body.importKey, body.draftId);

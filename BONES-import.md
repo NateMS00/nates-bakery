@@ -4,7 +4,7 @@
 > **Primary Action**: Import → hands the link to the Nate’s Bakery Shortcut, which opens `/import/:draftId` when done
 > **Primary Device**: mobile, because most imports start from Instagram's share menu on the iPhone; the Shortcut does the import itself, so this page mostly handles pasted links, setup, and errors
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.1.1 · **Updated**: 2026-10-13
+> **Version**: 1.1.2 · **Updated**: 2026-10-15
 
 ---
 
@@ -60,7 +60,7 @@ MOBILE
 ### Set up the Shortcut (SKELETON section 2)
 - **Layout**: full width of the column on both devices; a numbered list of 4 steps; open by default until the first import succeeds, then collapsed to a plain disclosure: "Set up the Shortcut" in body text with a chevron, no tile-mark and not heading-sized, since it's a one-time task and shouldn't weigh like a section. Expanding it in place turns it back into the section with its heading. When the Shortcut sends you here because setup is missing or the key failed, the section opens expanded and takes focus
 - **Content**: 1. "Get the Shortcut" (opens the Shortcut's install link, external). 2. "Turn on Apple Intelligence" (Settings → Apple Intelligence & Siri), with one line on why: it reads the recipe on your device, free. 3. "Add your import key": Create import key shows the key once, with Copy; the Shortcut asks for it the first time it runs. When a key exists: "Import key created 13 Oct", Revoke and create a new one (follows the Destructive confirmations rule: "The Shortcut stops working until you paste the new key."). 4. "In Instagram, tap Share on a reel, then Nate’s Bakery." Each step at most 12 words, apart from the key controls
-- **Behavior**: the key is never shown again after it's copied or the page is left; only its creation date is
+- **Behavior**: after Create, the key stays visible with Copy (copying confirms "Key copied" but doesn't hide it) until you press Done or leave the page, so a failed paste in the Shortcut doesn't force a new key; after that it's never shown again, only its creation date is
 
 ```text
 DESKTOP (centered column)
@@ -137,6 +137,7 @@ All states render in the Reel Link status area, directly under Import, so the fi
 
 ## CHANGE LOG
 
+- 1.1.2 (2026-10-15): The new key stays visible until Done or leaving the page; copying no longer hides it (build review).
 - 1.1.1 (2026-10-13): "Import again" runs the Shortcut again instead of starting Processing.
 - 1.1.0 (2026-10-13): Import runs in the Nate’s Bakery Shortcut (caption via the app, recipe read by Apple Intelligence); Import hands pasted links to the Shortcut; setup gains Apple Intelligence and the import key; new states No recipe in this caption and Setup needed; audio stage removed (SKELETON 1.4.0).
 - 1.0.2 (2026-10-01): App renamed to Nate’s Bakery.

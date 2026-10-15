@@ -71,6 +71,10 @@ export function recipeFromRow(r: RecipeRow): Recipe {
     yield: { quantity: r.yield_quantity, unit: r.yield_unit, unitPlural: r.yield_unit_plural },
     totalTimeMinutes: r.total_time_minutes,
     source: r.source_reel_url ? { creatorHandle: r.source_creator_handle ?? "", reelUrl: r.source_reel_url } : undefined,
+    // source_thumbnail_path (supabase/migrations/0002_import.sql) is a path in the
+    // private recipe-thumbnails bucket; showing it needs a signed URL, deferred until
+    // the Supabase backend is wired up for import (Import is off in production for now).
+    picture: null,
     ingredientGroups: byPosition(r.ingredient_groups).map(({ id, name }) => ({ id, name })),
     stepGroups: byPosition(r.step_groups).map(({ id, name }) => ({ id, name })),
     ingredients: byPosition(r.ingredients).map((i) => ({

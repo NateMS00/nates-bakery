@@ -86,6 +86,10 @@ export interface Recipe {
   totalTimeMinutes: number;
   /** Absent for recipes entered by hand. */
   source?: { creatorHandle: string; reelUrl: string };
+  /** The reel thumbnail, copied into the app's own storage (SKELETON 1.4.2). Null for a
+   * hand-entered recipe or a failed copy; the Library and Recipe page show the picture
+   * placeholder either way. Not on shared pages. */
+  picture: string | null;
   ingredientGroups: Group[];
   stepGroups: Group[];
   ingredients: Ingredient[];

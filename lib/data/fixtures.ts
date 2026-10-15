@@ -40,6 +40,7 @@ const pasteisDeNata: Recipe = {
   yield: { quantity: 12, unit: "tart", unitPlural: "tarts" },
   totalTimeMinutes: 210,
   source: { creatorHandle: "forno.da.rita", reelUrl: "https://www.instagram.com/reel/C9nataRita01/" },
+  picture: "/recipe-pictures/custard-tart.svg",
   ingredientGroups: [
     { id: "ig-pastry", name: "Pastry" },
     { id: "ig-custard", name: "Custard" },
@@ -95,6 +96,8 @@ const croissants: Recipe = {
   yield: { quantity: 12, unit: "croissant", unitPlural: "croissants" },
   totalTimeMinutes: 1260,
   source: { creatorHandle: "laminated.lou", reelUrl: "https://www.instagram.com/reel/C8croissLou22/" },
+  // Deliberately broken: a picture row exists but the copied file is gone (edge case for the placeholder fallback).
+  picture: "/recipe-pictures/missing.jpg",
   ingredientGroups: [
     { id: "cg-dough", name: "Dough" },
     { id: "cg-butter", name: "Butter block" },
@@ -164,6 +167,9 @@ const chocolateChipCookies: Recipe = {
   category: "cookie-bar",
   yield: { quantity: 36, unit: "cookie", unitPlural: "cookies" },
   totalTimeMinutes: 90,
+  // Entered by hand, no reel: no picture, and no placeholder on the Recipe page
+  // (BONES-recipes-detail), just the placeholder slot in the Library.
+  picture: null,
   ingredientGroups: [],
   stepGroups: [],
   ingredients: [
@@ -202,6 +208,8 @@ const lemonDrizzle: Recipe = {
   yield: { quantity: 1, unit: "loaf", unitPlural: "loaves" },
   totalTimeMinutes: 75,
   source: { creatorHandle: "bakewithjuno", reelUrl: "https://www.instagram.com/reel/C7lemonJuno9/" },
+  // A pale cover, close to the light canvas: checks the recipe-picture hairline edge.
+  picture: "/recipe-pictures/pale-meringue.svg",
   ingredientGroups: [],
   stepGroups: [],
   ingredients: [

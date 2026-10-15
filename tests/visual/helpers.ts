@@ -22,6 +22,21 @@ export async function ready(page: Page, path: string) {
   // Loading states have an H1 too; wait until the page has replaced them.
   await expect(page.getByRole("status").filter({ hasText: /^Loading / })).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
+  // A recipe-picture's own loaded/error state races the screenshot otherwise. Capped
+  // so one stuck image (never possible to spot from here) can't hang a whole test.
+  await page.evaluate(() => {
+    const allImages = Promise.all(
+      Array.from(document.images).map((img) => {
+        if (img.complete) return;
+        return new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        });
+      }),
+    );
+    const cap = new Promise((resolve) => setTimeout(resolve, 3000));
+    return Promise.race([allImages, cap]);
+  });
 }
 
 /** One h1, the landmarks, and no horizontal scroll. */

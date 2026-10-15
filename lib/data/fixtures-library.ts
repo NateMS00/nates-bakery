@@ -18,6 +18,7 @@ type Simple = {
   makes: [number, string, string];
   minutes: number;
   creator?: string;
+  picture?: string;
 };
 
 const BASICS: Record<Category, [string, number][]> = {
@@ -52,6 +53,7 @@ function simple(s: Simple): Recipe {
     yield: { quantity: s.makes[0], unit: s.makes[1], unitPlural: s.makes[2] },
     totalTimeMinutes: s.minutes,
     source: s.creator ? { creatorHandle: s.creator, reelUrl: `https://www.instagram.com/reel/${s.id}/` } : undefined,
+    picture: s.picture ?? null,
     ingredientGroups: [],
     stepGroups: [],
     ingredients,
@@ -85,11 +87,11 @@ export const LIBRARY_RECIPES: Recipe[] = [
   simple({ id: "blueberry-muffins", title: "Blueberry muffins with a crumble top", category: "quick-bread", created: "2026-08-19", makes: [12, "muffin", "muffins"], minutes: 45, creator: "morningbakes" }),
   simple({ id: "cornbread", title: "Skillet cornbread", category: "quick-bread", rating: 2, baked: ["2026-01-25"], created: "2026-01-20", makes: [1, "skillet", "skillets"], minutes: 35 }),
   simple({ id: "victoria-sponge", title: "Victoria sponge", category: "cake", rating: 4, baked: ["2026-08-24"], created: "2026-03-30", makes: [1, "cake", "cakes"], minutes: 70, creator: "bakewithjuno" }),
-  simple({ id: "basque-cheesecake", title: "Burnt Basque cheesecake", category: "cake", rating: 5, favorite: true, baked: ["2026-09-12", "2026-07-04"], created: "2026-05-02", makes: [1, "cake", "cakes"], minutes: 90, creator: "donostia.dulce" }),
+  simple({ id: "basque-cheesecake", title: "Burnt Basque cheesecake", category: "cake", rating: 5, favorite: true, baked: ["2026-09-12", "2026-07-04"], created: "2026-05-02", makes: [1, "cake", "cakes"], minutes: 90, creator: "donostia.dulce", picture: "/recipe-pictures/berry.svg" }),
   simple({ id: "carrot-cake", title: "Carrot cake with brown butter cream cheese frosting and toasted walnuts", category: "cake", rating: 4, baked: ["2026-04-12"], created: "2026-04-01", makes: [1, "cake", "cakes"], minutes: 150, creator: "layered.lena" }),
   simple({ id: "olive-oil-cake", title: "Olive oil and orange cake", category: "cake", created: "2026-09-25", makes: [1, "cake", "cakes"], minutes: 75, creator: "citrus.cucina" }),
   simple({ id: "chocolate-cupcakes", title: "Chocolate cupcakes", category: "cake", rating: 3, baked: ["2025-12-20"], created: "2025-12-15", makes: [12, "cupcake", "cupcakes"], minutes: 50 }),
-  simple({ id: "fudgy-brownies", title: "Fudgy brownies", category: "cookie-bar", rating: 5, favorite: true, baked: ["2026-09-28", "2026-09-01"], created: "2025-11-11", makes: [16, "brownie", "brownies"], minutes: 55, creator: "cocoa.carla" }),
+  simple({ id: "fudgy-brownies", title: "Fudgy brownies", category: "cookie-bar", rating: 5, favorite: true, baked: ["2026-09-28", "2026-09-01"], created: "2025-11-11", makes: [16, "brownie", "brownies"], minutes: 55, creator: "cocoa.carla", picture: "/recipe-pictures/chocolate.svg" }),
   simple({ id: "shortbread", title: "Scottish shortbread", category: "cookie-bar", rating: 4, baked: ["2025-12-23"], created: "2025-12-01", makes: [16, "finger", "fingers"], minutes: 60 }),
   simple({ id: "oatmeal-cookies", title: "Oatmeal raisin cookies", category: "cookie-bar", rating: 1, baked: ["2026-02-14"], created: "2026-02-10", makes: [24, "cookie", "cookies"], minutes: 40, creator: "cookiejar.co" }),
   simple({ id: "lemon-bars", title: "Lemon bars", category: "cookie-bar", created: "2026-09-26", makes: [16, "bar", "bars"], minutes: 70, creator: "sunny.bakes" }),

@@ -10,9 +10,11 @@ import { FavoriteToggle } from "@/components/ui/FavoriteToggle";
 import { IconButton, iconButtonClass } from "@/components/ui/IconButton";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import { Notice } from "@/components/ui/Notice";
+import { RecipePicture } from "@/components/ui/RecipePicture";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StarRating } from "@/components/ui/StarRating";
 import { ExternalLink, TextLink, tallHitArea } from "@/components/ui/TextLink";
+import { cx } from "@/components/ui/cx";
 import { categoryLabel } from "@/lib/data/categories";
 import { useOwnerRecipe } from "@/lib/data/useOwnerRecipe";
 import type { BakeLogEntry, Recipe } from "@/lib/data/types";
@@ -77,11 +79,24 @@ export function RecipeView({ initial }: { initial: Recipe }) {
   const latest = recipe.bakeLog[0];
   const bakeHref = `/recipes/${recipe.id}/bake?scale=${scale}`;
   const logHref = `/recipes/${recipe.id}/log`;
+  // BONES-recipes-detail 1.5.0: no picture, no placeholder here (unlike the Library) —
+  // the title block just takes the full width instead of reserving the picture column.
+  const hasPicture = Boolean(recipe.picture);
 
   return (
     <>
       {/* Header (SKELETON section 1) */}
-      <div className="grid grid-cols-[1fr_auto] gap-x-lg [grid-template-areas:'back_actions''title_title'] tablet:[grid-template-areas:'back_.''category_.''h1_actions''meta_.']">
+      <div
+        className={cx(
+          // minmax(0,…) instead of a bare 1fr: without it, splitting category/h1/meta
+          // into their own grid items (instead of one spanning block) let each one's
+          // unshrinkable min-content width force the row wider than the viewport.
+          "grid grid-cols-[minmax(0,1fr)_auto] gap-x-lg",
+          hasPicture
+            ? "[grid-template-areas:'back_actions''category_pic''h1_pic''meta_pic'] tablet:grid-cols-[auto_minmax(0,1fr)_auto] tablet:[grid-template-areas:'back_back_back''pic_category_.''pic_h1_actions''pic_meta_.']"
+            : "[grid-template-areas:'back_actions''category_.''h1_.''meta_.'] tablet:[grid-template-areas:'back_.''category_.''h1_actions''meta_.']",
+        )}
+      >
         <BackLink href="/recipes" className="self-center justify-self-start [grid-area:back]">
           Library
         </BackLink>
@@ -119,39 +134,39 @@ export function RecipeView({ initial }: { initial: Recipe }) {
           </div>
         </div>
 
-        {/* From tablet up the title block's parts join the header grid, so the actions align with the title. */}
-        <div className="[grid-area:title] tablet:contents">
-          <p className="mt-sm type-label text-primary tablet:[grid-area:category]">{categoryLabel(recipe.category)}</p>
-          <h1 className="mt-xs type-display-md text-ink tablet:[grid-area:h1] desktop:type-display-lg">{recipe.title}</h1>
-          <div className="tablet:[grid-area:meta]">
-            <StarRating
-              value={recipe.rating}
-              showUnrated
-              className="mt-xs"
-              onChange={(v) => {
-                nextAction();
-                actions.setRating(v);
-              }}
-            />
-            {recipe.source && (
-              <p className="type-body-sm text-muted">
-                @{recipe.source.creatorHandle} <span aria-hidden="true">·</span>{" "}
-                <ExternalLink href={recipe.source.reelUrl} className={tallHitArea}>
-                  Watch reel
-                </ExternalLink>
-              </p>
-            )}
-            <p className="mt-xs type-body-sm text-body">
-              {formatYield(recipe.yield, scale)}
-              {recipe.totalTimeMinutes > 0 && (
-                <>
-                  <span aria-hidden="true"> · </span>
-                  <span className="sr-only">, total time </span>
-                  {formatDuration(recipe.totalTimeMinutes)}
-                </>
-              )}
+        {hasPicture && (
+          <RecipePicture src={recipe.picture} className="mt-sm w-[96px] h-[128px] self-start [grid-area:pic] tablet:w-[144px] tablet:h-[192px]" />
+        )}
+        <p className="mt-sm type-label text-primary [grid-area:category]">{categoryLabel(recipe.category)}</p>
+        <h1 className="mt-xs type-display-md text-ink [grid-area:h1] desktop:type-display-lg">{recipe.title}</h1>
+        <div className="[grid-area:meta]">
+          <StarRating
+            value={recipe.rating}
+            showUnrated
+            className="mt-xs"
+            onChange={(v) => {
+              nextAction();
+              actions.setRating(v);
+            }}
+          />
+          {recipe.source && (
+            <p className="type-body-sm text-muted">
+              @{recipe.source.creatorHandle} <span aria-hidden="true">·</span>{" "}
+              <ExternalLink href={recipe.source.reelUrl} className={tallHitArea}>
+                Watch reel
+              </ExternalLink>
             </p>
-          </div>
+          )}
+          <p className="mt-xs type-body-sm text-body">
+            {formatYield(recipe.yield, scale)}
+            {recipe.totalTimeMinutes > 0 && (
+              <>
+                <span aria-hidden="true"> · </span>
+                <span className="sr-only">, total time </span>
+                {formatDuration(recipe.totalTimeMinutes)}
+              </>
+            )}
+          </p>
         </div>
       </div>
 

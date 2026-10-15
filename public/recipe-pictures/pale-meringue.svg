@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="405" height="720" viewBox="0 0 405 720">
+  <!-- Deliberately pale, close to SKIN's light canvas (#F6F2E8), to test the
+       recipe-picture hairline edge against the canvas in light mode. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF8EF"/>
+      <stop offset="100%" stop-color="#F3EEE0"/>
+    </linearGradient>
+  </defs>
+  <rect width="405" height="720" fill="url(#bg)"/>
+  <g fill="#EDE6D3" opacity="0.8">
+    <ellipse cx="130" cy="260" rx="70" ry="46"/>
+    <ellipse cx="260" cy="300" rx="80" ry="50"/>
+    <ellipse cx="190" cy="400" rx="90" ry="55"/>
+  </g>
+</svg>

@@ -193,8 +193,13 @@ function creatorFromUrl(url: string): string | undefined {
   return url.match(/instagram\.com\/([A-Za-z0-9._]+)\/(?:reel|p)\//)?.[1];
 }
 
-/** The saved recipe's content; callers add identity and history (id, rating, log…). */
-export function toRecipeContent(state: EditorState): Omit<Recipe, "id" | "rating" | "favorite" | "bakeLog" | "shareLink" | "createdAt"> {
+/**
+ * The saved recipe's content; callers add identity and history (id, rating, log…).
+ * Excludes "picture" too: the editor doesn't manage it (BONES-recipes-detail: removing
+ * or replacing it from Edit isn't drawn yet), so a caller spreading this over an
+ * existing recipe keeps that recipe's picture rather than clearing it.
+ */
+export function toRecipeContent(state: EditorState): Omit<Recipe, "id" | "rating" | "favorite" | "bakeLog" | "shareLink" | "createdAt" | "picture"> {
   const keep = state.ingredients.filter((i) => i.name.trim() || i.amount.trim() || i.toTaste);
   const keptIds = new Set(keep.map((i) => i.id));
   const quantity = Math.max(1, Math.round(Number(state.yieldQuantity) || 1));

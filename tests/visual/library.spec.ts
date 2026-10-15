@@ -228,3 +228,20 @@ test("recipe links are named title first", async ({ page }) => {
   await expect(items(page).first().getByRole("link")).toHaveAccessibleName("Fudgy brownies, Cookie & bar, rated 5 out of 5, favorite, Baked Mon 28 Sep");
   await expect(page.getByRole("link", { name: "Lemon bars, Cookie & bar, not rated, Not baked yet" })).toBeVisible();
 });
+
+test("recipe picture: a loaded one, a hand-entered recipe with no picture, and a failed load side by side", async ({ page }) => {
+  await ready(page, "/recipes?q=brown+butter+chocolate"); // brown butter chocolate chip cookies: no picture
+  const noPicture = items(page).first().getByTestId("recipe-picture").filter({ visible: true });
+  await expect(noPicture).toHaveAttribute("data-status", "error");
+  await expect(noPicture.locator("img")).toHaveCount(0);
+  await shot(page, "11-no-picture");
+
+  await ready(page, "/recipes?q=cultured+butter+block"); // the croissants: a picture row with a missing file
+  const broken = items(page).first().getByTestId("recipe-picture").filter({ visible: true });
+  await expect(broken).toHaveAttribute("data-status", "error");
+  await shot(page, "11b-picture-failed");
+
+  await ready(page, "/recipes?q=lemon+drizzle");
+  await expect(items(page).first().getByTestId("recipe-picture").filter({ visible: true })).toHaveAttribute("data-status", "loaded");
+  await shot(page, "12-picture-pale-cover");
+});

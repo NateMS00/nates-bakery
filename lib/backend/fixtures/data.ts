@@ -31,6 +31,8 @@ function newRecipe(content: EditorState, creatorHandle?: string): Recipe {
   return {
     ...toRecipeContent({ ...content, creatorHandle: content.creatorHandle ?? creatorHandle }),
     id: slug(content.title),
+    // No real thumbnail-copy pipeline yet (SKELETON 1.4.2 is stubbed until live import).
+    picture: null,
     rating: null,
     favorite: false,
     bakeLog: [],

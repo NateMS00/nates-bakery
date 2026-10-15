@@ -198,6 +198,30 @@ test("long recipe with several groups", async ({ page }) => {
   await shot(page, "16-long-recipe-full", true);
 });
 
+test("recipe picture: no picture, a broken one, and a pale cover", async ({ page }) => {
+  // No picture (hand-entered, no source): no placeholder either — the title block
+  // takes the full width instead (BONES-recipes-detail 1.5.0).
+  await ready(page, "/recipes/brown-butter-cookies");
+  await expect(page.getByTestId("recipe-picture")).toHaveCount(0);
+  await shot(page, "17-no-picture");
+
+  // A picture row exists but the file 404s: falls back to the placeholder frame,
+  // the same one shown while loading.
+  await ready(page, "/recipes/cultured-butter-croissants");
+  const broken = page.getByTestId("recipe-picture");
+  await expect(broken).toHaveAttribute("data-status", "error");
+  await expect(broken.locator("img")).toHaveCount(0);
+  await shot(page, "18-picture-failed-to-load");
+
+  // A very pale cover, close to the light canvas: the 1px hairline edge keeps it
+  // from melting into the page (SKIN recipe-picture).
+  await ready(page, "/recipes/lemon-drizzle-loaf");
+  const pale = page.getByTestId("recipe-picture");
+  await expect(pale).toHaveAttribute("data-status", "loaded");
+  await expect(pale).toHaveCSS("border-style", "solid");
+  await shot(page, "19-pale-cover");
+});
+
 test("Tips: last, unnumbered, a plain list, not part of the step count", async ({ page }) => {
   await ready(page, "/recipes/cultured-butter-croissants");
   const tips = page.locator("h3", { hasText: "Tips" }).locator("xpath=following-sibling::ul[1]");

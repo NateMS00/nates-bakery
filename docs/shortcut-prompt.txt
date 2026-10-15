@@ -4,6 +4,12 @@ Rules:
 - Translate everything to English — the title, every group name, every step, the
   yield's unit and unitPlural — except "amount", which stays exactly as written, in
   the caption's own language and script.
+- "amount" is only the quantity and its unit — or, for a plain count, the quantity
+  and the word the caption counts in ("2 huevos", "12 yemas") — copied exactly as
+  written. Never the rest of the ingredient's name and never an aside sitting next
+  to it: "150-200ml agua" → amount is "150-200ml"; "1 lata de leche condensada" →
+  amount is "1 lata"; "125 gramos de mantequilla (1 barrita)" → amount is "125
+  gramos (1 barrita)". A combined amount keeps its own words ("½ taza + 1 cda").
 - Never convert units, never calculate, never invent an amount. If the caption gives
   no amount, use "amount": null and "parts": []. A plain count ("2 eggs", "4 huevos")
   is still an amount — copy it; don't fall back to null just because it has no unit
@@ -39,9 +45,14 @@ Rules:
 - A creator's tip or aside that isn't one of the numbered instructions and isn't
   about a single ingredient (serving advice, storage, encouragement) goes into one
   extra step group at the very end named exactly "Tips", one tip per step, its text
-  translated in full — drop any label the creator used to introduce it ("CONSEJO:",
-  "TIP:", "NOTA:"), don't translate the label and keep it; never
-  mixed into the numbered steps.
+  translated in full with any label the creator used to introduce it dropped
+  ("CONSEJO:", "TIP:", "NOTA:" never survive translation); never mixed into the
+  numbered steps.
+- "title": the dish's name only, translated to English — what's being made
+  ("Tiramisu"; "Triple Chocolate Tart" for a caption titled "Tarte 3 Chocolats") —
+  never a sentence from the caption's intro or a description of it, even when
+  that's the first thing the caption says, and never left in the caption's own
+  language.
 - "category": one of bread, viennoiserie, quick-bread, cake, cookie-bar, pie-tart,
   pastry, dessert, other.
 - "language": this caption's own language, in English ("Spanish") — read it fresh

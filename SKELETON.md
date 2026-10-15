@@ -3,7 +3,7 @@
 > **Product Goal**: Turn a baking reel into a gram-precise recipe that Nathan can bake from and refine with every bake.
 > **Product Type**: Personal web app (React, mobile-first), single owner with read-only recipe sharing
 > **Primary Persona**: Nathan, a home baker on iPhone who finds recipes in Instagram reels, weighs everything on a scale, and wants to remember what he changed last time
-> **Version**: 1.4.4 · **Updated**: 2026-10-14
+> **Version**: 1.4.5 · **Updated**: 2026-10-14
 
 ---
 
@@ -152,6 +152,7 @@ Default access: public.
 - Reel is private, deleted, or the caption service is unavailable at step 2 → error on `/import` with "Enter it manually" → `/recipes/new?source=<reel link>`; the draft is removed.
 - Caption has no recipe (the reel points to a website, or the recipe is only spoken) at step 3 → "No recipe in this caption" on `/import`, with Watch the reel and "Enter it manually"; the draft is removed.
 - Apple Intelligence unavailable on the device at step 3 → the draft keeps the caption and opens in Review Import with an empty editor, so the recipe can be typed in while reading it.
+- The structured data from step 3 doesn't parse at step 4 → the system tells the Shortcut to run Apple Intelligence again on the same caption, once, automatically, with no owner-visible failure; a second bad reply leaves the draft "Couldn't finish" with Retry and Discard, as above. The retry is counted per draft, so it can't loop forever.
 - Reel was already imported at step 2 → notice on `/import` linking the existing `/recipes/:recipeId`, with the option to import again.
 - Owner leaves during step 3 or 4 → the draft stays under Drafts on `/recipes`; if the Shortcut stopped before step 4, it shows "Couldn't finish" with Retry and Discard.
 - Owner leaves `/import/:draftId` without saving → the draft stays under Drafts on `/recipes`.
@@ -326,6 +327,7 @@ Default access: public.
 - **Decided** (2026-10-13): The import reads the **caption only**: no audio, no on-screen text. Most saved reels put the full recipe in the caption; reels that don't fall back to manual entry.
 - **Decided**: Captions come from Apify's official Instagram scraper, called by the server with a key kept in server settings, never on the device. It runs on Apify's free monthly credit, with no card on file: when the credit runs out, imports stop until the next month instead of being charged. It reads Instagram against Instagram's terms; accepted for one person's personal use. Instagram offers no official way to get a reel's caption (tested: oEmbed and the public embed page return none).
 - **Decided**: The recipe is read by Apple Intelligence through the Shortcut, at no cost, using Private Cloud Compute by default because the on-device model's context is too small for long captions. It extracts and translates; it never does arithmetic.
+- **Decided** (2026-10-14): Apple Intelligence occasionally returns a reply that doesn't parse (seen in testing: about 1 in 5–6, a single dropped character). The server never shows this to the owner: it tells the Shortcut to run Apple Intelligence again on the same caption, once; a second bad reply is the only time the draft reaches "Couldn't finish".
 - **Decided**: Every imported recipe is translated to English. The original caption stays with the draft for checking.
 - **Decided**: Grams are always computed by the app from its own table of densities (volume → grams, by ingredient) and typical weights (counts → grams, such as 1 egg ≈ 50 g, 1 can of condensed milk ≈ 395 g), never by the AI, so the same amount always converts the same way and a wrong value is fixed in one place. Tested: the AI's own conversions put packed brown sugar about 20% low.
 - **Assumed**: Importing works on devices with Apple Intelligence and the Shortcut (the iPhone; the Mac if its Shortcuts app supports the same action, to be confirmed). Elsewhere, recipes are entered by hand.
@@ -362,6 +364,7 @@ Default access: public.
 
 ## CHANGE LOG
 
+- 1.4.5 (2026-10-14): Decided: a structured-data reply that doesn't parse gets one automatic retry (same caption) before the draft reaches "Couldn't finish" (FLOW-01).
 - 1.4.4 (2026-10-14): Decided: creator tips land in one step group named "Tips", always last, shown unnumbered in Bake Mode.
 - 1.4.3 (2026-10-13): Open question: reading the creator's own first comment when a caption is cut off.
 - 1.4.2 (2026-10-13): The recipe picture shows in the Library and the Recipe header.

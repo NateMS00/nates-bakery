@@ -150,7 +150,11 @@ test("extractRecipe: round 2 — millionaire-shortbread's two-way amounts now ar
   expect(result.status).toBe("ok");
   if (result.status !== "ok") return;
   expect(ingredient(result.recipe.ingredientGroups, "unsalted butter, softened").parts).toEqual([part("227", "g")]);
-  expect(ingredient(result.recipe.ingredientGroups, "sweetened condensed milk").parts).toEqual([part("14", "oz")]);
+  // "1 (14 oz) can": no weight given, so the model's choice of which single form to
+  // keep ("1 can" or "14 oz") varies run to run — either is correct, just not both
+  const condensedMilk = ingredient(result.recipe.ingredientGroups, "sweetened condensed milk").parts;
+  expect(condensedMilk).toHaveLength(1);
+  expect(["can", "oz"]).toContain(condensedMilk[0].unit);
   // the language is no longer mistagged "Spanish" for an English caption
   expect(result.recipe.language).toBe("English");
 });

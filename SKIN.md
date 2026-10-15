@@ -172,7 +172,7 @@ typography:
     fontStyle: italic
     lineHeight: 1
     letterSpacing: -0.3px
-    fontVariationSettings: "'SOFT' 0, 'opsz' 144"
+    fontVariationSettings: "'SOFT' 100, 'opsz' 36"
 
 rounded:
   none: 0px
@@ -1040,7 +1040,7 @@ Every colour has a light value (`colors`) and a dark value (`colors-dark`) under
 
 ## Typography
 
-**Display face**: Fraunces, a soft old-style serif with an adjustable "softness" axis. Turned to `SOFT 50` for titles and `SOFT 80` for group headings, its rounded terminals feel hand-painted, like lettering on a tile panel, without becoming a novelty face. The wordmark is the exception: `SOFT 0` at the largest optical size (`opsz 144`), so it has sharp, high-contrast strokes with thin hairlines, like a sign painter's display lettering (Nathan's choice, 2026-10-15). The app icon's N uses the same settings.
+**Display face**: Fraunces, a soft old-style serif with an adjustable "softness" axis. Turned to `SOFT 50` for titles, `SOFT 80` for group headings, and `SOFT 100` at `opsz 36` for the wordmark, its rounded terminals feel hand-painted, like lettering on a tile panel, without becoming a novelty face. Tried `SOFT 0` at the largest optical size (`opsz 144`) for the wordmark — sharp, high-contrast strokes with thin hairlines, like a sign painter's display lettering — but at the wordmark's 24px size its hairlines broke up at device pixel ratio 1, in both themes; kept the soft cut (2026-10-15). The app icon's N stays on the sharp cut: large enough (180–1024px) that the same hairlines hold up fine there.
 
 **Reading face**: Atkinson Hyperlegible Next, designed by the Braille Institute so letters that are easy to confuse (I, l, 1; O, 0) stay distinct. It carries steps, notes, buttons, and labels.
 

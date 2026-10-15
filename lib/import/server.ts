@@ -1,5 +1,5 @@
 import type { DataBackend } from "@/lib/backend/types";
-import type { FailReason, FinishImportResponse, StartImportResponse } from "@/lib/data/import";
+import { normalizeReelUrl, type FailReason, type FinishImportResponse, type StartImportResponse } from "@/lib/data/import";
 import { extractRecipe } from "./extract";
 import { toEditorState } from "./toEditorState";
 
@@ -26,7 +26,15 @@ export async function handleStartImport(
   fetchCaption: CaptionFetcher,
   body: { url: string; importKey: string; again?: boolean },
 ): Promise<StartImportResponse> {
-  const begin = await backend.importBegin(body.importKey, body.url, body.again ?? false);
+  // Canonicalize before validating: the Shortcut's input can carry a trailing
+  // newline, stray whitespace, or (from a real Instagram share) tracking query
+  // params — none of which the Supabase backend's SQL regex tolerates on its own.
+  // Fixtures' own importBegin already does this; doing it once here, for whichever
+  // backend is active, closes that gap instead of duplicating it per backend.
+  const url = normalizeReelUrl(body.url);
+  if (!url) return { status: "invalid" };
+
+  const begin = await backend.importBegin(body.importKey, url, body.again ?? false);
   switch (begin.status) {
     case "bad-key":
       return { status: "key-invalid" };
@@ -42,7 +50,7 @@ export async function handleStartImport(
       return { status: "started", draftId: begin.draftId, caption: begin.caption };
     case "fetch":
       try {
-        const fetched = await fetchCaption(body.url);
+        const fetched = await fetchCaption(url);
         await backend.importSetCaption(body.importKey, begin.draftId, fetched.caption ?? "", fetched.creatorHandle, fetched.thumbnailUrl);
         return { status: "started", draftId: begin.draftId, caption: fetched.caption ?? "" };
       } catch (err) {

@@ -9,8 +9,14 @@ Nothing here is runnable code: build it by hand in the Shortcuts app.
 
 `/api/import/start` and `/api/import/finish` (`app/api/import/`) are live against
 whichever backend is active — real Apify and Supabase in production,
-`BACKERY_BACKEND=fixtures` for local testing. Nothing on the server needs to change
-before building this.
+`BACKERY_BACKEND=fixtures` for local testing. Confirmed working end to end against a
+real reel in production. Nothing on the server needs to change before building this.
+
+**The Shortcut never builds a URL itself.** Every response except `started` (from
+start-import) and `retry` (from finish-import) carries an `open` field: the full
+absolute URL to open, already built server-side with proper encoding. The Shortcut's
+job reduces to one check after each of the two network calls: if `status` isn't
+`started`/`retry`, open `open` and stop.
 
 ## 1. Name and Share Sheet setup
 
@@ -82,35 +88,15 @@ never leaves your device as part of the file:
      `true`, so a field left as Text still works. Rename the output **Start
      Response**.
    - **Get Dictionary Value**: `status`, from `Start Response`. Rename **Start Status**.
-   - **Every branch below except `started` ends the Shortcut right there** — add
-     **Stop This Shortcut** immediately after each `Open URLs`. Without it, the
-     Shortcut falls through into step 5 and runs Use Model with no caption.
-   - **If** `Start Status` is `started`: continue to step 5 (no `Open URLs`, nothing to
-     stop — this is the one branch that keeps going).
-   - **If** `Start Status` is `invalid`: **Open URLs**
-     `https://nates-bakery.vercel.app/import`, then **Stop This Shortcut**.
-   - **If** `Start Status` is `already`: **Get Dictionary Value** `recipeId` and
-     `title` from `Start Response`, **Open URLs**
-     `https://nates-bakery.vercel.app/import?error=already&recipeId=<recipeId>&title=<title>&url=<Reel URL>`
-     (use **URL Encode** on `title` and `Reel URL` before building this — titles and
-     links can contain spaces and symbols), then **Stop This Shortcut**.
-   - **If** `Start Status` is `ready`: **Get Dictionary Value** `draftId` from
-     `Start Response`, **Open URLs** `https://nates-bakery.vercel.app/import/<draftId>`,
-     then **Stop This Shortcut** — don't run Use Model again; the recipe's already
-     been read.
-   - **If** `Start Status` is `limit`: **Open URLs**
-     `https://nates-bakery.vercel.app/import?error=limit&url=<Reel URL>`, then
-     **Stop This Shortcut**.
-   - **If** `Start Status` is `failed`: **Get Dictionary Value** `reason` from
-     `Start Response`, **Open URLs**
-     `https://nates-bakery.vercel.app/import?error=<reason>&url=<Reel URL>`, then
-     **Stop This Shortcut**.
-   - **If** `Start Status` is `key-invalid`: **Open URLs**
-     `https://nates-bakery.vercel.app/import?error=bad-key`, then
-     **Stop This Shortcut**.
-   **Otherwise** *(no import key pasted in yet)*:
-   - **Open URLs**: `https://nates-bakery.vercel.app/import?error=no-key`, then
-     **Stop This Shortcut**.
+   - **If** `Start Status` **is** `started`: continue to step 5 — nothing to open yet.
+   **Otherwise**:
+   - **Get Dictionary Value**: `open`, from `Start Response`. Rename **Open URL**.
+   - **Open URLs**: `Open URL`.
+   - **Stop This Shortcut**.
+   **End If**
+   **Otherwise** *(no import key pasted in yet — never reaches the server)*:
+   - **Open URLs**: `https://nates-bakery.vercel.app/import?error=no-key`.
+   - **Stop This Shortcut**.
    **End If**
 5. **Text**: paste the full contents of `docs/shortcut-prompt.txt` here, then put the
    cursor at the end and insert the `caption` value from `Start Response` (**Get
@@ -133,8 +119,8 @@ never leaves your device as part of the file:
    Key`, `reply` = the plain text from step 7. Rename the output **Finish Response**.
 9. **Get Dictionary Value**: `status`, from `Finish Response`. Rename **Finish
    Status**.
-10. **If** `Finish Status` is `retry`: Shortcuts has no "go back to an earlier step",
-    so this one retry is written out in full, a second time, right here:
+10. **If** `Finish Status` **is** `retry`: Shortcuts has no "go back to an earlier
+    step", so this one retry is written out in full, a second time, right here:
     - **Use Model**: Input = the same Text action from step 5. Set to **Cloud**,
       same as step 6.
     - **Get Text from Input**, set to **Plain Text**, same as step 7.
@@ -143,23 +129,18 @@ never leaves your device as part of the file:
       `Content-Type: application/json`, Request Body **JSON**: `draftId` = the
       `draftId` from `Start Response`, `importKey` = `Import Key`, `reply` = the plain
       text from the step just above. Rename **Retry Finish Response**.
-    - **Get Dictionary Value**: `status`, from `Retry Finish Response`. Rename
-      **Retry Finish Status**.
-    - Route on `Retry Finish Status` exactly as step 11 below routes on `Finish
-      Status` (`ready` / `no-recipe` / `failed`) — written out again here, nested
-      inside this `If`. There's nothing to branch on for a second `retry`: the server
-      already counts retries per draft and answers `failed` the second time a reply
-      doesn't parse, so `Retry Finish Status` will never itself be `retry`.
+    - **Get Dictionary Value**: `open`, from `Retry Finish Response`. Rename **Open
+      URL**. *(The server already guarantees at most one retry per draft —
+      `Retry Finish Response`'s status will never itself be `retry`, so there's no
+      second check needed: it always carries `open`.)*
+    - **Open URLs**: `Open URL`.
+    - **Stop This Shortcut**.
     **End If**
-11. **If** `Finish Status` is `ready` **or** `no-recipe` **or** `failed`: **Get
-    Dictionary Value** `draftId` from `Start Response`, then:
-    - `ready` → **Open URLs** `https://nates-bakery.vercel.app/import/<draftId>`.
-    - `no-recipe` → **Open URLs**
-      `https://nates-bakery.vercel.app/import?error=no-recipe&url=<Reel URL>` (the
-      draft is already gone server-side; don't open `/import/<draftId>`).
-    - `failed` → **Open URLs** `https://nates-bakery.vercel.app/import/<draftId>`
-      anyway — the page itself shows "Couldn't finish" with Retry and Discard, since
-      the draft still exists.
+11. **Get Dictionary Value**: `open`, from `Finish Response`. Rename **Open URL**.
+12. **Open URLs**: `Open URL`.
+
+(Step 11 only runs if step 10 didn't already stop the Shortcut — `Finish Status` was
+`ready`, `no-recipe`, or `failed` on the first try, each of which carries `open`.)
 
 ## Why the retry is server-side, not in the Shortcut
 
@@ -168,7 +149,7 @@ The Shortcut only ever retries once, by running Use Model a second time when tol
 the server is what counts attempts per draft, so a Shortcut that's interrupted and
 rerun by the owner can't accidentally exceed one retry.
 
-## Both routes always answer HTTP 200
+## Both routes always answer HTTP 200, and build every URL themselves
 
 `/api/import/start` and `/api/import/finish` answer HTTP 200 for every request,
 including a malformed one — the status is always in the response body (`status`),
@@ -180,12 +161,17 @@ checks above. You don't need to configure anything for this — no "Show Errors"
 toggle, no separate error handling — every `Get Dictionary Value: status` in this
 guide works the same way whether the request behind it succeeded cleanly or not.
 
+The same applies to `open`: every response that isn't `started` or `retry` carries it,
+built with proper URL encoding server-side (spaces, `&`, accented characters in a
+recipe title — all handled correctly, none of it the Shortcut's problem). There's
+nothing to assemble by hand and nothing left in this guide that mentions URL Encode.
+
 ## One thing to expect while testing: the page itself is still off
 
 `/api/import/start` and `/api/import/finish` work right now, regardless of
 `BACKERY_FEATURE_IMPORT` — they're not gated by it, only the browsable pages are
-(`/import`, `/import/:draftId`). So every `Open URLs` action above will land on "Page
-not found" until that flag goes on in production (item 13, not yet). That's expected,
+(`/import`, `/import/:draftId`). So every `open` URL above will land on "Page not
+found" until that flag goes on in production (item 13, not yet). That's expected,
 not a bug in the Shortcut: the import itself — the Apify fetch, Apple Intelligence
 reading it, the draft landing in the database — genuinely happens either way. Confirm
 it worked by reading `Finish Status` in the Shortcut's own run result (Shortcuts shows
@@ -213,17 +199,19 @@ failure points at one specific action instead of the whole chain.
 3. **A deliberately wrong import key** (you're on the same device building the
    Shortcut, so just edit the Text action from section 2 directly — no need to go
    through its import question — to a few garbage characters, run it, then paste the
-   real key back): `Start Status` should read `key-invalid` (the page it opens will
-   404 until the flag's on, per above — that's fine, the variable is the real signal
-   for now).
+   real key back): `Start Status` should read `key-invalid`, and `Start Response`
+   should carry `open` ending in `?error=bad-key` (the page it opens will 404 until
+   the flag's on, per above — that's fine, the variables are the real signal for now).
 4. **A reel you've already saved as a recipe**: `Start Status` should read `already`,
-   with `recipeId` and `title` in `Start Response` matching that recipe.
+   with `recipeId` and `title` in `Start Response` matching that recipe, and `open`
+   carrying all three — `error=already`, `recipeId`, and `title` — properly encoded.
 5. **The full chain, end to end**: share a real reel from Instagram to the Shortcut
    (or run it with a reel link pasted in). `Finish Status` should read `ready`, and the
    `drafts` table in Supabase's dashboard should show that reel's row with
    `status = 'ready'` and a filled-in `content`. Once `BACKERY_FEATURE_IMPORT` is on
    (item 13), this is the run that lands on `/import/<draftId>` with the recipe read,
-   grouped, and converted to grams.
+   grouped, and converted to grams — confirmed working this way against a real reel in
+   production.
 6. **A second run of the same reel, right after**: exercises the "already read, skip
    Use Model" path — `Start Status` should read `ready` this time (not `started`), and
    the Shortcut should finish noticeably faster, since it never reaches step 5.

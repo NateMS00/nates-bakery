@@ -209,28 +209,31 @@ test("?url= prefills the link; Import still needs to be pressed", async ({ page 
   await shot(page, "05-url-prefilled");
 });
 
-test("start-import: a private, deleted, or no-recipe reel fails with its own reason", async ({ page }) => {
+test("start-import: a private, deleted, or no-recipe reel fails with its own reason, and an open URL to match", async ({ page }) => {
   await ready(page, "/import");
+  const origin = new URL(page.url()).origin;
   const importKey = await makeImportKey(page);
   for (const [id, reason] of [
     ["Cprivate42", "private"],
     ["Cdeleted42", "deleted"],
     ["Cnorecipe42", "no-recipe"],
   ] as const) {
-    const res = await page.request.post("/api/import/start", { data: { url: `https://www.instagram.com/reel/${id}/`, importKey } });
-    expect(await res.json(), id).toEqual({ status: "failed", reason });
+    const url = `https://www.instagram.com/reel/${id}/`;
+    const res = await page.request.post("/api/import/start", { data: { url, importKey } });
+    expect(await res.json(), id).toEqual({ status: "failed", reason, open: `${origin}/import?error=${reason}&url=${encodeURIComponent(url)}` });
   }
 });
 
 test("the import routes always answer HTTP 200, even a malformed request — the Shortcut reads status from the body", async ({ page }) => {
   await ready(page, "/import");
+  const origin = new URL(page.url()).origin;
   const start = await page.request.post("/api/import/start", { data: { url: 123 } }); // no importKey, wrong url type
   expect(start.status()).toBe(200);
-  expect(await start.json()).toEqual({ status: "invalid" });
+  expect(await start.json()).toEqual({ status: "invalid", open: `${origin}/import` });
 
   const finish = await page.request.post("/api/import/finish", { data: {} });
   expect(finish.status()).toBe(200);
-  expect(await finish.json()).toEqual({ status: "failed" });
+  expect(await finish.json()).toEqual({ status: "failed", open: `${origin}/import` });
 
   // A field mistyped as Text in Shortcuts' JSON editor sends "true", not true — it
   // must still count as true (skipping the already-imported check), same as the
@@ -277,11 +280,18 @@ test("Daily limit reached: Enter it manually only, no Try another link", async (
   await shot(page, "08-daily-limit-reached");
 });
 
-test("start-import: an already-saved reel answers already, title and recipeId included", async ({ page }) => {
+test("start-import: an already-saved reel answers already, title and recipeId included, with an open URL", async ({ page }) => {
   await ready(page, "/import");
+  const origin = new URL(page.url()).origin;
   const importKey = await makeImportKey(page);
-  const res = await page.request.post("/api/import/start", { data: { url: "https://www.instagram.com/reel/C9nataRita01/", importKey } });
-  expect(await res.json()).toEqual({ status: "already", recipeId: "pasteis-de-nata", title: "Pastéis de nata" });
+  const link = "https://www.instagram.com/reel/C9nataRita01/";
+  const res = await page.request.post("/api/import/start", { data: { url: link, importKey } });
+  const open = new URL(`${origin}/import`);
+  open.searchParams.set("error", "already");
+  open.searchParams.set("recipeId", "pasteis-de-nata");
+  open.searchParams.set("title", "Pastéis de nata");
+  open.searchParams.set("url", link);
+  expect(await res.json()).toEqual({ status: "already", recipeId: "pasteis-de-nata", title: "Pastéis de nata", open: open.toString() });
 });
 
 test("Already imported: links to the recipe, Import again hands the Shortcut the link once more", async ({ page }) => {

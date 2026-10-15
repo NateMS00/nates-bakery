@@ -67,22 +67,30 @@ export const SETUP_MESSAGES: Record<SetupReason, string> = {
  * What the start-import route (app/api/import/start) answers the Shortcut, as JSON
  * (docs/shortcut-guide.md step 2). "ready" and "limit" aren't in the Shortcut's
  * original response list — see the guide's Build notes for why they were added.
+ * Every status but "started" carries `open`: the full absolute URL the Shortcut
+ * should open and then stop — built server-side, with proper encoding, so the
+ * Shortcut never constructs a URL itself.
  */
 export type StartImportResponse =
-  | { status: "key-invalid" }
-  | { status: "invalid" }
-  | { status: "limit" }
-  | { status: "already"; recipeId: string; title: string }
-  | { status: "ready"; draftId: string }
+  | { status: "key-invalid"; open: string }
+  | { status: "invalid"; open: string }
+  | { status: "limit"; open: string }
+  | { status: "already"; recipeId: string; title: string; open: string }
+  | { status: "ready"; draftId: string; open: string }
   | { status: "started"; draftId: string; caption: string }
-  | { status: "failed"; reason: FailReason };
+  | { status: "failed"; reason: FailReason; open: string };
 
 /**
  * What the finish-import route (app/api/import/finish) answers the Shortcut, as JSON
  * (docs/shortcut-guide.md step 6). "no-recipe" is a Build notes addition: FLOW-01
  * deletes the draft and sends the owner to a different message than "Couldn't finish".
+ * Every status but "retry" carries `open`, the same as StartImportResponse.
  */
-export type FinishImportResponse = { status: "retry" | "ready" | "failed" | "no-recipe" };
+export type FinishImportResponse =
+  | { status: "retry" }
+  | { status: "ready"; open: string }
+  | { status: "failed"; open: string }
+  | { status: "no-recipe"; open: string };
 
 /**
  * What the Shortcut's redirect back to /import means (?error=…&url=…, or

@@ -21,9 +21,10 @@ async function pickFetchCaption(): Promise<CaptionFetcher> {
 // Shortcut (docs/shortcut-guide.md) reads `status` from the response either way, and
 // a non-200 risks Shortcuts stopping before it gets the chance to.
 export async function POST(request: NextRequest) {
+  const origin = request.nextUrl.origin;
   const body: unknown = await request.json().catch(() => null);
   if (!body || typeof body !== "object" || typeof (body as Record<string, unknown>).url !== "string" || typeof (body as Record<string, unknown>).importKey !== "string") {
-    return NextResponse.json({ status: "invalid" });
+    return NextResponse.json({ status: "invalid", open: new URL("/import", origin).toString() });
   }
   const { url, importKey, again } = body as { url: string; importKey: string; again?: unknown };
   const backend = await dataBackend();
@@ -31,6 +32,6 @@ export async function POST(request: NextRequest) {
   // A Shortcut field mistyped as Text rather than Boolean sends the JSON string
   // "true"; accept it too, so that mistake fails loudly during testing instead of
   // silently never retrying/re-importing.
-  const result = await handleStartImport(backend, fetchCaption, { url, importKey, again: again === true || again === "true" });
+  const result = await handleStartImport(backend, fetchCaption, origin, { url, importKey, again: again === true || again === "true" });
   return NextResponse.json(result);
 }

@@ -83,10 +83,10 @@ Nothing is half-built or uncommitted. These are deliberate stubs until the backe
 - **Data and auth in development and tests:** the fixtures backend (`lib/backend/fixtures`): in-memory fixtures and a stub owner session (`owner@backery.local` / `backery-owner`; reset "emails" go to the server log). Production uses Supabase.
 - **Import service:** takes 4.5 seconds and always produces the same Kouign-amann draft; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail.
 - **Timers:** kept in the browser, not on a server, so locked-phone alerts can't be scheduled; no notifications are sent. The chime is synthesized until a real sound is chosen.
-- **Placeholders:** the Shortcut install link, reel thumbnails.
+- **Placeholders:** the Shortcut install link. Recipe pictures are real in the UI (`components/ui/RecipePicture.tsx`, the fixtures backend) but drawn from local placeholder SVGs, since there's no real thumbnail-copy pipeline yet.
 - **Owner name** on shared pages ("Shared by Nate") is a constant in `lib/auth/rules.ts` until accounts exist.
 - **Privacy copy** is a draft for Nathan to review before launch (BACKLOG).
-- **Import** isn't connected to Supabase; it runs only on fixtures with `BACKERY_FEATURE_IMPORT=on`.
+- **Import** isn't connected to Supabase; it runs only on fixtures with `BACKERY_FEATURE_IMPORT=on`. `recipeFromRow()` (`lib/backend/supabase/map.ts`) always returns `picture: null`, even though `source_thumbnail_path` is already in the database (migration 0002) — **must return the real picture (a signed URL, or whatever's best) once drafts and the import key move to Supabase**, or every recipe will look pictureless in production.
 - **Fault injection:** the `backery_stub_fail_saves` and `backery_stub_fail_loads` cookies make saves or loads fail, for the error states.
 
 Known issues and follow-ups are in `BACKLOG.md`.

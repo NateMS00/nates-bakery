@@ -93,7 +93,10 @@ export function RecipeView({ initial }: { initial: Recipe }) {
           // unshrinkable min-content width force the row wider than the viewport.
           "grid grid-cols-[minmax(0,1fr)_auto] gap-x-lg",
           hasPicture
-            ? "[grid-template-areas:'back_actions''category_pic''h1_pic''meta_pic'] tablet:grid-cols-[auto_minmax(0,1fr)_auto] tablet:[grid-template-areas:'back_back_back''pic_category_.''pic_h1_actions''pic_meta_.']"
+            ? // Mobile: pic sits beside category and h1 only — meta (rating, reel
+              // credit, yield) runs full width below, so the 5 stars never share a
+              // row with the picture. Tablet+ keeps the picture beside all three.
+              "[grid-template-areas:'back_actions''category_pic''h1_pic''meta_meta'] tablet:grid-cols-[auto_minmax(0,1fr)_auto] tablet:[grid-template-areas:'back_back_back''pic_category_.''pic_h1_actions''pic_meta_.']"
             : "[grid-template-areas:'back_actions''category_.''h1_.''meta_.'] tablet:[grid-template-areas:'back_.''category_.''h1_actions''meta_.']",
         )}
       >

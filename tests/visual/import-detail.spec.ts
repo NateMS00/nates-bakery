@@ -55,6 +55,16 @@ test("focus rings", async ({ page }) => {
   await expectFocusRings(page, 20);
 });
 
+test("Source shows the real reel thumbnail once copied; a draft without one keeps the placeholder", async ({ page }) => {
+  // d-babka carries a picture (SKELETON 1.4.6's first-open copy); d-canele doesn't —
+  // still importing, not yet copied, or a failed copy all look the same either way.
+  await ready(page, BABKA);
+  await expect(page.getByTestId("reel-thumbnail")).toHaveAttribute("data-status", "loaded");
+
+  await ready(page, "/import/d-canele");
+  await expect(page.getByTestId("reel-thumbnail")).toHaveAttribute("data-status", "error");
+});
+
 test("original caption: Read more expands in place, Show less collapses", async ({ page }) => {
   await ready(page, BABKA);
   await expect(page.getByText("Original caption")).toBeVisible();

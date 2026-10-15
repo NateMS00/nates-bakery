@@ -226,6 +226,9 @@ export const DRAFTS: Draft[] = [
     caption:
       "The babka that broke my feed 🍫 Tahini + dark chocolate + a crunchy sesame top. Recipe below! 500g bread flour, 1/2 cup warm milk, sugar, 7g yeast, 3 eggs, soft butter, salt. Filling: 150g dark chocolate, 1/2 cup tahini, a few spoons of cocoa, sesame. Syrup: 100g sugar + a splash of water. Save this for the weekend!",
     content: babka,
+    // Exercises Source's real-picture state (SKELETON 1.4.6); d-canele and
+    // d-madeleines stay pictureless, exercising the placeholder state.
+    picture: "/recipe-pictures/chocolate.svg",
   },
   {
     id: "d-canele",

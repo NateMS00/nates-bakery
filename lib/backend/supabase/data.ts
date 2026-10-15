@@ -15,30 +15,51 @@ const THUMBNAIL_MAX_BYTES = 2_097_152; // the bucket's own file_size_limit (0002
  * any failure here just leaves the picture placeholder (SKELETON: "nothing else breaks").
  */
 async function copyThumbnail(db: Awaited<ReturnType<typeof supabaseServer>>, url: string): Promise<string | null> {
+  // Each branch logs why, not just that it failed — this ran silently until a real
+  // first-open thumbnail copy needed diagnosing and nothing in Vercel's logs said why.
   try {
     const res = await fetch(url);
-    if (!res.ok) return null;
-    const ext = THUMBNAIL_TYPES[res.headers.get("content-type") ?? ""];
-    if (!ext) return null;
+    if (!res.ok) {
+      console.error(`copyThumbnail: fetch failed with ${res.status}`);
+      return null;
+    }
+    const contentType = res.headers.get("content-type") ?? "";
+    const ext = THUMBNAIL_TYPES[contentType];
+    if (!ext) {
+      console.error(`copyThumbnail: unexpected content-type "${contentType}"`);
+      return null;
+    }
     const bytes = await res.arrayBuffer();
-    if (bytes.byteLength > THUMBNAIL_MAX_BYTES) return null;
+    if (bytes.byteLength > THUMBNAIL_MAX_BYTES) {
+      console.error(`copyThumbnail: ${bytes.byteLength} bytes over the ${THUMBNAIL_MAX_BYTES} limit`);
+      return null;
+    }
     const {
       data: { user },
     } = await db.auth.getUser();
-    if (!user) return null;
+    if (!user) {
+      console.error("copyThumbnail: no signed-in user on this session");
+      return null;
+    }
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-    const { error } = await db.storage.from(THUMBNAIL_BUCKET).upload(path, bytes, { contentType: res.headers.get("content-type") ?? undefined });
+    const { error } = await db.storage.from(THUMBNAIL_BUCKET).upload(path, bytes, { contentType: contentType || undefined });
+    if (error) console.error(`copyThumbnail: upload failed: ${error.message}`);
     return error ? null : path;
-  } catch {
+  } catch (err) {
+    console.error(`copyThumbnail: ${err instanceof Error ? err.message : "unknown error"}`);
     return null;
   }
 }
 
-/** picture carries a raw Storage path (map.ts) until this resolves it to a signed URL. */
+/** A Storage path (map.ts carries it raw) resolved to a one-hour signed URL. */
+async function signThumbnail(db: Awaited<ReturnType<typeof supabaseServer>>, path: string | null | undefined): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await db.storage.from(THUMBNAIL_BUCKET).createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
+}
+
 async function resolvePicture(db: Awaited<ReturnType<typeof supabaseServer>>, recipe: ReturnType<typeof recipeFromRow>) {
-  if (!recipe.picture) return recipe;
-  const { data } = await db.storage.from(THUMBNAIL_BUCKET).createSignedUrl(recipe.picture, 3600);
-  return { ...recipe, picture: data?.signedUrl ?? null };
+  return { ...recipe, picture: await signThumbnail(db, recipe.picture) };
 }
 
 // The Supabase backend: every query runs as the signed-in owner, and row-level
@@ -186,7 +207,7 @@ export const supabaseData: DataBackend = {
         if (!saveError) draft = { ...draft, content };
       }
     }
-    return draft;
+    return { ...draft, picture: await signThumbnail(db, draft.content?.thumbnailPath) };
   },
 
   async findReadyDraftByReelUrl(reelUrl) {

@@ -138,6 +138,13 @@ export interface Draft {
    * (content.thumbnailPath), not kept as the picture source itself.
    */
   thumbnailUrl?: string;
+  /**
+   * The copied thumbnail (content.thumbnailPath), as a signed URL ready to display
+   * (SKELETON 1.4.6) — set once the first-open copy has run and succeeded. Absent
+   * otherwise (still importing, the copy hasn't run yet, or it failed); Source shows
+   * its placeholder either way, the same as a hand-entered recipe's picture.
+   */
+  picture?: string | null;
   /** The extracted recipe, edited in Review Import and autosaved here. Ready drafts only. */
   content?: import("./editor").EditorState;
 }

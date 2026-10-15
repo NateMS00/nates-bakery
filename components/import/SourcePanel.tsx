@@ -1,7 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/Notice";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -23,6 +23,50 @@ function withoutBlankLines(text: string): string {
     .join("\n");
 }
 
+type PictureStatus = "loading" | "loaded" | "error";
+
+/**
+ * The reel thumbnail (SKELETON 1.4.6): a signed Storage URL once the first-open
+ * copy has succeeded, otherwise the same Play-icon placeholder as before — still
+ * importing, the copy hasn't run yet, or it failed (nothing else breaks).
+ */
+function ReelThumbnail({ src }: { src: string | null }) {
+  const [state, setState] = useState<{ src: string | null; status: PictureStatus }>({ src, status: src ? "loading" : "error" });
+  if (state.src !== src) setState({ src, status: src ? "loading" : "error" });
+  const status = state.status;
+
+  const img = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    // A cached image can finish loading (or fail) before onLoad/onError attach.
+    const el = img.current;
+    if (!el || !el.complete) return;
+    setState((s) => (s.src === src ? { src, status: el.naturalWidth > 0 ? "loaded" : "error" } : s));
+  }, [src]);
+
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="reel-thumbnail"
+      data-status={status}
+      className="grid aspect-[9/16] w-[calc(var(--spacing-2xl)-var(--spacing-sm))] shrink-0 place-items-center overflow-hidden rounded-md border border-hairline bg-surface-sunken text-muted desktop:w-3xl"
+    >
+      {src && status !== "error" && (
+        // eslint-disable-next-line @next/next/no-img-element -- a signed Storage URL that expires in an hour; next/image's remote-pattern allowlist doesn't fit that.
+        <img
+          ref={img}
+          src={src}
+          alt=""
+          loading="lazy"
+          onLoad={() => setState({ src, status: "loaded" })}
+          onError={() => setState({ src, status: "error" })}
+          className={cx("size-full object-cover object-center", status !== "loaded" && "opacity-0")}
+        />
+      )}
+      {status !== "loaded" && <Play className="size-icon" strokeWidth={1.6} />}
+    </div>
+  );
+}
+
 export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draft; expanded: boolean; onExpandedChange: (v: boolean) => void }) {
   const { caption, captionCutOff, captionLanguage } = draft;
   const translatedFrom = captionLanguage && captionLanguage !== "English" ? captionLanguage : null;
@@ -32,10 +76,7 @@ export function SourcePanel({ draft, expanded, onExpandedChange }: { draft: Draf
     <section aria-labelledby="source-heading">
       <SectionHeading id="source-heading">Source</SectionHeading>
       <div className="mt-sm flex items-center gap-md tablet:items-start">
-        {/* Neutral placeholder until reel thumbnails come from the import service */}
-        <div aria-hidden="true" className="grid aspect-[9/16] w-[calc(var(--spacing-2xl)-var(--spacing-sm))] shrink-0 place-items-center rounded-md border border-hairline bg-surface-sunken text-muted desktop:w-3xl">
-          <Play className="size-icon" strokeWidth={1.6} />
-        </div>
+        <ReelThumbnail src={draft.picture ?? null} />
         <p className="type-body-sm text-muted tablet:flex tablet:flex-col tablet:gap-xs">
           <span className="text-ink">@{draft.creatorHandle}</span>
           <span aria-hidden="true" className="tablet:hidden"> · </span>

@@ -239,7 +239,7 @@ function Details({ state, setState, errors }: { state: EditorState; setState: Se
         </Select>
         <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-sm">
           <TextField id="editor-yield" label="Yield" inputMode="numeric" value={state.yieldQuantity} onChange={(e) => set({ yieldQuantity: e.target.value })} autoComplete="off" />
-          <TextField id="editor-yield-unit" label="Unit" placeholder="cookies" value={state.yieldUnit} onChange={(e) => set({ yieldUnit: e.target.value })} autoComplete="off" />
+          <TextField id="editor-yield-unit" label="Unit" placeholder="servings" value={state.yieldUnit} onChange={(e) => set({ yieldUnit: e.target.value })} autoComplete="off" />
         </div>
         <fieldset className="flex flex-col gap-xs">
           <legend className="type-label text-muted">Total time</legend>

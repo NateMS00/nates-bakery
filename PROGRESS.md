@@ -1,6 +1,6 @@
 # Progress
 
-Where the build stands, for picking it up again. Updated 2026-10-13.
+Where the build stands, for picking it up again. Updated 2026-10-15.
 
 ## Done
 
@@ -63,14 +63,30 @@ Live at **https://nates-bakery.vercel.app** (private repo `NateMS00/nates-bakery
 - `lib/backend`: one switch for data and auth. `BACKERY_BACKEND=fixtures` (dev, Playwright) or Supabase (production; fixtures are refused on Vercel production).
 - Supabase: `supabase/migrations/0001_init.sql` (tables, owner-only RLS, `save_recipe`, `shared_recipe` for anonymous visitors), checked by `supabase/checks/0001_verify.sql` (19/19) and `tests/supabase` (PGlite + live anonymous checks).
 - Supabase Auth: one owner, sign-ups off, minimum password 12; reset through Supabase's default email (PKCE code to `/auth/confirm`, single use, same browser).
-- Import is off in production (`BACKERY_FEATURE_IMPORT`), with New recipe as the Library's primary action.
+- Import is off in production (`BACKERY_FEATURE_IMPORT`), with New recipe as the Library's primary action. The Supabase backend itself is now fully wired (see "Reel import" below) — turning the flag on is the only thing left at the code level, after the deploy gaps below are closed.
 - Smoke-tested live: sign in, recipe, rating, sharing (read-only, "Shared by Nate"), revoke, password reset. Not yet: Add to Home Screen on the iPhone.
+
+## Reel import built (2026-10-15)
+
+The caption → recipe pipeline, migrations 0002 (2026-10-13) and 0003 (2026-10-15, retry-once, `import_get_caption`), and the real hand-off, all committed:
+
+- `lib/import/apify.ts`: the real caption fetch (Apify's official Instagram scraper), server-side only, verified against one live reel ($0.0027, free tier).
+- `lib/import/extract.ts` / `toEditorState.ts`: the model's reply → the Recipe Editor's form state, grams computed by the app's own table.
+- `app/api/import/start`, `app/api/import/finish` (`lib/import/server.ts`): what the Shortcut calls, backend-agnostic — Playwright simulates the Shortcut by POSTing to them directly, so the whole round trip is covered without a device.
+- `/import` hands the link to `shortcuts://run-shortcut` and polls for a ready draft; failures and "already imported" arrive via the Shortcut's own redirect, not an in-browser state.
+- `lib/backend/supabase/data.ts`: every `DataBackend` method is real now, including drafts (`getDrafts`, `getDraft`, `saveDraftContent`, `saveImport`, `discardDraft`) and recipe pictures (`resolvePicture`, a signed URL from `source_thumbnail_path`, copied into Storage the first time a ready draft is opened).
+- `docs/shortcut-guide.md`: the real Shortcut's actions in order, for Nathan to build in the Shortcuts app.
+
+Not yet turned on in production — see "Next" below for what's left.
 
 ## Next
 
 Priority order (Nathan, 2026-10-13):
 
-1. Reel import (connect the import service; Import is off in production until then).
+1. Reel import — built (the real hand-off, `app/api/import/*`, the Supabase backend, migrations 0002 and 0003, all committed and tested against PGlite + fixtures). Before turning it on in production:
+   - Add `APIFY_TOKEN` to Vercel's environment variables — not there yet, only the two `NEXT_PUBLIC_SUPABASE_*` ones are (`DEPLOY.md`).
+   - `/api/import/start` calls Apify for real; one live test took ~6s, against Vercel's 10s default function timeout. Worth a `maxDuration` export for headroom before relying on it live.
+   - Nothing live-tested against the real Supabase Storage bucket yet — the thumbnail copy (`getDraft`) and signed URL (`resolvePicture`) are only verified against PGlite and fixtures. Natural to fold into turning the flag on.
 2. Timer alerts (locked-phone notifications for Bake Mode timers).
 3. App icons for the Home Screen (BACKLOG).
 
@@ -78,15 +94,14 @@ The other BACKLOG items come after these.
 
 ## Half-finished and stubbed
 
-Nothing is half-built or uncommitted. These are deliberate stubs until the backend is chosen:
+Nothing is half-built or uncommitted. These are deliberate stubs, or genuinely done but not yet live:
 
 - **Data and auth in development and tests:** the fixtures backend (`lib/backend/fixtures`): in-memory fixtures and a stub owner session (`owner@backery.local` / `backery-owner`; reset "emails" go to the server log). Production uses Supabase.
-- **Import service:** takes 4.5 seconds and always produces the same Kouign-amann draft; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail.
+- **Import, in fixtures mode only:** the fixtures backend's caption fetch is a stand-in (`fixturesFetchCaption`, `lib/backend/fixtures/data.ts`) — a canned caption, no real Apify call; reel ids starting with `Cprivate`, `Cdeleted`, or `Cnorecipe` fail with that reason. The Supabase backend calls the real `fetchReel` (`lib/import/apify.ts`). See "Next" above for what's left before turning it on live.
 - **Timers:** kept in the browser, not on a server, so locked-phone alerts can't be scheduled; no notifications are sent. The chime is synthesized until a real sound is chosen.
-- **Placeholders:** the Shortcut install link. Recipe pictures are real in the UI (`components/ui/RecipePicture.tsx`, the fixtures backend) but drawn from local placeholder SVGs, since there's no real thumbnail-copy pipeline yet.
+- **Placeholders:** the Shortcut install link, until the real Shortcut is built and published (`docs/shortcut-guide.md`). Recipe pictures in fixtures mode are drawn from local placeholder SVGs; the Supabase backend returns a real signed URL from `source_thumbnail_path` (`resolvePicture`, `lib/backend/supabase/data.ts`), not yet live-tested against the real Storage bucket.
 - **Owner name** on shared pages ("Shared by Nate") is a constant in `lib/auth/rules.ts` until accounts exist.
 - **Privacy copy** is a draft for Nathan to review before launch (BACKLOG).
-- **Import** isn't connected to Supabase; it runs only on fixtures with `BACKERY_FEATURE_IMPORT=on`. `recipeFromRow()` (`lib/backend/supabase/map.ts`) always returns `picture: null`, even though `source_thumbnail_path` is already in the database (migration 0002) — **must return the real picture (a signed URL, or whatever's best) once drafts and the import key move to Supabase**, or every recipe will look pictureless in production.
 - **Fault injection:** the `backery_stub_fail_saves` and `backery_stub_fail_loads` cookies make saves or loads fail, for the error states.
 
 Known issues and follow-ups are in `BACKLOG.md`.

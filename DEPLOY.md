@@ -9,6 +9,8 @@ in Vercel's environment variables, never in the repo.
 - [x] Run `supabase/checks/0001_verify.sql`: all 19 rows ok (2026-10-01).
 - [x] Run `supabase/migrations/0002_import.sql` in the SQL editor (reel import: notes, drafts, the import key, the thumbnail bucket) (2026-10-13).
 - [x] Run `supabase/checks/0002_verify.sql`: all 21 rows ok (2026-10-13). Live checks after it: 31 passed.
+- [x] Run `supabase/migrations/0003_retry.sql` in the SQL editor (the automatic retry-once; renames `import_retry` to `import_get_caption`) (2026-10-15).
+- [x] Run `supabase/checks/0003_verify.sql`: all 9 rows ok (2026-10-15).
 - [x] Authentication → Sign-ups off.
 - [x] Authentication → Minimum password length 12.
 - [x] Authentication → URL Configuration: Site URL `http://localhost:3000`, redirect URL `http://localhost:3000/**` (local for now).
@@ -26,6 +28,7 @@ in Vercel's environment variables, never in the repo.
 
 - [x] Import the GitHub repository. (The import created no deployment; an empty commit to `main` started the first one.)
 - [x] Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (all environments; previews share the Supabase project for now). Not `BACKERY_BACKEND`, not `BACKERY_FEATURE_IMPORT`.
+- [ ] `APIFY_TOKEN` (server-only, no `NEXT_PUBLIC_` prefix) — needed before `BACKERY_FEATURE_IMPORT` goes on; `lib/import/apify.ts`'s live caption fetch throws without it. Not added yet.
 - [x] Functions region: Portland (`pdx1`), next to the Supabase project, set in `vercel.json` (applies from the first deploy).
 - [x] Deploy: **https://nates-bakery.vercel.app** (2026-10-01). Deployment-specific `…-nate-bcff.vercel.app` addresses sit behind Vercel's login.
 

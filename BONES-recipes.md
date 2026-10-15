@@ -4,7 +4,7 @@
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.3.0 · **Updated**: 2026-10-13
+> **Version**: 1.4.0 · **Updated**: 2026-10-15
 
 ---
 
@@ -21,7 +21,7 @@ MAIN
 │   ├── FILTER_CONTROLS (desktop) / FILTERS_BUTTON (mobile)
 │   └── ACTIVE_FILTER_CHIPS + CLEAR_FILTERS
 ├── DRAFTS                                  H2
-│   └── DRAFT_ROW × n (max 3, then Show all drafts)
+│   └── DRAFT_ROW × n (max 3, then Show all drafts), each with DISCARD
 ├── RECIPES                                 H2
 │   ├── RESULT_COUNT
 │   ├── RECIPE_ITEM × n (30, then Show more)
@@ -100,15 +100,15 @@ MOBILE
 
 ### Drafts (SKELETON section 3)
 - **Layout**: desktop full width, one row per draft; mobile one row per draft, full width
-- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet), "Ready to review" (links to `/import/:draftId`), or "Couldn't finish" (links to `/import/:draftId`, where Retry and Discard are; the status reads as text, not only as a color or icon); at most 2 rows on mobile and 3 on desktop, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
-- **Behavior**: hidden when there are no drafts or when any search or filter is active (SKELETON). An Importing row turns into Ready to review or Couldn't finish when the import ends, without a page reload. The page checks for changes while a row is importing, but screen readers only hear when a row's status changes, never on each check
+- **Content**: each row shows the extracted title (or "@creator's reel" until a title exists), the creator handle, and its status: "Importing…" (not a link yet), "Ready to review" (links to `/import/:draftId`), or "Couldn't finish" (links to `/import/:draftId`, where Retry and Discard are; the status reads as text, not only as a color or icon); every row, in any status, ends with a Discard icon button (trash, `icon-button`, 48px target, outside the row's link, labeled for screen readers "Discard draft: <title>"); at most 2 rows on mobile and 3 on desktop, then "Show all drafts (n)" expands the rest in place; titles truncate at one line
+- **Behavior**: hidden when there are no drafts or when any search or filter is active (SKELETON). An Importing row turns into Ready to review or Couldn't finish when the import ends, without a page reload. The page checks for changes while a row is importing, but screen readers only hear when a row's status changes, never on each check. A row still Importing after 10 minutes turns into Couldn't finish, so a stuck import never looks alive. Discard removes the row at once (no confirmation dialog) and shows "Draft discarded" with Undo, which stays until the next action or 10 seconds; Undo puts the row back where it was. Focus moves to the next draft row, or to the Recipes heading when it was the last draft. Discarding deletes the draft and its copied thumbnail, the same as Discard on `/import/:draftId`
 
 ```text
 DESKTOP
 +-----------------------------------------------------------------------+
 | DRAFTS                                                                |
-| DRAFT_TITLE                        @CREATOR           READY TO REVIEW |
-| @CREATOR'S REEL                    @CREATOR           IMPORTING...    |
+| DRAFT_TITLE                      @CREATOR       READY TO REVIEW [DEL] |
+| @CREATOR'S REEL                  @CREATOR       IMPORTING...    [DEL] |
 | SHOW ALL DRAFTS (n)                                                   |
 +-----------------------------------------------------------------------+
 ```
@@ -117,9 +117,9 @@ DESKTOP
 MOBILE
 +--------------------------------------+
 | DRAFTS                               |
-| DRAFT_TITLE                          |
+| DRAFT_TITLE                    [DEL] |
 | @CREATOR · READY TO REVIEW           |
-| @CREATOR'S REEL                      |
+| @CREATOR'S REEL                [DEL] |
 | @CREATOR · IMPORTING...              |
 +--------------------------------------+
 ```
@@ -201,6 +201,7 @@ MOBILE
 - **Assumed**: The desktop list stays rows, not a card grid, even with pictures: reel covers are often a face or overlaid text rather than the bake, so the title stays the main thing to scan, and rows scan faster.
 - **Assumed**: Tablet (768–1279px) uses the mobile cards, not the rows: at 768px the row squeezed "Baked Sat 12 Sep" onto two lines. Rows start at 1280px. Tablet uses the desktop filter row, which wraps to two lines.
 - **Decided** (2026-10-13): Recipes show the reel thumbnail as their picture (SKELETON 1.4.2). Small and to the left, not a large cover, so the Library still fits many recipes per screen.
+- **Assumed** (2026-10-15, Nathan): Drafts can be discarded from the Library without opening them, because an unfinished or broken draft may not open at all. A visible button, not a swipe gesture, so it works with a keyboard and screen readers; Undo instead of a confirmation dialog, so clearing several drafts stays quick and a mistake stays recoverable.
 - **Assumed**: Draft rows stay text only; their picture shows once you open the draft (Review Import's Source).
 - **Open**: A sort control (for example, by rating or A–Z). SKELETON fixes the order to most recently baked or added; a sort control would add a query param and a control in Filters.
 
@@ -209,6 +210,7 @@ MOBILE
 ## CHANGE LOG
 
 - 1.3.0 (2026-10-13): Recipe pictures: a 60×80 picture on the left of mobile and tablet cards, a 36×48 picture at the start of desktop rows, a placeholder when there's none (SKELETON 1.4.2).
+- 1.4.0 (2026-10-15): Discard on every draft row, with Undo; Importing turns into Couldn't finish after 10 minutes.
 - 1.2.0 (2026-10-13): Draft rows gain "Couldn't finish"; status changes announced only when they happen; empty state links to Set up the Shortcut (SKELETON 1.4.1).
 - 1.1.1 (2026-09-30): Recorded tablet behavior from the build: recipe cards under 1280px, rows from 1280px; desktop filter row wraps on tablet.
 - 1.1.0 (2026-09-30): After the first build review: 2 drafts on mobile, Filters sheet with wrapping chips and a close X, "Search" label, no-results count in words.

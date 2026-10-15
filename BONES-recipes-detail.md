@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.5.1 · **Updated**: 2026-10-14
+> **Version**: 1.5.2 · **Updated**: 2026-10-15
 
 ---
 
@@ -230,11 +230,13 @@ MOBILE
 - **Decided** (2026-10-13): The reel thumbnail is the recipe picture (SKELETON 1.4.2). On mobile it sits beside the title instead of above it, so the Scale presets stay in the first viewport; a full-width cover would push them below the fold.
 - **Assumed**: Hand-entered recipes show no picture and no placeholder on this page; the empty slot only exists in the Library, where it keeps titles aligned.
 - **Open**: Removing or replacing the picture from Edit (a reel cover can be a face or text, not the bake), and adding your own photo. Not drawn yet.
+- **Open** (2026-10-15, for the visual upgrade round): Nathan doesn't like how the recipe picture looks in the Header (seen on his iPhone with a real imported recipe). To be redesigned with the other visual upgrades, not before.
 
 ---
 
 ## CHANGE LOG
 
+- 1.5.2 (2026-10-15): Open note: the Header picture is to be redesigned in the visual upgrade round.
 - 1.5.1 (2026-10-14): Tips group: last, unnumbered, no time marks (SKELETON 1.4.4).
 - 1.5.0 (2026-10-13): Recipe picture in the Header, beside the title block (96×128 mobile, 144×192 desktop); none for recipes without one (SKELETON 1.4.2).
 - 1.4.1 (2026-10-13): Ingredient notes show as a muted line under the ingredient (SKELETON 1.4.0).

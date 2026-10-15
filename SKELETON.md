@@ -354,7 +354,7 @@ Default access: public.
 - **Assumed**: Component groups use a suggested list covering breads, cakes, pies and tarts, and creams, but accept any name.
 - **Assumed**: Every imported recipe keeps the creator handle and reel link, including on shared pages.
 - **Open**: Scale by pan size or servings, not just a multiplier? This would change the Scale section.
-- **Decided** (2026-10-13, Nathan): Recipes keep the reel thumbnail as their picture, shown in the Library and on the Recipe page; not on shared pages for now. Instagram's image links expire within days, so the app copies the thumbnail into its own storage when the draft is created and deletes it with a discarded draft or recipe; if the copy fails, the placeholder shows.
+- **Decided** (2026-10-13, Nathan): Recipes keep the reel thumbnail as their picture, shown in the Library and on the Recipe page; not on shared pages for now. Instagram's image links expire within days, so the app copies the thumbnail into its own storage the first time the draft is opened (see the 2026-10-15 decision) and deletes it with a discarded draft or recipe; if the copy fails, the placeholder shows.
 - **Open**: Photos on bake log entries?
 - **Assumed**: One category per recipe from a fixed list of nine, required on save and suggested by the importer; the Library filter picks one category at a time.
 - **Open**: Custom categories, or more than one category per recipe? The fixed list keeps filters clean; revisit if many recipes land in Other.

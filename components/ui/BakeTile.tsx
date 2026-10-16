@@ -56,7 +56,7 @@ export function BakeTile({
             {rating !== null && (
               <span className="inline-flex gap-[1px]">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <StarGlyph key={n} filled={n <= rating && !disabled} className="size-[13px]" />
+                  <StarGlyph key={n} filled={n <= rating} className="size-[13px]" />
                 ))}
               </span>
             )}

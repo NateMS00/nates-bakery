@@ -1,4 +1,5 @@
 import { Check, ChevronRight } from "lucide-react";
+import { formatGrams } from "@/lib/format";
 import { MissingMarker } from "./Marker";
 import { cx } from "./cx";
 
@@ -14,7 +15,7 @@ import { cx } from "./cx";
 export function CheckRow({
   name,
   original,
-  amount,
+  grams,
   status,
   confirmed,
   onConfirm,
@@ -23,12 +24,14 @@ export function CheckRow({
   name: string;
   /** "from 3 cups", shown under the name until confirmed. */
   original: string;
-  amount: string;
+  /** null for Missing (shown as "—", hidden from screen readers, which hear "no amount"). */
+  grams: number | null;
   status: "estimated" | "converted" | "missing";
   confirmed: boolean;
   onConfirm?: () => void;
   onJump: () => void;
 }) {
+  const amountLabel = grams === null ? "no amount" : `${formatGrams(grams)} g`;
   return (
     <div className="flex items-center gap-md border-b border-hairline py-md">
       {status === "missing" ? (
@@ -38,7 +41,7 @@ export function CheckRow({
           type="button"
           aria-pressed={confirmed}
           onClick={onConfirm}
-          aria-label={confirmed ? `${name}, confirmed` : `Confirm ${name}, ${amount}`}
+          aria-label={confirmed ? `${name}, confirmed` : `Confirm ${name}, ${amountLabel}`}
           className={cx(
             "relative inline-grid size-icon shrink-0 place-items-center rounded-full border-[1.5px] transition-colors duration-(--motion-fast) ease-skin before:absolute before:-inset-[12px] before:content-[''] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
             confirmed ? "border-success bg-success text-on-primary" : "border-border bg-transparent hover:border-ink",
@@ -61,7 +64,17 @@ export function CheckRow({
             </span>
           )}
         </span>
-        <span className="shrink-0 type-amount text-ink">{amount}</span>
+        <span className="shrink-0 whitespace-nowrap text-right">
+          {grams === null ? (
+            <span className="type-amount text-ink">
+              <span aria-hidden="true">—</span>
+              <span className="sr-only">No amount</span>
+            </span>
+          ) : (
+            <span className="type-amount text-ink">{formatGrams(grams)}</span>
+          )}
+          <span className="ml-[3px] type-body-md text-muted">g</span>
+        </span>
         <ChevronRight aria-hidden="true" className="size-icon-sm shrink-0 text-muted" />
       </button>
     </div>

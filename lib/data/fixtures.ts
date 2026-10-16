@@ -1,7 +1,10 @@
-// Typed fixture data, the only data source until the backend is chosen.
-// Covers: the pastel de nata recipe from design-reference/recipe-preview.html,
-// a long recipe with several groups, a manual recipe without a source, and
-// empty cases (never baked, unrated, no groups, baked without notes).
+// Typed fixture data, read by the fixtures backend (lib/backend/fixtures) in
+// development and Playwright. Covers: the pastel de nata recipe from
+// design-reference/recipe-preview.html (with a per-bake rating and photo, chosen
+// as the cover — SKELETON 1.5.0), a long recipe with several groups, a manual
+// recipe without a source, and empty cases (never baked, unrated, no groups,
+// baked without notes). lib/data/fixtures-library.ts adds more, including a
+// rated-but-never-baked recipe (the migration's edge case).
 
 import type { Ingredient, Recipe, Step, TimeMark } from "./types";
 
@@ -40,7 +43,9 @@ const pasteisDeNata: Recipe = {
   yield: { quantity: 12, unit: "tart", unitPlural: "tarts" },
   totalTimeMinutes: 210,
   source: { creatorHandle: "forno.da.rita", reelUrl: "https://www.instagram.com/reel/C9nataRita01/" },
-  picture: "/recipe-pictures/custard-tart.svg",
+  // The reel thumbnail: the fallback cover, below the latest bake's chosen photo.
+  coverBakeId: "nata-b3",
+  cover: "/recipe-pictures/custard-tart.svg",
   ingredientGroups: [
     { id: "ig-pastry", name: "Pastry" },
     { id: "ig-custard", name: "Custard" },
@@ -72,18 +77,24 @@ const pasteisDeNata: Recipe = {
     step("n7", "sg-baking", "Slice the log into 12 discs and press each into a tin with wet thumbs."),
     step("n8", "sg-baking", "Fill three quarters full and bake at 290 °C for 12 minutes, until blistered.", [], [{ text: "12 minutes", minutes: 12 }]),
   ],
-  rating: 4,
+  // Moved onto nata-b3, the latest rated bake (SKELETON 1.5.0); the recipe's own
+  // rating column is the legacy fallback, unused once a bake carries one.
+  rating: null,
   favorite: true,
   bakeLog: [
     {
       id: "nata-b3",
       date: "2026-09-26",
       scale: 1,
+      rating: 4,
+      // This bake's own photo, chosen as the recipe's cover (coverBakeId above) —
+      // the exposed cover resolves to this, not the reel thumbnail.
+      photoPath: "/recipe-pictures/pale-meringue.svg",
       whatChanged: "Rolled the log tighter and baked 2 minutes longer at the highest setting.",
       howItTurnedOut: "Blistered tops and crisp layers. Custard still a little loose in the middle.",
     },
-    { id: "nata-b2", date: "2026-09-12", scale: 1, howItTurnedOut: "Pale tops. Oven wasn't hot enough." },
-    { id: "nata-b1", date: "2026-08-30", scale: 0.5 },
+    { id: "nata-b2", date: "2026-09-12", scale: 1, rating: null, photoPath: null, howItTurnedOut: "Pale tops. Oven wasn't hot enough." },
+    { id: "nata-b1", date: "2026-08-30", scale: 0.5, rating: null, photoPath: null },
   ],
   shareLink: { token: "nata-k7p2qw", createdAt: "2026-09-27T10:12:00Z" },
   createdAt: "2026-08-28T19:40:00Z",
@@ -96,8 +107,9 @@ const croissants: Recipe = {
   yield: { quantity: 12, unit: "croissant", unitPlural: "croissants" },
   totalTimeMinutes: 1260,
   source: { creatorHandle: "laminated.lou", reelUrl: "https://www.instagram.com/reel/C8croissLou22/" },
-  // Deliberately broken: a picture row exists but the copied file is gone (edge case for the placeholder fallback).
-  picture: "/recipe-pictures/missing.jpg",
+  // Deliberately broken: a cover path exists but the copied file is gone (edge case for the placeholder fallback).
+  coverBakeId: null,
+  cover: "/recipe-pictures/missing.jpg",
   ingredientGroups: [
     { id: "cg-dough", name: "Dough" },
     { id: "cg-butter", name: "Butter block" },
@@ -143,19 +155,21 @@ const croissants: Recipe = {
     step("c15", "cs-tips", "Shape ahead and freeze unbaked: proof for 30 minutes at room temperature before baking from frozen."),
     step("c16", "cs-tips", "If the butter block cracks while rolling, let it sit a minute to warm slightly rather than forcing it — a crack now becomes a leak in the oven."),
   ],
-  rating: 5,
+  rating: null,
   favorite: false,
   bakeLog: [
     {
       id: "cr-b2",
       date: "2026-09-20",
       scale: 1.5,
+      rating: 5,
+      photoPath: null,
       whatChanged:
         "Used the cultured butter from the market instead of supermarket butter, rolled the dough a millimetre thinner for the final shaping, and cut the proof by 20 minutes because the kitchen was warm. Also moved the tray one shelf up for the last 5 minutes.",
       howItTurnedOut:
         "The best honeycomb so far, with clean layers all the way through and no butter leaking on the tray. Slightly too dark on the bottoms, so next time a second tray underneath. They stayed crisp until the next morning.",
     },
-    { id: "cr-b1", date: "2025-12-14", scale: 1, whatChanged: "First try, followed the reel exactly." },
+    { id: "cr-b1", date: "2025-12-14", scale: 1, rating: null, photoPath: null, whatChanged: "First try, followed the reel exactly." },
   ],
   shareLink: { token: "croissant-q2t6vb", createdAt: "2026-09-21T08:40:00Z" },
   createdAt: "2025-12-10T08:00:00Z",
@@ -167,9 +181,10 @@ const chocolateChipCookies: Recipe = {
   category: "cookie-bar",
   yield: { quantity: 36, unit: "cookie", unitPlural: "cookies" },
   totalTimeMinutes: 90,
-  // Entered by hand, no reel: no picture, and no placeholder on the Recipe page
+  // Entered by hand, no reel: no cover, and no placeholder on the Recipe page
   // (BONES-recipes-detail), just the placeholder slot in the Library.
-  picture: null,
+  coverBakeId: null,
+  cover: null,
   ingredientGroups: [],
   stepGroups: [],
   ingredients: [
@@ -209,7 +224,8 @@ const lemonDrizzle: Recipe = {
   totalTimeMinutes: 75,
   source: { creatorHandle: "bakewithjuno", reelUrl: "https://www.instagram.com/reel/C7lemonJuno9/" },
   // A pale cover, close to the light canvas: checks the recipe-picture hairline edge.
-  picture: "/recipe-pictures/pale-meringue.svg",
+  coverBakeId: null,
+  cover: "/recipe-pictures/pale-meringue.svg",
   ingredientGroups: [],
   stepGroups: [],
   ingredients: [
@@ -229,7 +245,7 @@ const lemonDrizzle: Recipe = {
   ],
   rating: null,
   favorite: true,
-  bakeLog: [{ id: "l-b1", date: "2026-09-05", scale: 1 }],
+  bakeLog: [{ id: "l-b1", date: "2026-09-05", scale: 1, rating: null, photoPath: null }],
   shareLink: null,
   createdAt: "2026-09-01T16:30:00Z",
 };

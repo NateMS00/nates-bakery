@@ -4,12 +4,18 @@
 
 import type { EditorIngredient, EditorState } from "./editor";
 import { IMPORT_FIXTURE_DRAFTS } from "./import-fixtures";
-import type { Category, Draft, Ingredient, Recipe, Step } from "./types";
+import type { BakeLogEntry, Category, Draft, Ingredient, Recipe, Step } from "./types";
 
 type Simple = {
   id: string;
   title: string;
   category: Category;
+  /**
+   * The recipe's displayed rating. When `baked` has dates, this lands on the latest
+   * bake instead of the legacy recipe column — same move the real migration makes
+   * (supabase/migrations/0005_bake_photos_ratings.sql). Only a recipe with no bakes
+   * at all keeps it on the recipe directly.
+   */
   rating?: number;
   favorite?: boolean;
   /** Bake dates, newest first. */
@@ -18,7 +24,7 @@ type Simple = {
   makes: [number, string, string];
   minutes: number;
   creator?: string;
-  picture?: string;
+  cover?: string;
 };
 
 const BASICS: Record<Category, [string, number][]> = {
@@ -46,6 +52,10 @@ function simple(s: Simple): Recipe {
     { id: `${s.id}-s2`, groupId: null, text: "Mix, shape, and rest for 20 minutes.", timeMarks: [{ text: "20 minutes", minutes: 20 }], ingredientIds: [] },
     { id: `${s.id}-s3`, groupId: null, text: `Bake until done, about ${Math.max(10, Math.round(s.minutes / 3))} minutes.`, timeMarks: [{ text: `${Math.max(10, Math.round(s.minutes / 3))} minutes`, minutes: Math.max(10, Math.round(s.minutes / 3)) }], ingredientIds: [] },
   ];
+  const baked = s.baked ?? [];
+  const bakeLog: BakeLogEntry[] = baked.map((date, i) => ({ id: `${s.id}-b${i}`, date, scale: 1, rating: null, photoPath: null }));
+  // The latest bake is index 0 (baked dates are given newest first, same order sortLog produces).
+  if (bakeLog.length > 0 && s.rating) bakeLog[0].rating = s.rating;
   return {
     id: s.id,
     title: s.title,
@@ -53,14 +63,16 @@ function simple(s: Simple): Recipe {
     yield: { quantity: s.makes[0], unit: s.makes[1], unitPlural: s.makes[2] },
     totalTimeMinutes: s.minutes,
     source: s.creator ? { creatorHandle: s.creator, reelUrl: `https://www.instagram.com/reel/${s.id}/` } : undefined,
-    picture: s.picture ?? null,
+    coverBakeId: null,
+    cover: s.cover ?? null,
     ingredientGroups: [],
     stepGroups: [],
     ingredients,
     steps,
-    rating: s.rating ?? null,
+    // Only a never-baked recipe keeps its rating on the legacy column (see Simple's rating comment).
+    rating: bakeLog.length > 0 ? null : (s.rating ?? null),
     favorite: s.favorite ?? false,
-    bakeLog: (s.baked ?? []).map((date, i) => ({ id: `${s.id}-b${i}`, date, scale: 1 })),
+    bakeLog,
     shareLink: null,
     createdAt: `${s.created}T12:00:00Z`,
   };
@@ -87,11 +99,11 @@ export const LIBRARY_RECIPES: Recipe[] = [
   simple({ id: "blueberry-muffins", title: "Blueberry muffins with a crumble top", category: "quick-bread", created: "2026-08-19", makes: [12, "muffin", "muffins"], minutes: 45, creator: "morningbakes" }),
   simple({ id: "cornbread", title: "Skillet cornbread", category: "quick-bread", rating: 2, baked: ["2026-01-25"], created: "2026-01-20", makes: [1, "skillet", "skillets"], minutes: 35 }),
   simple({ id: "victoria-sponge", title: "Victoria sponge", category: "cake", rating: 4, baked: ["2026-08-24"], created: "2026-03-30", makes: [1, "cake", "cakes"], minutes: 70, creator: "bakewithjuno" }),
-  simple({ id: "basque-cheesecake", title: "Burnt Basque cheesecake", category: "cake", rating: 5, favorite: true, baked: ["2026-09-12", "2026-07-04"], created: "2026-05-02", makes: [1, "cake", "cakes"], minutes: 90, creator: "donostia.dulce", picture: "/recipe-pictures/berry.svg" }),
+  simple({ id: "basque-cheesecake", title: "Burnt Basque cheesecake", category: "cake", rating: 5, favorite: true, baked: ["2026-09-12", "2026-07-04"], created: "2026-05-02", makes: [1, "cake", "cakes"], minutes: 90, creator: "donostia.dulce", cover: "/recipe-pictures/berry.svg" }),
   simple({ id: "carrot-cake", title: "Carrot cake with brown butter cream cheese frosting and toasted walnuts", category: "cake", rating: 4, baked: ["2026-04-12"], created: "2026-04-01", makes: [1, "cake", "cakes"], minutes: 150, creator: "layered.lena" }),
   simple({ id: "olive-oil-cake", title: "Olive oil and orange cake", category: "cake", created: "2026-09-25", makes: [1, "cake", "cakes"], minutes: 75, creator: "citrus.cucina" }),
   simple({ id: "chocolate-cupcakes", title: "Chocolate cupcakes", category: "cake", rating: 3, baked: ["2025-12-20"], created: "2025-12-15", makes: [12, "cupcake", "cupcakes"], minutes: 50 }),
-  simple({ id: "fudgy-brownies", title: "Fudgy brownies", category: "cookie-bar", rating: 5, favorite: true, baked: ["2026-09-28", "2026-09-01"], created: "2025-11-11", makes: [16, "brownie", "brownies"], minutes: 55, creator: "cocoa.carla", picture: "/recipe-pictures/chocolate.svg" }),
+  simple({ id: "fudgy-brownies", title: "Fudgy brownies", category: "cookie-bar", rating: 5, favorite: true, baked: ["2026-09-28", "2026-09-01"], created: "2025-11-11", makes: [16, "brownie", "brownies"], minutes: 55, creator: "cocoa.carla", cover: "/recipe-pictures/chocolate.svg" }),
   simple({ id: "shortbread", title: "Scottish shortbread", category: "cookie-bar", rating: 4, baked: ["2025-12-23"], created: "2025-12-01", makes: [16, "finger", "fingers"], minutes: 60 }),
   simple({ id: "oatmeal-cookies", title: "Oatmeal raisin cookies", category: "cookie-bar", rating: 1, baked: ["2026-02-14"], created: "2026-02-10", makes: [24, "cookie", "cookies"], minutes: 40, creator: "cookiejar.co" }),
   simple({ id: "lemon-bars", title: "Lemon bars", category: "cookie-bar", created: "2026-09-26", makes: [16, "bar", "bars"], minutes: 70, creator: "sunny.bakes" }),
@@ -104,7 +116,9 @@ export const LIBRARY_RECIPES: Recipe[] = [
   simple({ id: "apple-strudel", title: "Apple strudel", category: "pastry", created: "2026-09-02", makes: [1, "strudel", "strudels"], minutes: 120, creator: "wiener.backstube" }),
   simple({ id: "creme-brulee", title: "Crème brûlée", category: "dessert", rating: 5, favorite: true, baked: ["2026-09-09"], created: "2026-01-30", makes: [6, "ramekin", "ramekins"], minutes: 300, creator: "petit.pot" }),
   simple({ id: "pavlova", title: "Summer berry pavlova", category: "dessert", rating: 4, baked: ["2026-07-26"], created: "2026-07-20", makes: [1, "pavlova", "pavlovas"], minutes: 240, creator: "meringue.mae" }),
-  simple({ id: "tiramisu", title: "Tiramisu", category: "dessert", created: "2026-08-28", makes: [8, "serving", "servings"], minutes: 360 }),
+  // Rated but never baked (the migration's edge case, SKELETON 1.5.0 Assumptions):
+  // keeps this rating as its displayed one until its first rated bake.
+  simple({ id: "tiramisu", title: "Tiramisu", category: "dessert", rating: 4, created: "2026-08-28", makes: [8, "serving", "servings"], minutes: 360 }),
 ];
 
 // Drafts for the Library and Review Import. The babka is the main review case: groups,

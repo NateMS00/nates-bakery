@@ -152,7 +152,7 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   const formInitial: EntryValues =
     form?.mode === "edit"
       ? entryValues(form.entry)
-      : entryValues({ date: todayIso(), scale: bakedScale, whatChanged: "", howItTurnedOut: "" });
+      : entryValues({ date: todayIso(), scale: bakedScale, rating: null, photoPath: null, whatChanged: "", howItTurnedOut: "" });
 
   return (
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">

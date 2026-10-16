@@ -65,11 +65,11 @@ function RecipeItem({ recipe }: { recipe: Recipe }) {
       aria-label={cardName(recipe, baked)}
       className="grid grid-cols-[auto_1fr] items-start gap-x-md gap-y-xs rounded-lg border border-hairline bg-surface-card p-base text-ink transition-colors duration-(--motion-fast) ease-skin hover:border-primary active:border-primary active:bg-primary-wash focus-visible:outline-offset-2 desktop:grid-cols-12 desktop:items-center desktop:gap-x-(--gutter) desktop:gap-y-0"
     >
-      <RecipePicture src={recipe.picture} className="w-[60px] h-[80px] desktop:hidden" />
+      <RecipePicture src={recipe.cover} className="w-[60px] h-[80px] desktop:hidden" />
       <div className="grid gap-y-xs desktop:contents">
         <span className="type-label text-primary desktop:order-2 desktop:col-span-2">{categoryLabel(recipe.category)}</span>
         <span className="flex items-center gap-sm desktop:order-1 desktop:col-span-5">
-          <RecipePicture src={recipe.picture} className="hidden w-[36px] h-[48px] desktop:block" />
+          <RecipePicture src={recipe.cover} className="hidden w-[36px] h-[48px] desktop:block" />
           <span className="line-clamp-2 type-heading">{recipe.title}</span>
         </span>
         <span className="flex items-center gap-md desktop:contents">

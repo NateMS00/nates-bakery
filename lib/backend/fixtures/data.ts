@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { OWNER_NAME } from "@/lib/auth/rules";
-import { sortLog } from "@/lib/data/bakeLog";
+import { deriveRecipeRating, sortLog } from "@/lib/data/bakeLog";
 import { newId, toRecipeContent, type EditorState } from "@/lib/data/editor";
 import { normalizeReelUrl, type FailReason } from "@/lib/data/import";
 import type { BakeLogEntry, Draft, Recipe, ShareLink } from "@/lib/data/types";
@@ -44,7 +44,8 @@ function newRecipe(content: EditorState, creatorHandle?: string): Recipe {
     ...toRecipeContent({ ...content, creatorHandle: content.creatorHandle ?? creatorHandle }),
     id: slug(content.title),
     // No real thumbnail-copy pipeline yet (SKELETON 1.4.2 is stubbed until live import).
-    picture: null,
+    coverBakeId: null,
+    cover: null,
     rating: null,
     favorite: false,
     bakeLog: [],
@@ -57,13 +58,28 @@ async function findRecipe(recipeId: string) {
   return (await db()).recipes.find((r) => r.id === recipeId) ?? null;
 }
 
-function clean(f: BakeFields): BakeFields {
+/** `photo` (the resolved display value) never comes from the caller; it's recomputed below. */
+function clean(f: BakeFields): Omit<BakeLogEntry, "id" | "photo"> {
   return {
     date: f.date,
     scale: f.scale,
+    rating: f.rating,
     whatChanged: f.whatChanged?.trim() || undefined,
     howItTurnedOut: f.howItTurnedOut?.trim() || undefined,
+    photoPath: f.photoPath,
   };
+}
+
+/** Fixtures have no Storage to sign from: a photoPath is already a usable static path. */
+function withPhoto(entry: Omit<BakeLogEntry, "photo">): BakeLogEntry {
+  return { ...entry, photo: entry.photoPath };
+}
+
+/** Mirrors recipe_rating() (supabase/migrations/0005_bake_photos_ratings.sql) and the
+ * recipe's cover (its chosen bake's photo, else the reel thumbnail) on every read. */
+function withDisplay(r: Recipe): Recipe {
+  const coverBake = r.coverBakeId ? r.bakeLog.find((e) => e.id === r.coverBakeId) : undefined;
+  return { ...r, rating: deriveRecipeRating(r), cover: coverBake?.photoPath ?? r.cover };
 }
 
 // STUB import service: reel ids starting with Cprivate, Cdeleted, or Cnorecipe fail
@@ -89,22 +105,26 @@ export const fixturesFetchCaption: CaptionFetcher = async (url) => {
 export const fixturesData: DataBackend = {
   async getRecipes() {
     await simulatedLatency();
-    return (await db()).recipes;
+    return (await db()).recipes.map(withDisplay);
   },
 
   async getRecipe(id) {
     await simulatedLatency();
-    return (await db()).recipes.find((r) => r.id === id) ?? null;
+    const r = (await db()).recipes.find((r) => r.id === id) ?? null;
+    return r ? withDisplay(r) : null;
   },
 
   async getSharedRecipe(token) {
     await simulatedLatency();
     const recipe = (await db()).recipes.find((r) => r.shareLink?.token === token);
     if (!recipe) return null;
-    const { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, steps, rating } = recipe;
-    // As shared_recipe: no notes and no "was 1 cup" (Converted reads as confirmed).
+    const { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, steps } = recipe;
+    // As shared_recipe: no notes and no "was 1 cup" (Converted reads as confirmed);
+    // never the cover or any bake photo (SKELETON 1.5.0). The rating is the same
+    // derived value shown everywhere else, not the raw column (deriveRecipeRating
+    // mirrors supabase's recipe_rating()).
     const ingredients = recipe.ingredients.map(({ id, groupId, name, grams, status }) => ({ id, groupId, name, grams, status: status === "converted" ? ("confirmed" as const) : status }));
-    return { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating, sharedBy: OWNER_NAME };
+    return { title, category, yield: makes, totalTimeMinutes, source, ingredientGroups, stepGroups, ingredients, steps, rating: deriveRecipeRating(recipe), sharedBy: OWNER_NAME };
   },
 
   async createRecipe(content): Promise<SaveResult> {
@@ -141,21 +161,31 @@ export const fixturesData: DataBackend = {
   async addBake(recipeId, fields) {
     const r = await findRecipe(recipeId);
     if (!r) return null;
-    const entry: BakeLogEntry = { id: newId("bake"), ...clean(fields) };
+    const entry = withPhoto({ id: newId("bake"), ...clean(fields) });
     r.bakeLog = sortLog([entry, ...r.bakeLog]);
+    // "Use as cover" (SKELETON 1.5.0): only ever points at a bake with a photo.
+    if (fields.useAsCover && fields.photoPath) r.coverBakeId = entry.id;
     return entry;
   },
 
   async updateBake(recipeId, entryId, fields) {
     const r = await findRecipe(recipeId);
-    if (!r || !r.bakeLog.some((e) => e.id === entryId)) return false;
-    r.bakeLog = sortLog(r.bakeLog.map((e) => (e.id === entryId ? { id: e.id, ...clean(fields) } : e)));
+    const existing = r?.bakeLog.find((e) => e.id === entryId);
+    if (!r || !existing) return false;
+    r.bakeLog = sortLog(r.bakeLog.map((e) => (e.id === entryId ? withPhoto({ id: e.id, ...clean(fields) }) : e)));
+    // Replacing or removing this entry's photo clears the cover if this entry was
+    // the one pointing to it, unless the same save also asks to keep it as cover.
+    const photoChanged = existing.photoPath !== fields.photoPath;
+    if (fields.useAsCover && fields.photoPath) r.coverBakeId = entryId;
+    else if (photoChanged && r.coverBakeId === entryId) r.coverBakeId = null;
     return true;
   },
 
   async deleteBake(recipeId, entryId) {
     const r = await findRecipe(recipeId);
-    if (r) r.bakeLog = r.bakeLog.filter((e) => e.id !== entryId);
+    if (!r) return;
+    r.bakeLog = r.bakeLog.filter((e) => e.id !== entryId);
+    if (r.coverBakeId === entryId) r.coverBakeId = null;
   },
 
   async createShareLink(recipeId): Promise<ShareLink | null> {

@@ -16,6 +16,7 @@ const row: RecipeRow = {
   source_creator_handle: "forno.da.rita",
   source_reel_url: "https://www.instagram.com/reel/C9nataRita01/",
   source_thumbnail_path: null,
+  cover_bake_id: null,
   rating: 4,
   favorite: true,
   created_at: "2026-10-01T10:00:00Z",
@@ -35,9 +36,9 @@ const row: RecipeRow = {
     { id: "s-1", group_id: null, text: "Mix.", time_marks: [], position: 1, step_ingredients: [{ ingredient_id: "i-flour" }] },
   ],
   bakes: [
-    { id: "b-old", baked_on: "2026-08-30", scale: "0.5", what_changed: null, how_it_turned_out: null, created_at: "2026-08-30T20:00:00Z" },
-    { id: "b-new-1", baked_on: "2026-09-26", scale: 1.5, what_changed: "Hotter oven", how_it_turned_out: null, created_at: "2026-09-26T18:00:00Z" },
-    { id: "b-new-2", baked_on: "2026-09-26", scale: 1, what_changed: null, how_it_turned_out: "Better", created_at: "2026-09-26T21:00:00Z" },
+    { id: "b-old", baked_on: "2026-08-30", scale: "0.5", rating: null, photo_path: null, what_changed: null, how_it_turned_out: null, created_at: "2026-08-30T20:00:00Z" },
+    { id: "b-new-1", baked_on: "2026-09-26", scale: 1.5, rating: null, photo_path: null, what_changed: "Hotter oven", how_it_turned_out: null, created_at: "2026-09-26T18:00:00Z" },
+    { id: "b-new-2", baked_on: "2026-09-26", scale: 1, rating: 4, photo_path: "owner-1/bake.jpg", what_changed: null, how_it_turned_out: "Better", created_at: "2026-09-26T21:00:00Z" },
   ],
   share_links: { token: "abcdefghijklmnopqrstuvwx", created_at: "2026-09-27T10:12:00Z" },
 };
@@ -55,19 +56,28 @@ test("a recipe row becomes the app's Recipe, in the owner's order", () => {
   expect(r.yield).toEqual({ quantity: 12, unit: "tart", unitPlural: "tarts" });
   expect(r.source).toEqual({ creatorHandle: "forno.da.rita", reelUrl: "https://www.instagram.com/reel/C9nataRita01/" });
   expect(r.shareLink).toEqual({ token: "abcdefghijklmnopqrstuvwx", createdAt: "2026-09-27T10:12:00Z" });
-  expect(r.picture).toBeNull();
+  // cover is always null straight out of recipeFromRow — ./data.ts's resolveRecipe()
+  // computes it (it needs Storage to sign from, so it isn't tested at this pure
+  // mapping layer); coverBakeId is the one thing this layer does carry over.
+  expect(r.cover).toBeNull();
+  expect(r.coverBakeId).toBeNull();
 });
 
-test("the thumbnail path becomes source.thumbnailPath and picture (not yet a signed URL)", () => {
+test("the thumbnail path becomes source.thumbnailPath (resolveRecipe in ./data.ts signs it into cover)", () => {
   const r = recipeFromRow({ ...row, source_thumbnail_path: "owner-1/abc.jpg" });
   expect(r.source?.thumbnailPath).toBe("owner-1/abc.jpg");
-  expect(r.picture).toBe("owner-1/abc.jpg");
+});
+
+test("cover_bake_id becomes coverBakeId", () => {
+  const r = recipeFromRow({ ...row, cover_bake_id: "b-new-2" });
+  expect(r.coverBakeId).toBe("b-new-2");
 });
 
 test("bakes: newest first, the later-logged one first on the same date; numbers are numbers", () => {
   const r = recipeFromRow(row);
   expect(r.bakeLog.map((b) => b.id)).toEqual(["b-new-2", "b-new-1", "b-old"]);
-  expect(r.bakeLog[2]).toEqual({ id: "b-old", date: "2026-08-30", scale: 0.5, whatChanged: undefined, howItTurnedOut: undefined });
+  expect(r.bakeLog[0]).toEqual({ id: "b-new-2", date: "2026-09-26", scale: 1, rating: 4, photoPath: "owner-1/bake.jpg", whatChanged: undefined, howItTurnedOut: "Better" });
+  expect(r.bakeLog[2]).toEqual({ id: "b-old", date: "2026-08-30", scale: 0.5, rating: null, photoPath: null, whatChanged: undefined, howItTurnedOut: undefined });
 });
 
 test("no source, no share link (object, null, or empty array)", () => {

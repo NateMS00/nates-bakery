@@ -15,12 +15,18 @@ import { SCALE_MAX, SCALE_MIN, todayIso } from "@/lib/format";
 // changed, How it turned out; Save and Cancel pinned to the bottom. Focus starts on
 // What changed. Closing with changes asks first, inside the form (Discard changes).
 
-export type EntryValues = { date: string; scale: string; whatChanged: string; howItTurnedOut: string };
+// rating and photoPath have no control on this pre-visual-round form yet
+// (BONES-recipes-log.md's Log sheet replaces this entirely in Stage C); they're
+// still carried through from `initial` so editing an entry here never silently
+// erases a rating or photo it already had.
+export type EntryValues = { date: string; scale: string; rating: number | null; photoPath: string | null; whatChanged: string; howItTurnedOut: string };
 
 export function entryValues(fields: BakeFields): EntryValues {
   return {
     date: fields.date,
     scale: String(Math.round(fields.scale * 100) / 100),
+    rating: fields.rating,
+    photoPath: fields.photoPath,
     whatChanged: fields.whatChanged ?? "",
     howItTurnedOut: fields.howItTurnedOut ?? "",
   };
@@ -37,7 +43,7 @@ function validate(v: EntryValues): { errors: Errors; fields?: BakeFields } {
     errors.scale = `Enter a scale from ${SCALE_MIN} to ${SCALE_MAX}, like 1.5`;
   }
   if (errors.date || errors.scale) return { errors };
-  return { errors, fields: { date: v.date, scale, whatChanged: v.whatChanged, howItTurnedOut: v.howItTurnedOut } };
+  return { errors, fields: { date: v.date, scale, rating: v.rating, photoPath: v.photoPath, whatChanged: v.whatChanged, howItTurnedOut: v.howItTurnedOut } };
 }
 
 export function EntryForm({
@@ -85,7 +91,9 @@ export function EntryForm({
     if (confirming) keepRef.current?.focus();
   }, [confirming]);
 
-  const dirty = (Object.keys(initial) as (keyof EntryValues)[]).some((k) => values[k].trim() !== initial[k].trim());
+  // Only the fields this form can actually change (rating and photoPath have no
+  // control here yet, and are never anything but what `initial` already carried).
+  const dirty = (["date", "scale", "whatChanged", "howItTurnedOut"] as const).some((k) => values[k].trim() !== initial[k].trim());
 
   function requestClose() {
     if (busy) return;

@@ -333,3 +333,45 @@ test("supabase/checks/0004_verify.sql: every row ok", async () => {
   expect(rows).toHaveLength(3);
   expect(rows.filter((r) => !r.ok)).toEqual([]);
 });
+
+test("supabase/checks/0005_verify.sql: every row ok", async () => {
+  await t.as("postgres");
+  const rows = await t.q<{ check_name: string; result: string; expected: string; ok: boolean }>(
+    readFileSync(join(process.cwd(), "supabase", "checks", "0005_verify.sql"), "utf8"),
+  );
+  expect(rows).toHaveLength(20);
+  expect(rows.filter((r) => !r.ok)).toEqual([]);
+});
+
+test("0005: the one-time move copies a recipe's rating onto its latest bake without clearing the legacy column; the cover's composite FK clears only cover_bake_id, never the recipe itself", async () => {
+  // A pre-0005 database, with a recipe and two bakes in the pre-round shape (no
+  // rating or photo columns on bakes yet), to exercise the migration's own UPDATE —
+  // the fully-current `t` above ran 0005 against an empty database, where that
+  // UPDATE touches no rows.
+  const pre = await open({ upTo: "0004" });
+  await pre.as("authenticated", OWNER);
+  const [{ id: recipeId }] = await pre.q<{ id: string }>(
+    "insert into public.recipes (title, category, yield_quantity, yield_unit, yield_unit_plural, rating) values ('Pre-round recipe', 'cake', 1, 'cake', 'cakes', 5) returning id",
+  );
+  const [{ id: oldBakeId }] = await pre.q<{ id: string }>("insert into public.bakes (recipe_id, baked_on, scale) values ($1, '2026-08-01', 1) returning id", [recipeId]);
+  const [{ id: latestBakeId }] = await pre.q<{ id: string }>("insert into public.bakes (recipe_id, baked_on, scale) values ($1, '2026-09-01', 1) returning id", [recipeId]);
+
+  await pre.as("postgres");
+  await pre.db.exec(readFileSync(join(process.cwd(), "supabase", "migrations", "0005_bake_photos_ratings.sql"), "utf8"));
+
+  const bakeRatings = await pre.q<{ id: string; rating: number | null }>("select id, rating from public.bakes where recipe_id = $1", [recipeId]);
+  expect(bakeRatings.find((b) => b.id === latestBakeId)?.rating).toBe(5);
+  expect(bakeRatings.find((b) => b.id === oldBakeId)?.rating).toBeNull();
+
+  // Additive: the legacy column is untouched, but recipe_rating() already prefers
+  // the bake's rating over it.
+  expect((await pre.q<{ rating: number | null }>("select rating from public.recipes where id = $1", [recipeId]))[0].rating).toBe(5);
+  expect((await pre.q<{ rating: number | null }>("select public.recipe_rating(r) rating from public.recipes r where id = $1", [recipeId]))[0].rating).toBe(5);
+
+  await pre.as("authenticated", OWNER);
+  await pre.q("update public.recipes set cover_bake_id = $1 where id = $2", [latestBakeId, recipeId]);
+  await pre.q("delete from public.bakes where id = $1", [latestBakeId]);
+  const after = (await pre.q<{ id: string; cover_bake_id: string | null }>("select id, cover_bake_id from public.recipes where id = $1", [recipeId]))[0];
+  expect(after.id).toBe(recipeId); // the recipe row survives — only cover_bake_id was asked to null
+  expect(after.cover_bake_id).toBeNull();
+});

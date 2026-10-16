@@ -5,22 +5,29 @@ import type { BakeLogEntry, Draft, Recipe, SharedRecipe } from "@/lib/data/types
 // Database rows ↔ the app's types (lib/data/types.ts). Pure, so tests/supabase can
 // check it without a database.
 
-/** The columns and parts read for a recipe (PostgREST select). */
+/**
+ * The columns and parts read for a recipe (PostgREST select). `rating:recipe_rating`
+ * selects the computed column (supabase/migrations/0005_bake_photos_ratings.sql) under
+ * the same JSON key the raw column used to use, so recipeFromRow's read side didn't
+ * need to change — only the query now asks the one shared rule for it, not the
+ * legacy column directly.
+ */
 export const RECIPE_SELECT = `
   id, title, category, yield_quantity, yield_unit, yield_unit_plural, total_time_minutes,
-  source_creator_handle, source_reel_url, source_thumbnail_path, rating, favorite, created_at,
+  source_creator_handle, source_reel_url, source_thumbnail_path, cover_bake_id,
+  rating:recipe_rating, favorite, created_at,
   ingredient_groups ( id, name, position ),
   step_groups ( id, name, position ),
   ingredients ( id, group_id, name, grams, status, original, note, position ),
   steps ( id, group_id, text, time_marks, position, step_ingredients ( ingredient_id ) ),
-  bakes ( id, baked_on, scale, what_changed, how_it_turned_out, created_at ),
+  bakes ( id, baked_on, scale, rating, photo_path, what_changed, how_it_turned_out, created_at ),
   share_links ( token, created_at )
 `;
 
 interface GroupRow { id: string; name: string; position: number }
 interface IngredientRow { id: string; group_id: string | null; name: string; grams: number | string | null; status: Recipe["ingredients"][number]["status"]; original: string | null; note: string | null; position: number }
 interface StepRow { id: string; group_id: string | null; text: string; time_marks: { text: string; minutes: number }[]; position: number; step_ingredients: { ingredient_id: string }[] }
-export interface BakeRow { id: string; baked_on: string; scale: number | string; what_changed: string | null; how_it_turned_out: string | null; created_at: string }
+export interface BakeRow { id: string; baked_on: string; scale: number | string; rating: number | null; photo_path: string | null; what_changed: string | null; how_it_turned_out: string | null; created_at: string }
 interface ShareRow { token: string; created_at: string }
 
 export interface RecipeRow {
@@ -34,6 +41,8 @@ export interface RecipeRow {
   source_creator_handle: string | null;
   source_reel_url: string | null;
   source_thumbnail_path: string | null;
+  cover_bake_id: string | null;
+  /** The computed `recipe_rating()` value, selected above as "rating". */
   rating: number | null;
   favorite: boolean;
   created_at: string;
@@ -49,13 +58,16 @@ export interface RecipeRow {
 const byPosition = <T extends { position: number }>(rows: T[]) => [...rows].sort((a, b) => a.position - b.position);
 const num = (v: number | string | null) => (v === null ? null : Number(v));
 
+/** `photoPath` is raw here (not yet signed); `photo` is left unset — ./data.ts resolves it. */
 export function bakeFromRow(b: BakeRow): BakeLogEntry {
   return {
     id: b.id,
     date: b.baked_on,
     scale: Number(b.scale),
+    rating: b.rating,
     whatChanged: b.what_changed ?? undefined,
     howItTurnedOut: b.how_it_turned_out ?? undefined,
+    photoPath: b.photo_path,
   };
 }
 
@@ -75,10 +87,12 @@ export function recipeFromRow(r: RecipeRow): Recipe {
     source: r.source_reel_url
       ? { creatorHandle: r.source_creator_handle ?? "", reelUrl: r.source_reel_url, thumbnailPath: r.source_thumbnail_path ?? undefined }
       : undefined,
-    // A path in the private recipe-thumbnails bucket (SKELETON 1.4.6), not a usable
-    // URL yet — resolvePicture() in ./data.ts signs it. Pure here, so tests/supabase
-    // can check the mapping without a database or Storage.
-    picture: r.source_thumbnail_path,
+    coverBakeId: r.cover_bake_id,
+    // Resolved in ./data.ts's resolveRecipe(), which needs the raw row (cover_bake_id
+    // plus the embedded bakes' photo_path) to pick the right Storage bucket to sign
+    // from. Pure here, so tests/supabase can check the mapping without a database or
+    // Storage — always null until resolveRecipe overwrites it.
+    cover: null,
     ingredientGroups: byPosition(r.ingredient_groups).map(({ id, name }) => ({ id, name })),
     stepGroups: byPosition(r.step_groups).map(({ id, name }) => ({ id, name })),
     ingredients: byPosition(r.ingredients).map((i) => ({

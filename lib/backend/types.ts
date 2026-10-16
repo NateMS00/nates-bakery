@@ -18,7 +18,14 @@ export type BeginImportResult =
 
 export type SaveResult = { ok: true; recipeId: string } | { ok: false; error: "blocked" | "failed" };
 
-export type BakeFields = Omit<BakeLogEntry, "id">;
+/**
+ * `photo` (the resolved display URL) is never an input, only an output — omitted
+ * here. `useAsCover` isn't part of BakeLogEntry itself: it's the Log sheet's one-shot
+ * instruction to point the recipe's cover at this bake's photo (or, when false on a
+ * bake that currently is the cover, to clear it back to the reel thumbnail); the
+ * backend turns it into Recipe.coverBakeId, not a column on bakes.
+ */
+export type BakeFields = Omit<BakeLogEntry, "id" | "photo"> & { useAsCover?: boolean };
 
 export interface DataBackend {
   getRecipes(): Promise<Recipe[]>;
@@ -34,6 +41,12 @@ export interface DataBackend {
   deleteRecipe(id: string): Promise<void>;
 
   setFavorite(recipeId: string, favorite: boolean): Promise<void>;
+  /**
+   * Writes the recipe's legacy rating column directly. Superseded the moment the
+   * recipe has a rated bake (lib/data/bakeLog.ts's deriveRecipeRating prefers that
+   * over this), so in practice this only still matters for a recipe with no bakes at
+   * all — kept until Stage C's screens stop calling it (visual-round, Nathan).
+   */
   setRating(recipeId: string, rating: number | null): Promise<void>;
   addBake(recipeId: string, fields: BakeFields): Promise<BakeLogEntry | null>;
   updateBake(recipeId: string, entryId: string, fields: BakeFields): Promise<boolean>;

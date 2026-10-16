@@ -11,6 +11,8 @@ in Vercel's environment variables, never in the repo.
 - [x] Run `supabase/checks/0002_verify.sql`: all 21 rows ok (2026-10-13). Live checks after it: 31 passed.
 - [x] Run `supabase/migrations/0003_retry.sql` in the SQL editor (the automatic retry-once; renames `import_retry` to `import_get_caption`) (2026-10-15).
 - [x] Run `supabase/checks/0003_verify.sql`: all 9 rows ok (2026-10-15).
+- [ ] Run `supabase/migrations/0005_bake_photos_ratings.sql` in the SQL editor (visual-round Stage A: rating and photo columns on bakes, the recipe's cover_bake_id, the `recipe_rating()` rule, `shared_recipe()` updated to use it, the one-time rating copy, and the `bake-photos` Storage bucket). Additive — safe to run against the database main and this branch's previews share; doesn't touch anything main's deployed code reads differently.
+- [ ] Run `supabase/checks/0005_verify.sql`: all 20 rows should say ok.
 - [x] Authentication → Sign-ups off.
 - [x] Authentication → Minimum password length 12.
 - [x] Authentication → URL Configuration: Site URL `http://localhost:3000`, redirect URL `http://localhost:3000/**` (local for now).

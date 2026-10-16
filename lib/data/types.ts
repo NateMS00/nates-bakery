@@ -63,8 +63,18 @@ export interface BakeLogEntry {
   /** ISO date (YYYY-MM-DD). The only required field. */
   date: string;
   scale: number;
+  /** 1–5, or null when this bake wasn't rated (SKELETON 1.5.0: ratings live on bakes now). */
+  rating: number | null;
   whatChanged?: string;
   howItTurnedOut?: string;
+  /**
+   * A path in the bake-photos Storage bucket, or null for no photo. Resolved to a
+   * signed URL in `photo` before reaching the app (same convention as Recipe.cover);
+   * never read directly outside lib/backend.
+   */
+  photoPath: string | null;
+  /** The resolved, displayable photo — absent until a backend has resolved it. */
+  photo?: string | null;
 }
 
 export interface ShareLink {
@@ -88,20 +98,36 @@ export interface Recipe {
   source?: {
     creatorHandle: string;
     reelUrl: string;
-    /** The Storage path behind `picture` (SKELETON 1.4.6). save_recipe keeps the
-     * existing one when this is absent, so editing never clears it. */
+    /** The Storage path behind the reel thumbnail (SKELETON 1.4.6). save_recipe keeps
+     * the existing one when this is absent, so editing never clears it. */
     thumbnailPath?: string;
   };
-  /** The reel thumbnail, copied into the app's own storage (SKELETON 1.4.2). Null for a
-   * hand-entered recipe or a failed copy; the Library and Recipe page show the picture
-   * placeholder either way. Not on shared pages. */
-  picture: string | null;
+  /**
+   * Which bake's photo is the cover (SKELETON 1.5.0), or null to use the reel
+   * thumbnail. Kept separately from `cover` (the resolved display value) so a
+   * backend can tell "no cover chosen" from "chosen bake has since lost its photo".
+   */
+  coverBakeId: string | null;
+  /** The recipe's cover: a chosen bake's photo, else the reel thumbnail, else null.
+   * Null for a hand-entered recipe with neither, or a failed thumbnail copy; the
+   * Library and Recipe page show the picture placeholder either way. Not on shared
+   * pages. Resolved (a signed URL, or the same static path in fixtures) before this
+   * reaches the app — never a raw Storage path. */
+  cover: string | null;
   ingredientGroups: Group[];
   stepGroups: Group[];
   ingredients: Ingredient[];
   /** In order; numbering is continuous across groups. */
   steps: Step[];
-  /** 1–5, or null when unrated. */
+  /**
+   * The recipe's displayed rating (SKELETON 1.5.0, Nathan 2026-10-15): the latest
+   * bake with a rating, else this column's own legacy value — never averaged, and
+   * never read directly once a bake has been rated. Both backends compute this on
+   * every read (Supabase: the `recipe_rating()` SQL function, so getRecipe,
+   * getRecipes and shared_recipe() can't drift apart; fixtures: deriveRecipeRating
+   * in lib/data/bakeLog.ts). Still settable directly (DataBackend.setRating) for a
+   * recipe with no bakes at all — its only remaining path to a rating.
+   */
   rating: number | null;
   /** Private: never shown on shared pages. */
   favorite: boolean;

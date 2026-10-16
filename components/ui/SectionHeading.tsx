@@ -1,8 +1,12 @@
 import type { ReactNode } from "react";
-import { TileMark } from "./Tile";
 import { cx } from "./cx";
 
-/** An H2 section title in `heading`, stamped with a tile-mark (SKIN). */
+/**
+ * An H2 section title in `heading`. No tile-mark (SKIN, since the visual round:
+ * repeated on every section it stopped meaning anything — section titles stand on
+ * type alone now). TileMark itself is kept for two places only: a picture
+ * placeholder while it loads, and before an empty state's heading.
+ */
 export function SectionHeading({
   id,
   children,
@@ -17,8 +21,7 @@ export function SectionHeading({
   tabIndex?: number;
 }) {
   return (
-    <h2 ref={ref} tabIndex={tabIndex} id={id} className={cx("flex items-center gap-sm type-heading text-ink", className)}>
-      <TileMark />
+    <h2 ref={ref} tabIndex={tabIndex} id={id} className={cx("type-heading text-ink", className)}>
       {children}
     </h2>
   );

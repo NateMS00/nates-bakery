@@ -152,7 +152,13 @@ export const supabaseData: DataBackend = {
 
   async setRating(recipeId, rating) {
     const db = await supabaseServer();
-    const { error } = await db.from("recipes").update({ rating }).eq("id", recipeId);
+    // Ratings live on bakes now (SKELETON 1.5.0): once the recipe has one, "rate
+    // this recipe" means its latest bake — the same thing recipe_rating() would
+    // read back — otherwise this would silently do nothing once a newer bake
+    // already has its own rating. Only a recipe with no bakes at all still uses
+    // the legacy column.
+    const { data: latest } = await db.from("bakes").select("id").eq("recipe_id", recipeId).order("baked_on", { ascending: false }).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { error } = latest ? await db.from("bakes").update({ rating }).eq("id", latest.id) : await db.from("recipes").update({ rating }).eq("id", recipeId);
     if (error) fail("saving the rating", error);
   },
 

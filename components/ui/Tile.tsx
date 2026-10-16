@@ -16,10 +16,14 @@ export function TileBand({ className }: { className?: string }) {
   );
 }
 
-/** tile-panel: 3:2 field of the motif for empty states. */
-export function TilePanel({ className }: { className?: string }) {
+/**
+ * tile-panel: a field of the motif for empty states (3:2 by default) and, small and
+ * inset, for a missing picture (SKIN recipe-picture, visual round) — pass
+ * `aspectRatio` to match the frame it sits in instead of the default.
+ */
+export function TilePanel({ className, aspectRatio = "3 / 2" }: { className?: string; aspectRatio?: string }) {
   return (
-    <div aria-hidden="true" className={cx("aspect-[3/2] rounded-lg border border-primary bg-primary-wash text-primary", className)}>
+    <div aria-hidden="true" style={{ aspectRatio }} className={cx("rounded-lg border border-primary bg-primary-wash text-primary", className)}>
       <div className="size-full rounded-lg tile-panel-mask" />
     </div>
   );

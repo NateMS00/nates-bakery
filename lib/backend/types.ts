@@ -42,10 +42,11 @@ export interface DataBackend {
 
   setFavorite(recipeId: string, favorite: boolean): Promise<void>;
   /**
-   * Writes the recipe's legacy rating column directly. Superseded the moment the
-   * recipe has a rated bake (lib/data/bakeLog.ts's deriveRecipeRating prefers that
-   * over this), so in practice this only still matters for a recipe with no bakes at
-   * all — kept until Stage C's screens stop calling it (visual-round, Nathan).
+   * Sets the recipe's displayed rating: its latest bake's rating when it has one
+   * (what deriveRecipeRating/recipe_rating would read back anyway), else the
+   * legacy recipe-level column for a recipe with no bakes at all. Kept for the
+   * pre-visual-round screens' "rate this recipe" flows until Stage C's Log sheet
+   * replaces them with rating a specific bake directly (visual-round, Nathan).
    */
   setRating(recipeId: string, rating: number | null): Promise<void>;
   addBake(recipeId: string, fields: BakeFields): Promise<BakeLogEntry | null>;

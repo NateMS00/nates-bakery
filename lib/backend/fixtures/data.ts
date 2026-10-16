@@ -158,7 +158,14 @@ export const fixturesData: DataBackend = {
 
   async setRating(recipeId, rating) {
     const r = await findRecipe(recipeId);
-    if (r) r.rating = rating;
+    if (!r) return;
+    // Ratings live on bakes now (SKELETON 1.5.0): once the recipe has one, "rate
+    // this recipe" means its latest bake, the same thing recipe_rating()/
+    // deriveRecipeRating() would read back — otherwise setRating would silently
+    // do nothing once a newer bake already has its own rating. Only a recipe
+    // with no bakes at all still uses the legacy column.
+    if (r.bakeLog.length > 0) r.bakeLog = r.bakeLog.map((e, i) => (i === 0 ? { ...e, rating } : e));
+    else r.rating = rating;
   },
 
   async addBake(recipeId, fields) {

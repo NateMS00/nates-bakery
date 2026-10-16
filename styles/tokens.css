@@ -12,14 +12,14 @@
   --color-primary-wash: #DDE5F6;
   --color-on-primary: #FFFDF7;
   --color-crust: #A86A0C;
-  --color-canvas: #F6F2E8;
-  --color-surface-card: #FFFDF7;
-  --color-surface-sunken: #ECE6D8;
+  --color-canvas: #FBFBF9;
+  --color-surface-card: #FFFFFF;
+  --color-surface-sunken: #EEF0F4;
   --color-ink: #131A33;
   --color-body: #2C3350;
   --color-muted: #5A617D;
-  --color-hairline: #DDD5C3;
-  --color-border: #8C8573;
+  --color-hairline: #E4E5E9;
+  --color-border: #7E8290;
   --color-success: #3B6A2C;
   --color-success-wash: #E0EBD6;
   --color-warning: #875208;
@@ -28,8 +28,8 @@
   --color-error-wash: #F7DDD5;
   --color-info-wash: #DDE5F6;
   --color-focus-ring: #2A5BD7;
-  --color-disabled: #8E8A7D;
-  --color-surface-disabled: #E8E3D7;
+  --color-disabled: #8A8E99;
+  --color-surface-disabled: #ECEDF0;
   --color-scrim: rgba(19, 26, 51, 0.36);
 
   --radius-none: 0px;
@@ -60,6 +60,8 @@
   --spacing-tile-mark: 18px;
   --spacing-tile-repeat: 32px;
   --spacing-content-max: 1200px;
+  --spacing-tab-bar: 56px;
+  --spacing-bake-progress: 6px;
 
   --shadow-float: 0 8px 24px rgba(19, 26, 51, 0.14), 0 1px 0 var(--color-hairline);
   --shadow-bar: 0 -1px 0 var(--color-hairline), 0 -6px 16px rgba(19, 26, 51, 0.08);
@@ -246,4 +248,13 @@
   letter-spacing: -0.3px;
   font-style: italic;
   font-variation-settings: 'SOFT' 100, 'opsz' 36;
+}
+
+@utility type-tile-title {
+  font-family: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.1px;
+  font-variation-settings: 'SOFT' 50, 'opsz' 24;
 }

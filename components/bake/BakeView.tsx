@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Notice } from "@/components/ui/Notice";
 import { GroupHeading } from "@/components/ui/SectionHeading";
-import { TileMark } from "@/components/ui/Tile";
 import { cx } from "@/components/ui/cx";
 import { TABLET_UP, useMediaQuery } from "@/components/ui/useMediaQuery";
 import { groupItems } from "@/components/recipe/IngredientList";
@@ -372,8 +371,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
             </div>
             <section aria-labelledby="all-heading">
               {tabletUp ? (
-                <h2 id="all-heading" ref={allHeading as React.RefObject<HTMLHeadingElement>} tabIndex={-1} className="flex items-center gap-sm type-heading text-ink outline-none">
-                  <TileMark />
+                <h2 id="all-heading" ref={allHeading as React.RefObject<HTMLHeadingElement>} tabIndex={-1} className="type-heading text-ink outline-none">
                   All ingredients
                 </h2>
               ) : (
@@ -386,7 +384,6 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                     onClick={() => setAllOpenChoice(!allOpen)}
                     className="flex min-h-touch-min w-full items-center gap-sm rounded-sm text-left focus-visible:outline-offset-2"
                   >
-                    <TileMark />
                     All ingredients ({recipe.ingredients.length})
                     <ChevronDown aria-hidden="true" className={cx("ml-auto size-icon text-primary transition-transform duration-(--motion-base) ease-skin", allOpen && "rotate-180")} />
                   </button>

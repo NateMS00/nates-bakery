@@ -4,15 +4,22 @@ import Link from "next/link";
 import { User } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { IconButton } from "@/components/ui/IconButton";
+import { cx } from "@/components/ui/cx";
 import { signOut } from "@/lib/auth/actions";
 import { TimerAlertsSheet } from "./TimerAlertsSheet";
 
-// BONES-shell: a small dropdown anchored to the account button on every device,
-// with Timer alerts, Sign out, and Privacy in that order. Dismissed by choosing
-// an item, Esc, or tapping outside. SKIN menu + menu-item.
+// BONES-shell 1.7.0: a small dropdown anchored to the account button on every
+// device, with Bakes (phones only — tablet and up has it in the header already),
+// Timer alerts, Sign out, and Privacy in that order. Dismissed by choosing an
+// item, Esc, or tapping outside. SKIN menu + menu-item.
 
 const itemClass =
   "flex min-h-touch-min w-full items-center px-base text-left type-body-md text-ink hover:bg-surface-sunken active:bg-primary-wash active:text-primary focus-visible:outline-offset-[-3px]";
+
+/** Bakes is `tablet:hidden` (present in the DOM, not at that breakpoint) — excluded here so focus never lands on a menu item that CSS has hidden. */
+function visibleItems(menu: HTMLDivElement | null): HTMLElement[] {
+  return Array.from(menu?.querySelectorAll<HTMLElement>("[role=menuitem]") ?? []).filter((el) => el.offsetParent !== null);
+}
 
 export function AccountMenu() {
   const [open, setOpen] = useState(false);
@@ -22,7 +29,7 @@ export function AccountMenu() {
 
   useEffect(() => {
     if (!open) return;
-    menu.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus();
+    visibleItems(menu.current)[0]?.focus();
     function onPointerDown(e: PointerEvent) {
       if (!menu.current?.contains(e.target as Node) && !button.current?.contains(e.target as Node)) setOpen(false);
     }
@@ -36,7 +43,7 @@ export function AccountMenu() {
   }
 
   function onKeyDown(e: KeyboardEvent) {
-    const items = Array.from(menu.current?.querySelectorAll<HTMLElement>("[role=menuitem]") ?? []);
+    const items = visibleItems(menu.current);
     const index = items.indexOf(document.activeElement as HTMLElement);
     if (e.key === "Escape") {
       e.preventDefault();
@@ -75,6 +82,9 @@ export function AccountMenu() {
           onKeyDown={onKeyDown}
           className="absolute top-full right-0 z-30 mt-xs min-w-[200px] rounded-lg border border-hairline bg-surface-card py-xs shadow-float"
         >
+          <Link href="/bakes" role="menuitem" className={cx(itemClass, "tablet:hidden")} onClick={() => setOpen(false)}>
+            Bakes
+          </Link>
           <button
             type="button"
             role="menuitem"

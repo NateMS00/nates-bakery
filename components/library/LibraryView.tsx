@@ -8,6 +8,7 @@ import { ChipFilter } from "@/components/ui/ChipFilter";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { TextLink } from "@/components/ui/TextLink";
 import { TilePanel } from "@/components/ui/Tile";
+import { useInstalled } from "@/components/shell/useInstalled";
 import { categoryLabel } from "@/lib/data/categories";
 import {
   NO_FILTERS,
@@ -44,6 +45,7 @@ export function LibraryView({
   importEnabled: boolean;
 }) {
   const drafts = useDrafts(initialDrafts);
+  const installed = useInstalled();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const query = parseLibraryQuery(searchParams);
@@ -85,7 +87,7 @@ export function LibraryView({
       {/* Page header: H1 and, except in Empty, the primary action */}
       <div className="flex items-center justify-between gap-lg">
         <h1 className="type-display-md text-ink desktop:type-display-lg">Library</h1>
-        {!isEmpty && <PrimaryAction importEnabled={importEnabled} />}
+        {!isEmpty && <PrimaryAction importEnabled={importEnabled} installed={installed} />}
       </div>
 
       {isEmpty ? (
@@ -208,16 +210,19 @@ export function LibraryView({
 }
 
 /**
- * Primary action: the sticky action-bar on mobile, in the page header from tablet up.
- * Import from a reel, or New recipe while the Import feature is off.
+ * Primary action: the sticky action-bar on mobile, in the page header from tablet
+ * up. Import from a reel, or New recipe while the Import feature is off.
+ * Installed (BONES-shell 1.7.0): dropped on mobile, since the tab bar's Import
+ * tab is the same action; tablet and desktop keep it in the header either way.
  */
-function PrimaryAction({ importEnabled, centered = false }: { importEnabled: boolean; centered?: boolean }) {
+function PrimaryAction({ importEnabled, installed, centered = false }: { importEnabled: boolean; installed: boolean; centered?: boolean }) {
   return (
     <div
       data-action-bar
       className={
         "z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:bg-transparent tablet:p-0 tablet:shadow-none" +
-        (centered ? " tablet:mt-lg" : "")
+        (centered ? " tablet:mt-lg" : "") +
+        (installed ? " max-tablet:hidden" : "")
       }
     >
       <ButtonLink href={importEnabled ? "/import" : "/recipes/new"} variant="primary" className="w-full tablet:w-auto">
@@ -229,11 +234,12 @@ function PrimaryAction({ importEnabled, centered = false }: { importEnabled: boo
 
 /** BONES Empty: no recipes and no drafts. */
 function EmptyState({ importEnabled }: { importEnabled: boolean }) {
+  const installed = useInstalled();
   return (
     <div className="mx-auto mt-lg flex flex-col items-center text-center tablet:max-w-[calc(var(--col)*4+var(--gutter)*3)] desktop:mt-xl">
       <TilePanel className="w-full max-w-[calc(var(--spacing-3xl)*4)]" />
       <p className="mt-lg type-body-lg text-ink">{importEnabled ? "Save your first recipe from a reel" : "Add your first recipe"}</p>
-      <PrimaryAction importEnabled={importEnabled} centered />
+      <PrimaryAction importEnabled={importEnabled} installed={installed} centered />
       {importEnabled && (
         <TextLink href="/import#set-up-the-shortcut" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">
           Set up the Shortcut

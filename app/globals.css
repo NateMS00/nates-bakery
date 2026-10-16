@@ -145,6 +145,18 @@ dialog :is(input, textarea, select) {
   }
 }
 
+/* BONES-shell 1.7.0: the installed app's bottom tab bar reserves its own space (it's
+   56px, not an action-bar's height) and hides while the keyboard is open, same as a
+   page's own sticky action. */
+@media (max-width: 767.98px) {
+  body:has([data-tab-bar]) {
+    padding-bottom: calc(var(--spacing-tab-bar) + env(safe-area-inset-bottom));
+  }
+  html[data-keyboard-open] [data-tab-bar] {
+    display: none;
+  }
+}
+
 /* Bake Log: a newly saved entry briefly draws attention (cobalt wash and border), then
    settles back to the card. Under reduced motion it is skipped; focus still moves. */
 @keyframes entry-new {

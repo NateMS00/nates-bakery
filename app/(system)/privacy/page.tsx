@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
-// /privacy (Privacy), BONES-system.md 1.2.0: what the app stores (owner email,
-// recipes, reel captions and thumbnails, the import key, notification subscription),
-// what share links expose, how Apify and Apple Intelligence read a reel, and where
-// data is stored. One reading column, 8 of 12 cols on desktop (SKIN).
+// /privacy (Privacy), BONES-system.md 1.3.0: what the app stores (owner email,
+// recipes, favorites, the bake log with each bake's rating and photos, reel
+// captions and thumbnails, the import key, notification subscription), what share
+// links expose, how Apify and Apple Intelligence read a reel, and where data is
+// stored. One reading column, 8 of 12 cols on desktop (SKIN).
 
 export const metadata: Metadata = { title: "Privacy" };
 
@@ -13,7 +14,7 @@ const sections: { heading: string; body: React.ReactNode }[] = [
     body: (
       <ul className="list-disc space-y-xs pl-lg">
         <li>The owner’s email address and password, to sign in. The password is stored only as a secure hash.</li>
-        <li>Recipes: ingredients, steps, ratings, favorites, and the bake log with its notes.</li>
+        <li>Recipes: ingredients, steps, and favorites; the bake log, including each bake’s rating and the photos you add to it.</li>
         <li>For imported recipes: the reel’s link, the creator’s handle (so the creator is always credited), its caption, and a copy of its thumbnail.</li>
         <li>The import key that connects the Shortcut to your account, stored only in a form that can’t be read back — not even by Nate’s Bakery.</li>
         <li>If timer alerts are turned on, a notification subscription for that device, so alerts reach a locked phone.</li>

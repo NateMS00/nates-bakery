@@ -246,10 +246,12 @@ test("rating: tap sets, tapping again clears; favorite toggles", async ({ page }
   await expect(fav).toHaveAttribute("aria-pressed", "false");
 });
 
-test("account menu and timer alerts sheet", async ({ page }) => {
+test("account menu and timer alerts sheet", async ({ page, isMobile }) => {
   await ready(page, NATA);
   await page.getByRole("button", { name: "Account" }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Timer alerts", "Sign out", "Privacy"]);
+  // Bakes is in the menu on phones only (BONES-shell 1.7.0); tablet and desktop
+  // already have it in the header, so the menu doesn't repeat it.
+  await expect(page.getByRole("menuitem")).toHaveText(isMobile ? ["Bakes", "Timer alerts", "Sign out", "Privacy"] : ["Timer alerts", "Sign out", "Privacy"]);
   await shot(page, "17-account-menu");
   await page.getByRole("menuitem", { name: "Timer alerts" }).click();
   const sheet = page.getByRole("dialog", { name: "Get timer alerts on a locked phone" });
@@ -263,11 +265,26 @@ for (const [state, permission, title] of [
   ["alerts-on", "granted", "Timer alerts are on"],
   ["denied", "denied", "Alerts are blocked"],
 ] as const) {
-  test(`timer alerts sheet: ${state}`, async ({ page }) => {
+  test(`timer alerts sheet: ${state}`, async ({ page, isMobile }) => {
+    // These simulate installed mode to exercise readAlertsState()'s other
+    // branches, not recipe-page-specific layout (the mobile "not-home-screen"
+    // case is already covered, unstubbed, by the test above). On mobile,
+    // simulating installed here now also hides this page's Account button
+    // (BONES-shell 1.7.0: installed mode on a detail page has no account menu,
+    // same as a real iOS app's push screens) — there's no longer a path to open
+    // it from here, so this runs on desktop only, where Account always stays in
+    // the header.
+    test.skip(isMobile, "installed mode hides the account menu on a detail page; covered on desktop");
     await page.addInitScript((perm) => {
       const real = window.matchMedia.bind(window);
-      window.matchMedia = (q: string) =>
-        q === "(display-mode: standalone)" ? ({ ...real(q), matches: true } as MediaQueryList) : real(q);
+      // A real MediaQueryList (not a spread-copied plain object): useInstalled's
+      // useSyncExternalStore subscribes via its actual addEventListener, which a
+      // plain object fake wouldn't have.
+      window.matchMedia = (q: string) => {
+        const mql = real(q);
+        if (q === "(display-mode: standalone)") Object.defineProperty(mql, "matches", { value: true, configurable: true });
+        return mql;
+      };
       Object.defineProperty(window, "Notification", { value: { permission: perm, requestPermission: async () => perm } });
     }, permission);
     await ready(page, NATA);

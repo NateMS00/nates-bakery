@@ -3,6 +3,7 @@
 import { useState, type RefObject } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { isStandalone } from "@/lib/standalone";
 
 // BONES-shell Timer alerts sheet (SKELETON FLOW-05). Its content depends on where
 // the app stands. Scheduling alerts on the server is STUBBED until the backend
@@ -12,10 +13,7 @@ export type AlertsState = "not-home-screen" | "alerts-off" | "alerts-on" | "deni
 
 /** Where timer alerts stand on this device (not on the Home Screen, off, on, denied). */
 export function readAlertsState(): AlertsState {
-  const standalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true;
-  if (!standalone || !("Notification" in window)) return "not-home-screen";
+  if (!isStandalone() || !("Notification" in window)) return "not-home-screen";
   if (Notification.permission === "granted") return "alerts-on";
   if (Notification.permission === "denied") return "denied";
   return "alerts-off";

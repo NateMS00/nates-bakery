@@ -5,10 +5,14 @@ import { usePathname } from "next/navigation";
 import { TileBand } from "@/components/ui/Tile";
 import { cx } from "@/components/ui/cx";
 import { AccountMenu } from "./AccountMenu";
+import { useInstalled } from "./useInstalled";
 
-// BONES-shell App variant header: wordmark (→ /recipes), Library and Import,
-// then the account menu. Scrolls with the page. On mobile the wordmark is Library,
-// so only Import shows as a link. SKIN app-header + tile-band + nav-link.
+// BONES-shell 1.7.0 App variant header: wordmark (→ /recipes), Library, Import
+// and Bakes, then the account menu — always at tablet and up. On mobile the
+// wordmark is Library, so Library itself doesn't repeat as a link. Installed on
+// a phone (Home Screen, no Safari toolbar), the tab bar covers Import, Bakes and
+// the account menu, so only the logo and tile band remain. Scrolls with the
+// page. SKIN app-header + tile-band + nav-link.
 
 const navLinkClass =
   "inline-flex min-h-touch-min items-center border-b-3 border-transparent px-sm tablet:px-md type-button text-body transition-colors duration-(--motion-fast) ease-skin hover:border-hairline hover:text-ink focus-visible:outline-offset-2 aria-[current=page]:border-primary aria-[current=page]:text-primary";
@@ -16,6 +20,8 @@ const navLinkClass =
 /** `showImport`: the Import link, only while the Import feature is on (lib/features.ts). */
 export function AppHeader({ showImport }: { showImport: boolean }) {
   const pathname = usePathname();
+  const installed = useInstalled();
+  const current = (href: string) => (pathname === href ? "page" : undefined);
   return (
     <header>
       {/* "Nate’s Bakery" stays on one line down to 320px: below tablet the gaps and the
@@ -27,17 +33,22 @@ export function AppHeader({ showImport }: { showImport: boolean }) {
         >
           Nate’s Bakery
         </Link>
-        <nav aria-label="Primary" className="flex items-center gap-xs">
-          <Link href="/recipes" aria-current={pathname === "/recipes" ? "page" : undefined} className={cx(navLinkClass, "max-tablet:hidden")}>
-            Library
-          </Link>
-          {showImport && (
-            <Link href="/import" aria-current={pathname === "/import" ? "page" : undefined} className={navLinkClass}>
-              Import
+        <div className={cx("flex items-center gap-xs tablet:gap-sm", installed && "max-tablet:hidden")}>
+          <nav aria-label="Primary" className="flex items-center gap-xs">
+            <Link href="/recipes" aria-current={current("/recipes")} className={cx(navLinkClass, "max-tablet:hidden")}>
+              Library
             </Link>
-          )}
-        </nav>
-        <AccountMenu />
+            {showImport && (
+              <Link href="/import" aria-current={current("/import")} className={navLinkClass}>
+                Import
+              </Link>
+            )}
+            <Link href="/bakes" aria-current={current("/bakes")} className={cx(navLinkClass, "max-tablet:hidden")}>
+              Bakes
+            </Link>
+          </nav>
+          <AccountMenu />
+        </div>
       </div>
       <TileBand />
     </header>

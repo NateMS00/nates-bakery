@@ -17,7 +17,7 @@ test.beforeEach(async ({ context }, info) => {
 /** Every link on the page, including the header's (mobile and desktop forms alike). */
 const hrefs = (page: Page) => page.locator("a[href]").evaluateAll((links) => links.map((a) => a.getAttribute("href") ?? ""));
 
-test("no page links to /import", async ({ page }) => {
+test("no page links to /import", async ({ page, isMobile }) => {
   const pages = [
     "/recipes",
     "/recipes/pasteis-de-nata",
@@ -36,6 +36,23 @@ test("no page links to /import", async ({ page }) => {
   // The header has no Import link, on mobile or desktop.
   await ready(page, `${OFF}/recipes`);
   await expect(page.locator("header").getByRole("link", { name: "Import" })).toHaveCount(0);
+
+  // Installed mode (BONES-shell 1.7.0): the tab bar drops the Import tab too.
+  // Tab bar is mobile-only (tablet and desktop keep the top header either way).
+  if (isMobile) {
+    await page.addInitScript(() => {
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (q: string) => {
+        const mql = real(q);
+        if (q === "(display-mode: standalone)") Object.defineProperty(mql, "matches", { value: true, configurable: true });
+        return mql;
+      };
+    });
+    await ready(page, `${OFF}/recipes`);
+    const tabBar = page.getByRole("navigation", { name: "Main" });
+    await expect(tabBar.getByRole("link")).toHaveCount(3); // Library, Bakes, Account
+    await expect(tabBar.getByRole("link", { name: "Import" })).toHaveCount(0);
+  }
 });
 
 test("/import and Review Import are Not found", async ({ page }) => {

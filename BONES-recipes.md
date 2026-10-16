@@ -4,7 +4,7 @@
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.6.0 · **Updated**: 2026-10-16
+> **Version**: 1.6.1 · **Updated**: 2026-10-16
 
 ---
 
@@ -191,11 +191,11 @@ MOBILE
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Recipes not yet loaded | Search, Filters and the view tabs render; the grid shows 4 placeholder tiles (grout frames and two text bars) in final proportions; the Drafts tab appears once loaded |
-| Empty | No recipes and no drafts | Search, Filters, the view tabs, and the grid hide. Nathan's empty-Library illustration (160px; a tile panel until it exists) illustrates the page. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up the Shortcut" link → `/import` (its Set up the Shortcut section) |
+| Empty | No recipes and no drafts | Search, Filters, the view tabs, and the grid hide. Nathan's empty-Library illustration (160px; a tile panel until it exists) illustrates the page. The first viewport shows "Your recipe box is *empty.*" as the display title, a short line "Save your first recipe from a reel.", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up the Shortcut" link → `/import` (its Set up the Shortcut section) |
 | Only drafts | No saved recipes, at least one draft | Search and Filters hide; the page opens on the Drafts view; the Recipes tab shows one line "No saved recipes yet" |
 | No favorites | Favorites view, none marked | One line: "Tap the heart on a recipe to keep it here." |
 | `?favorite=1` | Old links | Opens the Favorites view and rewrites the URL to `?view=favorites` |
-| No results | Search or filters match nothing | Result count reads "No matches out of 24 recipes" (words, not a 0); the list is replaced by "Nothing matches" plus Clear search (when `?q=` is set) and Clear filters (when any filter is set) |
+| No results | Search or filters match nothing | Result count reads "No matches out of 24 recipes" (words, not a 0); the list is replaced by "Nothing *matches.*" in `display-md` with Nathan's "no results" illustration (96px; nothing until it exists), plus Clear search (when `?q=` is set) and Clear filters (when any filter is set) |
 | Filters sheet | Filters button (mobile only) | Bottom sheet sized to its content, with a footer pinned to its bottom. Order: a header row with "Filters" and a close X; Category as wrapping single-choice chips ("All" first, then each category with its count: "Cake 6"); Status as a three-part segmented control; Rating as wrapping single-choice chips (Any, 3★ and up, 4★ and up, 5★); footer with Clear and "Show n recipes" (n updates live). All three filters fit on one 390 × 844 screen without scrolling; if they ever don't, the body scrolls above the pinned footer. Dismissed by the close X, Esc, backdrop tap, or swipe down, which discard unapplied changes. Focus is trapped inside and returns to the Filters button on close |
 
 ---
@@ -226,6 +226,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.6.1 (2026-10-16): Empty and No results copy and illustrations (SKIN Voice).
 - 1.6.0 (2026-10-16): Personality round (SKIN October 2026): display title "Your *recipes.*"; view tabs drawn as choice radios; recipe tiles framed in ink with cobalt stars; azulejo field for tiles without a picture; empty state uses Nathan's illustration when it exists.
 - 1.5.1 (2026-10-16): First viewport recorded as measured (first row in full, the top of the second); tile dates without the weekday, the date moving under the stars when the line doesn't fit.
 

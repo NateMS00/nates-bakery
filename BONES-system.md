@@ -3,7 +3,7 @@
 > **Source**: SKELETON.md v1.5.0: `/login`, `/forgot-password`, `/reset-password`, `/account`, `/privacy`, not-found, error; FLOW-04
 > **Primary Device**: mobile for the auth pages, because a sign-in usually interrupts something started on the iPhone (an import from Instagram's share menu, a link opened from Messages); the system pages have no single primary device
 > **Shell**: BONES-shell.md. Auth pages use the Share variant (public shell). Privacy, Not found and Error use the App variant when signed in and the Share variant otherwise, so a guest or friend never sees owner navigation
-> **Version**: 1.3.0 · **Updated**: 2026-10-15
+> **Version**: 1.4.0 · **Updated**: 2026-10-16
 > **Note**: Written after the build (prompt 8) to record the layout as reviewed and approved, so later changes and the accessibility audit have a spec to check against.
 
 ---
@@ -17,6 +17,7 @@
   - Every field carries the autocomplete hints the iPhone needs to offer saved and suggested passwords (listed per page below).
 - **Notices**: page-level messages ("Password updated", "That reset link has expired…") sit between the H1 and the form, use SKIN's notice component, and are announced when they appear.
 - **No account enumeration**: no page ever reveals whether an email has an account.
+- **Titles** (October 2026): Sign in, Account, Not found and Error use SKIN's `display-title` (44px on phones, 64px on desktop) with one word in Fraunces italic; the forgot and reset password pages and Privacy keep `display-md`/`display-lg` titles, since they are tasks or reading. A wink lives only in the heading; the sentence under it is always plain (SKIN Voice).
 
 ---
 
@@ -26,7 +27,7 @@
 
 ```text
 MAIN
-├── PAGE_TITLE "Sign in"                    H1
+├── PAGE_TITLE "Welcome back."             H1 (display title)
 ├── NOTICE (Password updated, or the sign-in error)
 └── SIGN_IN_FORM
     ├── EMAIL
@@ -36,7 +37,7 @@ MAIN
 ```
 
 - **Layout**: one column (see Shared rules); Sign in full width of the column on every device; "Forgot password?" a text link below it
-- **Content**: "Sign in"; Email (`type="email"`, `autocomplete="username"`); Password (`autocomplete="current-password"`); Sign in; "Forgot password?". No sign-up link (SKELETON)
+- **Content**: "Welcome *back.*" (the page title in the browser tab stays "Sign in", and the button says Sign in); Email (`type="email"`, `autocomplete="username"`); Password (`autocomplete="current-password"`); Sign in; "Forgot password?". No sign-up link (SKELETON)
 - **Behavior**: on success → the `?next=` path if it is a same-site path, otherwise `/recipes`. A `?next=` pointing to another site (for example `//evil.example`) is ignored
 
 ```text
@@ -118,7 +119,7 @@ MAIN
 
 ```text
 MAIN
-├── PAGE_TITLE "Account"                    H1
+├── PAGE_TITLE "Your account."            H1 (display title)
 ├── SIGNED_IN_AS (email, muted)
 ├── SETTINGS (list of rows)
 │   ├── TIMER_ALERTS ("On" / "Off") → Timer alerts sheet
@@ -127,7 +128,7 @@ MAIN
 └── SIGN_OUT
 ```
 
-- **Layout**: reading column, 8 of 12 cols on desktop, full width on mobile. Settings as one glazed `card` with hairline-separated rows, each 56px tall: label on the left, its state in muted text and a chevron on the right. Sign out below the card, as a `button-secondary`, full width on mobile
+- **Layout**: reading column, 8 of 12 cols on desktop, full width on mobile. Title "Your *account.*". Settings as one SKIN `record-card` whose rows are links, each 56px tall: the label in `label-mono` on the left (signed in as, timer alerts, shortcut, privacy), the value on the right (the email; "On"/"Off"; "Import key"; nothing) with a chevron on the rows that go somewhere; ink rules between rows. Sign out below the card, as a `button-secondary` (outlined pill), full width on mobile
 - **Content**: "Account"; "Signed in as nathan@…" (muted); Timer alerts with its state ("On", "Off", "Blocked"); "Shortcut and import key"; "Privacy"; Sign out
 - **Behavior**: Timer alerts opens the Timer alerts sheet (BONES-shell) over this page; Sign out ends the session → `/login`, with no confirmation (signing back in is easy and nothing is lost)
 
@@ -183,13 +184,14 @@ MAIN
 
 ```text
 MAIN
-├── PAGE_TITLE "Page not found"             H1
+├── ILLUSTRATION (decorative)
+├── PAGE_TITLE "Not in the recipe box."   H1 (display title)
 ├── EXPLANATION (one sentence)
 └── WAY_FORWARD (button-secondary)
 ```
 
 - **Layout**: column aligned to the page top (not centered), since the page has a way forward; the button sizes to its label
-- **Content**: "Page not found"; "This page doesn't exist, or the recipe was deleted."; "Go to your recipes" → `/recipes` when signed in, "Sign in" → `/login` otherwise
+- **Content**: Nathan's "no results" illustration (160px, decorative; a tile panel until it exists); "Not in the recipe *box.*"; "This page doesn't exist, or the recipe was deleted." (the browser tab title stays "Page not found"); "Go to your recipes" → `/recipes` when signed in, "Sign in" → `/login` otherwise
 - **Behavior**: served with a 404 status (BACKLOG)
 
 ---
@@ -200,14 +202,15 @@ MAIN
 
 ```text
 MAIN
-├── PAGE_TITLE "Something went wrong"       H1 (takes focus)
+├── ILLUSTRATION (decorative)
+├── PAGE_TITLE "Something went wrong."     H1 (display title, takes focus)
 ├── EXPLANATION (one sentence)
 ├── TRY_AGAIN (button-primary)
 └── WAY_OUT (button-secondary; depends on where the error happened)
 ```
 
 - **Layout**: column aligned to the page top; both buttons full width and stacked on mobile, side by side and sized to their labels from tablet up
-- **Content**: "Something went wrong"; "This page didn't load. Nothing you saved is lost; try again in a moment."; Try again reloads the page's data from the server (a plain redraw would repeat the failure). The way out depends on the area:
+- **Content**: Nathan's error illustration (160px, decorative; a tile panel until it exists); "Something went *wrong.*" (no joke here: something failed and the person may be worried about their data); "This page didn't load. Nothing you saved is lost; try again in a moment."; Try again reloads the page's data from the server (a plain redraw would repeat the failure). The way out depends on the area:
   - Owner area: "Go to your recipes" → `/recipes`
   - Shared pages: none, Try again only, since nothing in the owner area is open to a friend
   - Anywhere else: "Go to Nate’s Bakery" → `/`
@@ -230,6 +233,7 @@ MAIN
 
 ## CHANGE LOG
 
+- 1.4.0 (2026-10-16): Personality round: display titles on Sign in ("Welcome *back.*"), Account ("Your *account.*"), Not found ("Not in the recipe *box.*") and Error ("Something went *wrong.*"); Account settings as a record card; illustrations on Not found and Error.
 - 1.3.0 (2026-10-15): New `/account` page for the installed app's Account tab; Privacy lists ratings per bake and bake photos (SKELETON 1.5.0).
 - 1.2.0 (2026-10-13): Privacy names Apify and Apple Intelligence for reel imports, lists captions, thumbnails and the import key, and adds where data is stored (SKELETON 1.4.1).
 - 1.1.2 (2026-10-01): App renamed to Nate’s Bakery.

@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.5.0 · **Updated**: 2026-10-15
+> **Version**: 1.6.0 · **Updated**: 2026-10-16
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -53,7 +53,7 @@ MAIN
 
 ### Page header (added; see Assumptions)
 - **Layout**: desktop full width: title and draft status 8 cols, Discard and Save recipe 4 cols right-aligned; mobile title on the left, Discard on the right of the same row, draft status under the title
-- **Content**: "Review import"; draft status "Draft saved" or "Saving…"; Discard as a text button (`button-text`), not a bordered one, because it's an escape hatch and shouldn't compete with the title or Save; it opens the Discard confirmation; on desktop, Save recipe is here as the most prominent action, and repeated at the end of the sticky left column (see Needs Your Check)
+- **Content**: "Review *import.*" in `display-md` (44px on desktop), not the big display title: this is a working page; draft status in `label-mono` "Draft saved" or "Saving…"; Discard as a text button (`button-text`), not a bordered one, because it's an escape hatch and shouldn't compete with the title or Save; it opens the Discard confirmation; on desktop, Save recipe is here as the most prominent action, and repeated at the end of the sticky left column (see Needs Your Check)
 - **Behavior**: draft status updates as edits autosave
 
 ```text
@@ -73,7 +73,7 @@ MOBILE
 ```
 
 ### Source (SKELETON section 1)
-- **Layout**: desktop left column (4 cols), top; mobile full width. One `source-card` (SKIN): the reel as a 64px-wide 9:16 frame on the left with a round play badge on it, and on the right the creator handle (bold), the first 2 lines of the original caption, and Watch reel
+- **Layout**: desktop left column (4 cols), top; mobile full width. One `source-card` (SKIN), drawn as a small record: the reel as a 64px-wide 9:16 frame on the left with a round play badge on it; on the right, record rows with `label-mono` labels and ink rules: `reel` @creator · Watch reel, `caption` its first 2 lines in the voice italic, `language` (only when translated: "Spanish, translated")
 - **Content**: reel frame (the thumbnail; the frame and its play badge together are one link to the reel, labeled "Watch @creator's reel", opening in a new tab); creator handle; caption preview (2 lines of the original caption, in its own language); "Watch reel" text link. Below the card: when the caption looks cut off (Instagram's length limit), a one-line notice: "Instagram cut this caption off. Check the reel for the rest."; then "Read more" (a button), which expands the full Original caption under the card with its label "Original caption" plus "· Translated from Spanish" (or the language it was in) when the recipe was translated, and becomes "Show less"
 - **Behavior**: the caption starts collapsed every time the page opens. Read more exposes its expanded state to screen readers; expanding doesn't move focus. On desktop, while the caption is expanded, the left column stops being sticky and scrolls with the page, so no part of it is cut off
 
@@ -105,7 +105,7 @@ MOBILE
 
 ### Needs Your Check (SKELETON section 2)
 - **Layout**: desktop left column (4 cols) under Source, sticky while the editor scrolls, so it works as a checklist next to the form, and ends with Save recipe (`button-primary`, full column width) so saving stays in view however long the form is; mobile full width under Source, with no Save here (mobile has the Save bar)
-- **Content**: heading "Check 6 amounts" (the count of what's still open); one muted line under it, "Tap a row to fix it."; then rows in this order:
+- **Content**: heading "Check 6 amounts" (the count of what's still open), with the count also drawn as a big outlined numeral, "06", at 64px beside the heading (decorative, `aria-hidden`: the heading text carries it) that counts down as rows are confirmed and turns into a solid cobalt check at zero; one muted line under it, "Tap a row to fix it."; then rows in this order:
   - **Missing** (no amount in the caption, or an ingredient or unit the grams table doesn't know): a `check-row` with the `marker-missing` tag ("! Missing") in place of the check control, the name, "was ½ cup" when an original was kept, and "— g" (the "—" hidden from screen readers, which hear "no amount"); tapping it jumps to the amount field. These must get an amount or "To taste" to save
   - **Estimated** (from a count or a package at a typical weight, "50 g from 1 egg") and **Converted** (from a volume, "360 g from 3 cups"): a `check-row` each: a round check control that confirms that amount in place, the name with "from 3 cups" in muted caption under it, the grams on the right, and a chevron; tapping anywhere but the check control jumps to the field. An Estimated row also shows a small "~ Est." tag after the name, so the two kinds stay apart without colour
   - at most 5 rows on mobile, then "Show n more" expands in place; desktop shows all
@@ -115,8 +115,8 @@ MOBILE
 ```text
 DESKTOP (left column, sticky)
 +-------------------------------+
-| CHECK 6 AMOUNTS               |
-| Tap a row to fix it.          |
+| 06  CHECK 6 AMOUNTS           |
+|     Tap a row to fix it.      |
 | [! MISSING] BUTTER    — g   > |
 | (✓) FLOUR           360 g   > |
 |     from 3 cups               |
@@ -130,8 +130,8 @@ DESKTOP (left column, sticky)
 ```text
 MOBILE
 +--------------------------------------+
-| CHECK 6 AMOUNTS                      |
-| Tap a row to fix it.                 |
+| 06  CHECK 6 AMOUNTS                  |
+|     Tap a row to fix it.             |
 | [! MISSING] BUTTER          — g    > |
 | ( ) FLOUR                 360 g    > |
 |     from 3 cups                      |
@@ -302,12 +302,14 @@ MOBILE
 - **Assumed**: Ingredient notes are short and optional; they hold what the creator said about one ingredient. Tips about the whole recipe go in the Tips step group (SKELETON 1.4.4).
 - **Decided** (2026-10-15, Nathan, visual upgrade round): Source becomes a card: the reel is a small 9:16 frame with a play badge, read as a reference to open rather than as the recipe's picture, with the handle and caption preview beside it. The recipe's own picture is handled by the cover (a bake photo, later).
 - **Decided** (2026-10-15): Retry stays on this page instead of going to the Library. Reported live, iPhone only, Mac not: the Shortcut never opened. The old code set location.href to the Shortcut's shortcuts:// link and immediately navigated to the Library in the same tick — the likely cause, by code comparison with /import (which never navigates away and is confirmed working on the iPhone): on iOS the client-side navigation can cancel the hand-off before Safari finishes it, a race desktop Safari tolerates. Staying put and polling (the Retrying state) removes the race either way, confirmed or not.
+- **Decided** (2026-10-16, personality round): The source reads as a small record (reel, caption, language) and the check count gets a big outlined numeral that counts down, so checking feels like progress (references: Object & Archive's records, Bucks Sauce's numerals). The editor itself stays plain: forms are for doing, and they already get the new tokens.
 - **Open**: Highlight the part of the caption an item came from when you tap a check item ("125 g from 1 cup" → the words "1 cup flour")? Useful for checking, but it depends on the extraction returning positions; not drawn.
 
 ---
 
 ## CHANGE LOG
 
+- 1.6.0 (2026-10-16): Personality round: "Review *import.*" title; the source card as record rows (reel, caption, language); an outlined countdown numeral beside "Check 6 amounts".
 - 1.5.0 (2026-10-15): Visual upgrade round: Source as a card (reel frame with play badge, handle, 2-line caption preview); Needs Your Check becomes a checklist ("Check 6 amounts") with a check per Estimated and Converted row and "These look right" for all; editor rows lose the marker chip and Confirm button, keeping one muted "from 3 cups" line until confirmed (SKELETON 1.5.0).
 - 1.4.4 (2026-10-15): Retry (Couldn't finish) stays on this page and polls instead of navigating to the Library — the iPhone never opened the Shortcut on Retry, a same-tick navigation racing the shortcuts:// hand-off by most likely cause. New Retrying state.
 - 1.4.3 (2026-10-15): Open note: the Source picture is to be redesigned in the visual upgrade round.

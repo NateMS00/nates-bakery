@@ -6,7 +6,7 @@
 > **Shell**: BONES-shell.md, App variant (no tab bar)
 
 This file also defines the **Log sheet**, the one form for logging or editing a bake, opened from this page, from the Recipe page (Log bake), from Bake Mode's Finish, and from the Bakes diary.
-> **Version**: 1.3.0 · **Updated**: 2026-10-16
+> **Version**: 1.4.0 · **Updated**: 2026-10-16
 
 ---
 
@@ -41,7 +41,7 @@ All sections sit in one centered reading column: desktop 8 of 12 cols, mobile fu
 
 ### Page header (added; see Assumptions)
 - **Layout**: desktop back link on its own line, then title and count on the left (6 of 8 cols) and Log a bake on the right (2 cols); mobile back link, title, and count stacked, with the primary action in the sticky bar
-- **Content**: back link with the recipe title ("< Brown butter cookies", truncated at one line) → `/recipes/:recipeId`; "Bake log"; "5 bakes" (hidden when empty); Log a bake → `?new=1`
+- **Content**: back link with the recipe title ("< Brown butter cookies", truncated at one line) → `/recipes/:recipeId`; "Bake *log.*" in `display-md` (44px on desktop); "5 bakes" (hidden when empty); Log a bake → `?new=1`
 - **Behavior**: none
 
 ```text
@@ -63,8 +63,8 @@ MOBILE
 ```
 
 ### Entries (SKELETON section 1)
-- **Layout**: one block per entry, stacked with a medium gap, on both devices; the entry menu sits at the end of the entry's first line
-- **Content**: first line: date ("Sat 26 Sep") and scale used ("1.5×", hidden at 1×) as the entry heading, with that bake's stars at the end of the line when rated; the bake photo when there is one, full width of the column at 4:3, with a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
+- **Layout**: one SKIN `record-card` per entry, stacked with a medium gap, on both devices; the entry menu sits at the end of the card's first row
+- **Content**: record rows with `label-mono` labels: `baked` the date ("Sat 26 Sep", the entry heading), `scale` (row hidden at 1×), `rating` that bake's cobalt stars (row hidden when unrated); then the bake photo when there is one, full width of the card at 4:3 with an ink rule above and below, and a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed" as labeled rows whose text is set in the voice italic, as quoted words; the bake photo when there is one, full width of the column at 4:3, with a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
 - **Behavior**: a newly saved entry appears at the top and briefly draws attention with a cobalt wash that fades over about 2.4 s (no animation under reduced motion), and focus moves to its heading, after the After-save moment (section 3) has closed
 
 ```text
@@ -122,7 +122,7 @@ MOBILE
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Entries not yet loaded | Page header renders; Entries shows 3 placeholder entries in final proportions |
-| Empty | No entries | Entries reduces to "No bakes logged yet" and one sentence on why ("Note what you change each time, and the next bake gets better"); Log a bake stays the primary action |
+| Empty | No entries | Nathan's empty-Bakes illustration (a tile panel until it exists), "Not baked *yet.*" in `display-md`, and one sentence: "Note what you change each time, and the next bake gets better." Log a bake stays the primary action |
 | Not found | Unknown `:recipeId` | System not-found page (SKELETON) |
 | Log sheet | `?new=1` (new), or `?edit=<entryId>` from Edit in an entry menu, Add notes, a bake in Recipe's Bakes section, or a bake in the Bakes diary | **Mobile**: a bottom sheet with the tile band on its top edge, opening at its content height (most of the screen), and growing to full height while the keyboard is open, with Save pinned just above the keyboard (SKIN Mobile Browser Viewport); **desktop**: centered modal, 6 cols wide. Order: header row with "Log this bake" (or "Edit bake") and a close X; one row of two compact controls, "Baked on" (shows "Today", or the date; opens the date picker; can't be later than today in the owner's local time) and the scale ("1×", a number with a visible "×" suffix that screen readers skip, decimal keypad, prefilled from Bake Mode or the Recipe page); the five stars at the prompt size (SKIN `star-rating`, 40px), centered, optional, pressing the current one clears it; "How it turned out" (multi-line); "What changed" (multi-line); a photo slot: "Add a photo" with "Can become the recipe's cover", which offers the camera or the photo library (the phone's own picker); once a photo is added it shows as a 4:3 preview with Replace and Remove, and a "Use as recipe cover" toggle under it (on by default for a recipe whose cover is still the reel thumbnail, off otherwise); Save (`button-primary`, full width), and under it one muted line "Only the date is required." There is no Cancel button: the close X cancels. Closing removes `?new=1` or `?edit=` from the URL (replacing the history entry); an unknown entry id opens the log without the sheet and drops the param, no error. Focus starts on the first star for a new bake (rating is the quickest thing to give) and on "How it turned out" when editing; it returns to what opened the sheet. Save with nothing but the date is the one-tap "I baked it" path |
 | Discard changes | Esc, close X, backdrop tap or swipe down on the Log sheet after any change (stars, typed text, a photo, or a changed date or scale) | A confirmation inside the form following the Destructive confirmations rule (BONES-shell): "Discard this entry?", Discard first, Keep editing last and focused; with no changes the form just closes |
@@ -157,6 +157,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.0 (2026-10-16): Personality round: "Bake *log.*" title; each entry as a record card (baked, scale, rating, photo, notes in the voice italic); empty state with illustration.
 - 1.3.0 (2026-10-16): Personality round: after saving a new bake, a full-screen celebration for milestones (first bake, best rating, every 5th) or a "Bake saved · Undo" toast otherwise; the entry highlight follows once that closes. Visuals follow SKIN October 2026 (cobalt stars, ochre Save, ink outlines).
 - 1.2.0 (2026-10-15): Visual upgrade round: the entry form becomes the Log sheet (shared by Recipe, Bake Mode, Bakes): Baked on and scale as compact controls, stars per bake, How it turned out before What changed, one photo with "Use as recipe cover", Save only (close X cancels); entries show their stars and photo; the Rating prompt is removed (SKELETON 1.5.0).
 - 1.1.0 (2026-09-30): After the first build review: `?edit=<entryId>` for one-tap Add notes and Edit; Discard check covers date and scale changes; edit focus on What changed; no future dates (local date); highlight timing plus a "Bake saved" announcement; scale field details; confirmations follow BONES-shell's Destructive rule.

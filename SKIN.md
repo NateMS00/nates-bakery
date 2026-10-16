@@ -1417,6 +1417,16 @@ The design takes its DNA from three places, without copying any of them: the cob
 - Lines are ink, not grout: list rules, record rows, tile and photo frames are `{colors.outline}`. `{colors.hairline}` survives only in skeletons and as the edge of disabled controls. Shadows exist only on `sheet`, `modal`, `menu`, `timer-alert`, and the sticky `action-bar`.
 - One idea at a time where it matters: Bake Mode is a dark stage (`bake-stage`) with one step, one giant outlined number or one big clock per screen.
 
+### Voice
+
+The words carry personality too, and cost nothing to build. The voice is a baker's notebook: warm, plain, a little wry, about Nathan's own kitchen.
+- **The wink lives in the heading, never in the sentence under it.** Display titles may play ("Nothing out of the oven *yet.*", "This link has gone *stale.*", "Bake no. 5 *in the book.*"); the line under them always says plainly what happened and what to do, so the meaning never depends on the joke.
+- **One wink per screen at most**, and only on empty states, system pages, page titles and celebrations. Forms, buttons, field labels, markers, timers and Bake Mode steps stay literal.
+- **No jokes in failures that might worry someone**: "Something went *wrong.*", not a pun, when data could be at stake. A stale share link is fine; a failed save is not.
+- **The italic word is the human one**: the second half of a display title ("Your *recipes.*"), the source ("from Avó Lurdes"), notes in quotes. Never italic for emphasis inside a sentence.
+- **Kitchen words over app words** where they're just as clear: recipe box, bake, oven, in the book; never "items", "entries" or "content".
+- Mechanics stay as before: sentence case, no exclamation marks, no "please", no "successfully".
+
 ---
 
 ## Colors

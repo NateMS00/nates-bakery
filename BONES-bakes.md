@@ -4,7 +4,7 @@
 > **Primary Action**: none; a reading page (bakes are logged from a recipe)
 > **Primary Device**: mobile, because the persona looks back at bakes on the iPhone, often when deciding what to bake next or remembering what went wrong last time
 > **Shell**: BONES-shell.md, App variant (the Bakes tab in the installed app)
-> **Version**: 1.0.1 · **Updated**: 2026-10-16
+> **Version**: 1.1.0 · **Updated**: 2026-10-16
 
 ---
 
@@ -36,14 +36,15 @@ MAIN
 ```text
 MOBILE
 +--------------------------------------+
-| BAKES                                |
+| YOUR                                 |
+| *BAKES.*                             |
 | 7 BAKES THIS YEAR · 5 RECIPES        |
 +--------------------------------------+
 ```
 
 ### Diary (SKELETON section 2)
-- **Layout**: months stacked, newest first, each with its name as an H2 on the left and its count on the right, over a hairline. Within a month, in date order (newest first): bakes with a photo as `bake-tile`s in a grid, 2 columns on mobile, 3 on tablet, 4 on desktop; bakes without a photo as full-width `card` rows. Tiles and rows keep date order between them: a run of photo bakes forms a grid block, a bake without a photo breaks it with a row, then the grid resumes. Months older than the current year show the year ("September 2025")
-- **Content**: **bake tile**: the bake photo, square, with a date `picture-chip` in its top-left corner ("15" over "Thu"); the recipe title in bold (2 lines, then truncates); one meta line: that bake's stars in amarelo (none when unrated), then "2nd bake" (its number among that recipe's bakes, from the second on) or the scale when it isn't 1×. **bake row**: a 52px tile-panel square in place of a photo, the recipe title with the date ("Pastel de nata · 2 Oct"), one line of the bake's note (How it turned out, else What changed; truncated), and its stars. 40 bakes, then Show more loads older ones below
+- **Layout**: months stacked, newest first, `{spacing.2xl}` apart (`{spacing.section}` on desktop), each with its name as an H2 in Fraunces at `display-md` (34px, 44px on desktop) on the left and its count in `label-mono` on the right, over an ink rule, like the chapters of a diary. Within a month, in date order (newest first): bakes with a photo as `bake-tile`s in a grid, 2 columns on mobile, 3 on tablet, 4 on desktop; bakes without a photo as full-width `card` rows. Tiles and rows keep date order between them: a run of photo bakes forms a grid block, a bake without a photo breaks it with a row, then the grid resumes. Months older than the current year show the year ("September 2025")
+- **Content**: **bake tile**: the bake photo, square, with a date `picture-chip` in its top-left corner ("15" over "Thu"); the recipe title in bold (2 lines, then truncates); one meta line: that bake's stars in cobalt (none when unrated), then "2nd bake" (its number among that recipe's bakes, from the second on) or the scale when it isn't 1×. **bake row**: a 52px `azulejo-fill` square in place of a photo, framed in ink, the recipe title with the date ("Pastel de nata · 2 Oct"), one line of the bake's note (How it turned out, else What changed; truncated), and its stars. 40 bakes, then Show more loads older ones below
 - **Behavior**: each tile or row is one link to that bake in its Log sheet (`/recipes/:recipeId/log?edit=<entryId>`), where it can be read in full, edited, or the recipe opened. The tile's accessible name reads the whole bake: "Pastel de nata, Thursday 15 October, 5 stars, second bake"
 
 ```text
@@ -86,7 +87,7 @@ DESKTOP (4 columns)
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Bakes not yet loaded | Title renders; one month heading and 4 placeholder tiles in final proportions |
-| Empty | No bakes logged yet | Summary hides; a tile panel, "No bakes yet", one sentence ("Log a bake from any recipe and it shows up here, with its photo and how it went."), and a "Go to Library" link → `/recipes` |
+| Empty | No bakes logged yet | Summary hides; Nathan's empty-Bakes illustration (a tile panel until it exists), "Nothing out of the oven *yet.*" in `display-md`, one sentence ("Log a bake from any recipe and it shows up here, with its photo and how it went."), and a "Go to Library" link → `/recipes` |
 | Log sheet | A tile or row | The bake opens in the Log sheet (BONES-recipes-log.md) over this page; closing returns here at the same scroll position |
 
 ---
@@ -105,5 +106,6 @@ DESKTOP (4 columns)
 
 ## CHANGE LOG
 
+- 1.1.0 (2026-10-16): Month headings as big Fraunces chapter titles with more space between months; bake rows use the azulejo square; empty state copy and illustration.
 - 1.0.1 (2026-10-16): Personality round: display title "Your *bakes.*"; tiles and rows follow SKIN October 2026 (ink frames, cobalt stars).
 - 1.0.0 (2026-10-15): Initial wireframe (SKELETON 1.5.0).

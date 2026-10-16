@@ -33,7 +33,7 @@ export function CheckRow({
 }) {
   const amountLabel = grams === null ? "no amount" : `${formatGrams(grams)} g`;
   return (
-    <div className="flex items-center gap-md border-b border-hairline py-md">
+    <div className="flex items-center gap-md border-b border-outline py-md">
       {status === "missing" ? (
         <MissingMarker />
       ) : (

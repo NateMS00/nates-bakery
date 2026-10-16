@@ -25,7 +25,7 @@ export function TabBar({ items, className }: { items: TabBarItemConfig[]; classN
     // bottom"): without it this sits in normal document flow and scrolls away
     // with the page instead of staying put; `data-tab-bar`'s body padding (its
     // sibling CSS rule) reserves the matching space so it never covers content.
-    <nav aria-label="Main" className={cx("z-20 pin-bottom border-t border-hairline bg-canvas pb-[var(--safe-area-bottom)]", className)}>
+    <nav aria-label="Main" className={cx("z-20 pin-bottom border-t border-outline bg-canvas pb-[var(--safe-area-bottom)]", className)}>
       <div className="flex h-tab-bar">
         {items.map((item) => (
           <Link

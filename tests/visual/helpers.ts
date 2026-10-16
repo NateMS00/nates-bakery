@@ -146,7 +146,7 @@ export async function expectDestructiveConfirmation(page: Page, title: string, d
   const dialog = page.getByRole("dialog", { name: title });
   const safeButton = dialog.getByRole("button", { name: safe, exact: true });
   await expect(safeButton).toBeFocused();
-  await expect(safeButton).toHaveClass(/border-primary/); // button-secondary, not a text link
+  await expect(safeButton).toHaveClass(/bg-transparent/); // button-secondary, not a text link
   const [d, s, panel] = await Promise.all([
     dialog.getByRole("button", { name: destructive, exact: true }).boundingBox(),
     safeButton.boundingBox(),

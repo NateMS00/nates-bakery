@@ -56,7 +56,7 @@ function IngredientRow({ ingredient, scale, shared }: { ingredient: Ingredient; 
   const hasMarker = ingredient.status === "estimated" || (ingredient.status === "converted" && !shared);
 
   return (
-    <li className="grid grid-cols-[1fr_auto] items-baseline gap-x-base border-b border-hairline py-md">
+    <li className="grid grid-cols-[1fr_auto] items-baseline gap-x-base border-b border-outline py-md">
       <span className="line-clamp-2 type-body-md text-ink">{ingredient.name}</span>
       {ingredient.grams === null ? (
         <span className="text-right type-body-md text-muted">to taste</span>

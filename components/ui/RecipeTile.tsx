@@ -5,12 +5,14 @@ import { StarGlyph } from "./Star";
 import { cx } from "./cx";
 
 /**
- * SKIN recipe-tile: a recipe in the Library's photo grid (4:5 picture, category,
- * title, one meta line). The whole tile is one link, named explicitly (as
- * RecipeList.tsx's cardName already does) because the meta line's pieces — stars,
- * favorite, baked date — don't read in a sensible order from their visual layout
- * alone. "Not rated" and "Not baked yet" are never printed: the meta line is
- * omitted entirely when there's nothing to say.
+ * SKIN recipe-tile: a recipe in the Library's photo grid, drawn like a printed
+ * card — a 1px ink frame at rounded.tile around the picture and the text, with
+ * an ink rule between them (October 2026; previously an unframed picture over
+ * bare text). The whole tile is one link, named explicitly (as RecipeList.tsx's
+ * cardName already does) because the meta line's pieces — stars, favorite,
+ * baked date — don't read in a sensible order from their visual layout alone.
+ * "Not rated" and "Not baked yet" are never printed: the meta line is omitted
+ * entirely when there's nothing to say.
  */
 export function RecipeTile({
   href,
@@ -39,12 +41,12 @@ export function RecipeTile({
       aria-disabled={disabled || undefined}
       aria-label={name}
       className={cx(
-        "group flex flex-col gap-sm rounded-lg text-ink transition-transform duration-(--motion-fast) ease-skin focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring",
+        "group flex flex-col overflow-hidden rounded-tile border border-outline bg-surface-card text-ink transition-transform duration-(--motion-fast) ease-skin focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring",
         disabled ? "pointer-events-none text-disabled" : "active:scale-[0.98]",
       )}
     >
-      <Picture src={picture} aspectRatio="4 / 5" className="w-full" />
-      <div>
+      <Picture src={picture} aspectRatio="4 / 5" rounded="none" className="w-full border-b border-outline" />
+      <div className="px-md pt-sm pb-md">
         <p className={cx("type-label", disabled ? "text-disabled" : "text-primary")}>{category}</p>
         <p className={cx("type-tile-title mt-[2px] line-clamp-2 text-current", !disabled && "group-hover:underline group-hover:underline-offset-[3px]")}>{title}</p>
         {hasMeta && (

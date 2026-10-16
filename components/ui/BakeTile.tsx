@@ -5,10 +5,12 @@ import { StarGlyph } from "./Star";
 import { cx } from "./cx";
 
 /**
- * SKIN bake-tile: a bake in the Bakes diary — a square photo with a date
- * picture-chip in its top-left corner, the recipe title in bold body-sm, and one
- * meta line (that bake's stars in amarelo, then "2nd bake" or the scale when it
- * isn't 1×). One link to the bake's entry in its Log sheet.
+ * SKIN bake-tile: a bake in the Bakes diary, the same printed-card frame as
+ * recipe-tile (1px ink edge at rounded.tile, an ink rule under the picture) — a
+ * square photo with a date picture-chip in its top-left corner, the recipe
+ * title in bold body-sm, and one meta line (that bake's stars in cobalt, then
+ * "2nd bake" or the scale when it isn't 1×). One link to the bake's entry in
+ * its Log sheet.
  */
 export function BakeTile({
   href,
@@ -39,17 +41,17 @@ export function BakeTile({
       aria-disabled={disabled || undefined}
       aria-label={name}
       className={cx(
-        "group flex flex-col gap-sm rounded-lg text-ink transition-transform duration-(--motion-fast) ease-skin focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring",
+        "group flex flex-col overflow-hidden rounded-tile border border-outline bg-surface-card text-ink transition-transform duration-(--motion-fast) ease-skin focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-focus-ring",
         disabled ? "pointer-events-none text-disabled" : "active:scale-[0.98]",
       )}
     >
-      <Picture src={picture} aspectRatio="1 / 1" className="w-full">
+      <Picture src={picture} aspectRatio="1 / 1" rounded="none" className="w-full border-b border-outline">
         <PictureChip className="absolute top-sm left-sm flex flex-col items-center leading-none">
           <span>{day}</span>
           <span className="font-normal">{weekday}</span>
         </PictureChip>
       </Picture>
-      <div>
+      <div className="px-md pt-sm pb-md">
         <p className={cx("type-body-sm font-bold text-current", !disabled && "group-hover:underline")}>{title}</p>
         {(rating !== null || bakeLabel) && (
           // flex-wrap, not a fixed one line — same rule as recipe-tile: never wrap a

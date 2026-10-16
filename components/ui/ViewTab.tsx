@@ -7,11 +7,12 @@ export interface ViewTabOption {
 }
 
 /**
- * SKIN view-tab: the Library's Recipes / Favorites / Drafts switcher — short
- * grout-fill tiles, the selected one cobalt with on-primary text, an optional
- * count. Built as a tab list (`role="tablist"`, `aria-selected`), not filters.
- * 40px tall in a 48px hit area (a centered pseudo-element, as SKIN's segmented
- * control already does).
+ * SKIN view-tab: the Library's Recipes / Favorites / Drafts switcher, drawn as a
+ * row of choice-radios ("(●) Recipes  ( ) Favorites  ( ) Drafts 5") — but it is a
+ * tab list, not a radio group: `role="tablist"`/`role="tab"`/`aria-selected`,
+ * not a real radio input, because switching views swaps a panel below, which is
+ * what a tab does. The glyph only echoes what `aria-selected` already says, so
+ * it's `aria-hidden`.
  */
 export function ViewTabs({
   label,
@@ -27,7 +28,7 @@ export function ViewTabs({
   className?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={cx("flex gap-sm", className)}>
+    <div role="tablist" aria-label={label} className={cx("flex flex-wrap gap-x-lg gap-y-sm", className)}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -37,13 +38,15 @@ export function ViewTabs({
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(option.value)}
-            className={cx(
-              "relative inline-flex min-h-10 items-center gap-xs whitespace-nowrap rounded-md px-md type-button text-[15px] transition-colors duration-(--motion-fast) ease-skin after:absolute after:inset-x-0 after:-inset-y-xs after:content-[''] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring",
-              selected ? "bg-primary text-on-primary" : "bg-surface-sunken text-body hover:bg-hairline hover:text-ink",
-            )}
+            className="group flex min-h-touch-min items-center gap-sm whitespace-nowrap rounded-sm transition-colors duration-(--motion-fast) ease-skin focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
           >
-            {option.label}
-            {option.count !== undefined && <span className="type-caption">{option.count}</span>}
+            <span aria-hidden="true" className={cx("type-amount", selected ? "text-primary" : "text-muted")}>
+              {selected ? "(●)" : "( )"}
+            </span>
+            <span className={cx("type-tab", selected ? "text-ink" : "text-muted group-hover:text-ink")}>
+              {option.label}
+              {option.count !== undefined && <span className="type-label-mono ml-xs text-muted">{option.count}</span>}
+            </span>
           </button>
         );
       })}

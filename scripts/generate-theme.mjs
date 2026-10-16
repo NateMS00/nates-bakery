@@ -115,6 +115,14 @@ for (const [name, role] of Object.entries(t.typography)) {
   if (role.fontVariationSettings) out(`  font-variation-settings: ${role.fontVariationSettings};`);
   if (role.fontFeatureSettings) out(`  font-feature-settings: ${role.fontFeatureSettings};`);
   if (mono) out("  font-variant-numeric: tabular-nums;");
+  // SKIN gives a few display roles a smaller mobile size (display-xl, bake-number,
+  // timer-xl); nested here so every call site gets it for free, the same way the
+  // desktop size already is, instead of each one repeating a max-tablet override.
+  if (role.fontSizeMobile) {
+    out("  @media (max-width: 767.98px) {");
+    out(`    font-size: ${px(role.fontSizeMobile)};`);
+    out("  }");
+  }
   out("}");
   out();
 }

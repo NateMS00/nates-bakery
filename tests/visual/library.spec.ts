@@ -28,7 +28,7 @@ test("default: Recipes view, 30 recipes, Show more", async ({ page }) => {
   await expectTouchTargets(page);
   await expect(page.getByLabel("Search", { exact: true })).toHaveAttribute("placeholder", "Recipe or ingredient");
   await expect(viewTab(page, "Recipes")).toHaveAttribute("aria-selected", "true");
-  await expect(viewTab(page, "Drafts")).toHaveText("Drafts7");
+  await expect(viewTab(page, "Drafts")).toHaveText(/Drafts7$/);
 
   // Library is the current nav item (the link shows from tablet up; the wordmark is Library on mobile).
   if (!test.info().project.use.isMobile) await expect(page.getByRole("link", { name: "Library", exact: true })).toHaveAttribute("aria-current", "page");
@@ -114,7 +114,7 @@ test("an importing draft becomes Ready to review without a reload", async ({ pag
 
   await expect(row.getByRole("link", { name: /Kouign-amann/ })).toBeVisible({ timeout: 8_000 });
   await expect(page.locator("#drafts-heading ~ p[role=status]")).toHaveText("Kouign-amann is ready to review.");
-  await expect(viewTab(page, "Drafts")).toHaveText("Drafts7"); // the tab's count updates too
+  await expect(viewTab(page, "Drafts")).toHaveText(/Drafts7$/); // the tab's count updates too
 });
 
 test("Discard removes the row at once, with Undo", async ({ page }) => {
@@ -125,7 +125,7 @@ test("Discard removes the row at once, with Undo", async ({ page }) => {
 
   await first.getByRole("button", { name: `Discard draft: ${firstTitle}` }).click();
   await expect(first).not.toContainText(firstTitle!);
-  await expect(viewTab(page, "Drafts")).toHaveText("Drafts6");
+  await expect(viewTab(page, "Drafts")).toHaveText(/Drafts6$/);
   const confirmation = page.locator("#drafts-heading ~ div[role=status]");
   await expect(confirmation).toContainText("Draft discarded");
   await page.waitForTimeout(300); // let the fade-in settle before the screenshot
@@ -135,7 +135,7 @@ test("Discard removes the row at once, with Undo", async ({ page }) => {
   await confirmation.getByRole("button", { name: "Undo" }).click();
   await expect(drafts(page).first()).toContainText(firstTitle!);
   await expect(confirmation).toHaveCount(0);
-  await expect(viewTab(page, "Drafts")).toHaveText("Drafts7");
+  await expect(viewTab(page, "Drafts")).toHaveText(/Drafts7$/);
 });
 
 test("discarding the last draft hides the Drafts tab and moves focus to Recipes", async ({ page }) => {

@@ -4,13 +4,13 @@ import { cx } from "./cx";
 /**
  * SKIN picture-button: a round 40px control that floats on a photo — Back,
  * Favorite, Share and Edit on a cover; the play badge on a reel — with a solid
- * glazed-card fill and hairline edge, so its contrast never depends on the photo
+ * glazed-card fill and ink outline, so its contrast never depends on the photo
  * underneath. The one round shape in the system besides chips and toggles. A
  * centered pseudo-element extends the 40px visible size to a 48px hit area.
  * Always needs an accessible name (`label`).
  */
 export const pictureButtonClass =
-  "relative inline-grid size-[40px] shrink-0 place-items-center rounded-full border border-hairline bg-surface-card text-ink transition-colors duration-(--motion-fast) ease-skin before:absolute before:-inset-xs before:content-[''] hover:bg-surface-sunken active:bg-primary-wash active:text-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:text-disabled [&_svg]:size-icon-sm";
+  "relative inline-grid size-[40px] shrink-0 place-items-center rounded-full border border-outline bg-surface-card text-ink transition-colors duration-(--motion-fast) ease-skin before:absolute before:-inset-xs before:content-[''] hover:bg-surface-sunken active:bg-primary-wash active:text-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:text-disabled [&_svg]:size-icon-sm";
 
 type PictureButtonProps = ComponentProps<"button"> & { label: string };
 

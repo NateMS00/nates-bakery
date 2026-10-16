@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ChipFilter } from "@/components/ui/ChipFilter";
+import { DisplayTitle } from "@/components/ui/DisplayTitle";
 import { TextLink } from "@/components/ui/TextLink";
 import { TilePanel } from "@/components/ui/Tile";
 import { ViewTabs } from "@/components/ui/ViewTab";
@@ -104,16 +105,15 @@ export function LibraryView({
 
   return (
     <>
-      {/* Page header: H1 and, except in Empty, the primary action */}
-      <div className="flex items-center justify-between gap-lg">
-        <h1 className="type-display-md text-ink desktop:type-display-lg">Library</h1>
-        {!isEmpty && <PrimaryAction importEnabled={importEnabled} installed={installed} />}
-      </div>
-
       {isEmpty ? (
         <EmptyState importEnabled={importEnabled} />
       ) : (
         <>
+          {/* Page header: H1 and the primary action. */}
+          <div className="flex items-center justify-between gap-lg">
+            <DisplayTitle lead="Your" accent="recipes." />
+            <PrimaryAction importEnabled={importEnabled} installed={installed} />
+          </div>
           {view !== "drafts" && (
             <>
               {/* Search, with the Filters button beside it on mobile */}
@@ -272,8 +272,10 @@ function EmptyState({ importEnabled }: { importEnabled: boolean }) {
   const installed = useInstalled();
   return (
     <div className="mx-auto mt-lg flex flex-col items-center text-center tablet:max-w-[calc(var(--col)*4+var(--gutter)*3)] desktop:mt-xl">
+      {/* Nathan's empty-Library illustration (160px) stands in for TilePanel once it exists. */}
       <TilePanel className="w-full max-w-[calc(var(--spacing-3xl)*4)]" />
-      <p className="mt-lg type-body-lg text-ink">{importEnabled ? "Save your first recipe from a reel" : "Add your first recipe"}</p>
+      <DisplayTitle lead="Your recipe box is" accent="empty." className="mt-lg" />
+      <p className="mt-sm type-body-lg text-ink">{importEnabled ? "Save your first recipe from a reel." : "Add your first recipe."}</p>
       <PrimaryAction importEnabled={importEnabled} installed={installed} centered />
       {importEnabled && (
         <TextLink href="/import#set-up-the-shortcut" className="mt-sm inline-flex min-h-touch-min items-center type-body-md">

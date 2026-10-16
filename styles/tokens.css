@@ -297,6 +297,9 @@
   line-height: 0.95;
   letter-spacing: -1.2px;
   font-variation-settings: 'SOFT' 100, 'opsz' 144;
+  @media (max-width: 767.98px) {
+    font-size: 44px;
+  }
 }
 
 @utility type-bake-number {
@@ -307,6 +310,9 @@
   letter-spacing: -2px;
   font-variation-settings: 'SOFT' 100, 'opsz' 144;
   font-feature-settings: 'tnum' 1;
+  @media (max-width: 767.98px) {
+    font-size: 104px;
+  }
 }
 
 @utility type-voice {
@@ -346,4 +352,7 @@
   letter-spacing: -1px;
   font-feature-settings: 'tnum' 1;
   font-variant-numeric: tabular-nums;
+  @media (max-width: 767.98px) {
+    font-size: 56px;
+  }
 }

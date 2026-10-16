@@ -150,7 +150,7 @@ test("share dialog: copy, revoke, create", async ({ page, context, isMobile, bro
   // Destructive first, then the safe action as a real (secondary) button, last.
   const actions = dialog.getByRole("button", { name: /^(Revoke link|Keep link)$/ });
   await expect(actions).toHaveText(["Revoke link", "Keep link"]);
-  await expect(dialog.getByRole("button", { name: "Keep link" })).toHaveClass(/border-primary/);
+  await expect(dialog.getByRole("button", { name: "Keep link" })).toHaveClass(/bg-transparent/);
   await shot(page, "10-share-revoke-confirm");
   await dialog.getByRole("button", { name: "Revoke link" }).click();
   await expect(dialog.getByRole("button", { name: "Create link" })).toBeFocused();

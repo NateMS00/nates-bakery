@@ -8,9 +8,9 @@ export function StarGlyph({ filled, preview, className }: { filled: boolean; pre
         strokeWidth={1.5}
         className={
           filled
-            ? "fill-crust stroke-crust"
+            ? "fill-primary stroke-primary"
             : preview
-              ? "fill-crust/55 stroke-crust"
+              ? "fill-primary/55 stroke-primary"
               : "fill-transparent stroke-border"
         }
       />

@@ -122,7 +122,7 @@ export function TimerBanner({ timers, onDismiss }: { timers: Timer[]; onDismiss:
       {done.map((t) => (
         <div
           key={t.id}
-          className="flex flex-wrap items-center justify-between gap-x-base gap-y-sm border-b-4 border-crust bg-primary px-(--gutter) py-base text-on-primary shadow-float first:pt-[calc(var(--spacing-base)+env(safe-area-inset-top))]"
+          className="flex flex-wrap items-center justify-between gap-x-base gap-y-sm border-b-4 border-ochre bg-primary px-(--gutter) py-base text-on-primary shadow-float first:pt-[calc(var(--spacing-base)+env(safe-area-inset-top))]"
         >
           <p className="type-heading">{t.label} timer is done</p>
           <Button

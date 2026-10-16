@@ -11,15 +11,24 @@
   --color-primary-active: #142E78;
   --color-primary-wash: #DDE5F6;
   --color-on-primary: #FFFDF7;
-  --color-crust: #A86A0C;
+  --color-ochre: #E8AE3A;
+  --color-ochre-active: #D69A22;
+  --color-on-ochre: #131A33;
+  --color-celebration: #1D3F9E;
+  --color-on-celebration: #FFFDF7;
   --color-canvas: #FBFBF9;
   --color-surface-card: #FFFFFF;
   --color-surface-sunken: #EEF0F4;
+  --color-stage: #131A33;
+  --color-on-stage: #F5EEDF;
+  --color-on-stage-muted: #A9B0C8;
+  --color-stage-track: #606A8E;
   --color-ink: #131A33;
   --color-body: #2C3350;
   --color-muted: #5A617D;
   --color-hairline: #E4E5E9;
   --color-border: #7E8290;
+  --color-outline: #131A33;
   --color-success: #3B6A2C;
   --color-success-wash: #E0EBD6;
   --color-warning: #875208;
@@ -35,6 +44,7 @@
   --radius-none: 0px;
   --radius-sm: 4px;
   --radius-md: 8px;
+  --radius-tile: 10px;
   --radius-lg: 12px;
   --radius-full: 9999px;
 
@@ -49,6 +59,7 @@
   --spacing-2xl: 48px;
   --spacing-3xl: 64px;
   --spacing-section: 80px;
+  --spacing-section-lg: 120px;
 
   /* SKIN sizing, in the spacing namespace so h-*, w-*, min-h-*, max-w-* accept them. */
   --spacing-touch-min: 48px;
@@ -62,6 +73,12 @@
   --spacing-content-max: 1200px;
   --spacing-tab-bar: 56px;
   --spacing-bake-progress: 6px;
+  --spacing-bake-clock: 264px;
+  --spacing-bake-clock-lg: 320px;
+  --spacing-bake-clock-ring: 10px;
+  --spacing-outline: 1px;
+  --spacing-outline-text: 1.5px;
+  --spacing-step-strip: 44px;
 
   --shadow-float: 0 8px 24px rgba(19, 26, 51, 0.14), 0 1px 0 var(--color-hairline);
   --shadow-bar: 0 -1px 0 var(--color-hairline), 0 -6px 16px rgba(19, 26, 51, 0.08);
@@ -77,6 +94,9 @@
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-sheet: 280ms;
+  --motion-step: 350ms;
+  --motion-celebrate: 600ms;
+  --motion-reduced: 150ms;
   --ease-skin: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -90,15 +110,24 @@
       --color-primary-active: #C3D2FF;
       --color-primary-wash: #223060;
       --color-on-primary: #0D1326;
-      --color-crust: #E9B24A;
+      --color-ochre: #E9B24A;
+      --color-ochre-active: #F2C66E;
+      --color-on-ochre: #131A33;
+      --color-celebration: #1D3F9E;
+      --color-on-celebration: #FFFDF7;
       --color-canvas: #0D1326;
       --color-surface-card: #151D38;
       --color-surface-sunken: #0A0F1F;
+      --color-stage: #070B17;
+      --color-on-stage: #F5EEDF;
+      --color-on-stage-muted: #A9B0C8;
+      --color-stage-track: #606A8E;
       --color-ink: #F4F0E6;
       --color-body: #D5D2C8;
       --color-muted: #9DA4C0;
       --color-hairline: #2A3456;
       --color-border: #6C7497;
+      --color-outline: #D5D2C8;
       --color-success: #9CCB88;
       --color-success-wash: #1C2E17;
       --color-warning: #F0C46A;
@@ -216,11 +245,13 @@
 }
 
 @utility type-button {
-  font-family: var(--font-atkinson-next), 'Avenir Next', system-ui, sans-serif;
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-atkinson-mono), 'SF Mono', ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: 0.1px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
 }
 
 @utility type-caption {
@@ -257,4 +288,62 @@
   line-height: 1.2;
   letter-spacing: -0.1px;
   font-variation-settings: 'SOFT' 50, 'opsz' 24;
+}
+
+@utility type-display-xl {
+  font-family: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -1.2px;
+  font-variation-settings: 'SOFT' 100, 'opsz' 144;
+}
+
+@utility type-bake-number {
+  font-family: var(--font-fraunces), 'Iowan Old Style', Georgia, serif;
+  font-size: 120px;
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: -2px;
+  font-variation-settings: 'SOFT' 100, 'opsz' 144;
+  font-feature-settings: 'tnum' 1;
+}
+
+@utility type-voice {
+  font-family: var(--font-fraunces-italic), 'Iowan Old Style', Georgia, serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0px;
+  font-style: italic;
+  font-variation-settings: 'SOFT' 100, 'opsz' 24;
+}
+
+@utility type-label-mono {
+  font-family: var(--font-atkinson-mono), 'SF Mono', ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-tab {
+  font-family: var(--font-atkinson-mono), 'SF Mono', ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-timer-xl {
+  font-family: var(--font-atkinson-mono), 'SF Mono', ui-monospace, monospace;
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
 }

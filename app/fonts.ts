@@ -6,7 +6,7 @@ import localFont from "next/font/local";
 
 export const fraunces = localFont({
   src: "./fonts/Fraunces.woff2",
-  weight: "300 700",
+  weight: "300 900",
   style: "normal",
   display: "swap",
   variable: "--font-fraunces",
@@ -15,7 +15,7 @@ export const fraunces = localFont({
 
 export const frauncesItalic = localFont({
   src: "./fonts/Fraunces-Italic.woff2",
-  weight: "300 700",
+  weight: "300 900",
   style: "italic",
   display: "swap",
   preload: false,

@@ -4,7 +4,7 @@
 > **Primary Action**: none; a reading page (bakes are logged from a recipe)
 > **Primary Device**: mobile, because the persona looks back at bakes on the iPhone, often when deciding what to bake next or remembering what went wrong last time
 > **Shell**: BONES-shell.md, App variant (the Bakes tab in the installed app)
-> **Version**: 1.0.0 · **Updated**: 2026-10-15
+> **Version**: 1.0.1 · **Updated**: 2026-10-16
 
 ---
 
@@ -13,7 +13,7 @@
 ```text
 MAIN
 ├── PAGE_HEADER
-│   ├── PAGE_TITLE "Bakes"                  H1
+│   ├── PAGE_TITLE "Your bakes."            H1 (display title)
 │   └── SUMMARY ("7 bakes this year · 5 recipes")
 ├── MONTH × n (newest first)                H2 "October"
 │   ├── MONTH_COUNT ("3 bakes")
@@ -30,7 +30,7 @@ MAIN
 
 ### Page header
 - **Layout**: desktop the content column, title on the left; mobile full width
-- **Content**: "Bakes"; summary in muted text: "7 bakes this year · 5 recipes" (bakes logged in the current calendar year, and how many different recipes they cover); hidden when empty
+- **Content**: SKIN `display-title` "Your *bakes.*" ("bakes." in Fraunces italic; the tab and page title stay "Bakes"); summary in muted text: "7 bakes this year · 5 recipes" (bakes logged in the current calendar year, and how many different recipes they cover); hidden when empty
 - **Behavior**: none
 
 ```text
@@ -105,4 +105,5 @@ DESKTOP (4 columns)
 
 ## CHANGE LOG
 
+- 1.0.1 (2026-10-16): Personality round: display title "Your *bakes.*"; tiles and rows follow SKIN October 2026 (ink frames, cobalt stars).
 - 1.0.0 (2026-10-15): Initial wireframe (SKELETON 1.5.0).

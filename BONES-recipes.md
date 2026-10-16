@@ -4,7 +4,7 @@
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.5.1 · **Updated**: 2026-10-16
+> **Version**: 1.6.0 · **Updated**: 2026-10-16
 
 ---
 
@@ -13,14 +13,14 @@
 ```text
 MAIN
 ├── PAGE_HEADER
-│   ├── PAGE_TITLE "Library"                H1
+│   ├── PAGE_TITLE "Your recipes."          H1 (display title)
 │   └── IMPORT_FROM_A_REEL (desktop; sticky bar on mobile in Safari)
 ├── SEARCH
 │   └── SEARCH_FIELD + FILTERS_BUTTON (mobile)
 ├── FILTERS
 │   ├── FILTER_CONTROLS (desktop) / FILTERS_BUTTON (mobile)
 │   └── ACTIVE_FILTER_CHIPS + CLEAR_FILTERS
-├── VIEWS (tab list: Recipes · Favorites · Drafts n)
+├── VIEWS (tab list drawn as choice radios: (●) Recipes ( ) Favorites ( ) Drafts n)
 ├── RECIPES (tab panel)                     H2, visually hidden
 │   ├── RESULT_COUNT
 │   ├── RECIPE_TILE × n in a grid (30, then Show more)
@@ -30,28 +30,30 @@ MAIN
 └── IMPORT_BAR (sticky, mobile, Safari only)
 ```
 
-**First viewport (mobile)**: page title, search field with the Filters button, active filter chips when any, the view tabs, the first row of tiles in full and the top of the second (measured in the build on a 390 × 844 screen; the cut-off row signals that the grid scrolls), then the sticky Import from a reel bar in Safari or the tab bar when installed.
+**First viewport (mobile)**: the display title (two lines at 44px), search field with the Filters button, active filter chips when any, the view tabs, the first row of tiles in full and the top of the second (measured in the build on a 390 × 844 screen; the cut-off row signals that the grid scrolls), then the sticky Import from a reel bar in Safari or the tab bar when installed.
 
 ---
 
 ## 2. SECTIONS
 
 ### Page header (added; see Assumptions)
-- **Layout**: desktop full width: title 8 cols, Import from a reel 4 cols right-aligned; mobile title only, with the primary action in the sticky bar
-- **Content**: "Library"; Import from a reel → `/import`
+- **Layout**: desktop full width: title 8 cols, Import from a reel 4 cols right-aligned on the title's last baseline; mobile title only, with the primary action in the sticky bar. A `{spacing.2xl}` (48px) pause under it on desktop, `{spacing.lg}` on mobile
+- **Content**: SKIN `display-title`: "Your *recipes.*", with "recipes." in the Fraunces italic (the H1's accessible name is "Your recipes"; the tab and the page title stay "Library"); Import from a reel → `/import`
 - **Behavior**: none
 
 ```text
 DESKTOP
 +---------------------------------------------------+-------------------+
-| LIBRARY                                           |[IMPORT FROM REEL] |
+| YOUR                                              |                   |
+| *RECIPES.*                                        |(IMPORT FROM REEL) |
 +---------------------------------------------------+-------------------+
 ```
 
 ```text
 MOBILE
 +--------------------------------------+
-| LIBRARY                              |
+| YOUR                                 |
+| *RECIPES.*                           |
 +--------------------------------------+
 ```
 
@@ -100,21 +102,21 @@ MOBILE
 ```
 
 ### Views (SKELETON section 3)
-- **Layout**: one row of `view-tab`s under Filters on both devices, left-aligned, never scrolling: Recipes, Favorites, Drafts. Drafts carries its count ("Drafts 5") and is hidden when there are no drafts
+- **Layout**: one row of `view-tab`s under Filters on both devices, left-aligned, never scrolling, drawn as SKIN `choice-radio`s: "(●) Recipes  ( ) Favorites  ( ) Drafts 5" (the selected one ink with a cobalt dot, the others muted). Drafts carries its count in `label-mono` and is hidden when there are no drafts. If the row doesn't fit at 320px, it wraps
 - **Content**: Recipes (default), Favorites (recipes marked favorite), Drafts (unsaved imports)
 - **Behavior**: a tab list; choosing a tab writes `?view=` (replacing the history entry) and swaps the panel below without a reload. Search and filters apply to Recipes and Favorites; on Drafts, the search row and filters hide, since drafts have no category or rating yet, and come back with their values when you switch back. Arrow keys move between tabs (standard tab list keyboard pattern)
 
 ```text
 DESKTOP
 +-----------------------------------------------------------------------+
-| [RECIPES] [FAVORITES] [DRAFTS 5]                                      |
+| (●) RECIPES   ( ) FAVORITES   ( ) DRAFTS 5                            |
 +-----------------------------------------------------------------------+
 ```
 
 ```text
 MOBILE
 +--------------------------------------+
-| [RECIPES] [FAVORITES] [DRAFTS 5]     |
+| (●) RECIPES ( ) FAVORITES ( ) DRAFTS 5|
 +--------------------------------------+
 ```
 
@@ -134,9 +136,9 @@ MOBILE
 ```
 
 ### Recipes (SKELETON section 4; Recipes and Favorites views)
-- **Layout**: a photo grid of `recipe-tile`s: 2 columns on mobile, 3 on tablet, 4 on desktop, `{spacing.md}` between columns and `{spacing.base}` between rows. Every tile has the same picture frame (4:5), so rows line up whatever the titles
-- **Content**: a result count above the grid ("24 recipes", or "3 of 24 recipes" when searching or filtering); each tile links to `/recipes/:recipeId` and shows, top to bottom: the picture, the category label, the title (2 lines, then truncates), and one meta line only when there is something to say: the recipe's stars (its latest rated bake), a cobalt heart when favorite, and "Baked 13 Oct" (day and month only, no weekday, so the line fits a 2-column tile; if it still doesn't fit, the date moves to its own line under the stars rather than wrapping mid-phrase). "Not rated" and "Not baked yet" aren't printed; the Status filter covers them. Order is most recently baked or added first; 30 tiles, then "Show more" loads the next 30 below
-- **Picture**: the recipe's cover (SKIN `recipe-picture`): a bake photo chosen as cover, else the reel thumbnail, cropped to 4:5 from its focal point (centre by default). At about 170px wide on a 390px phone, the bake is readable, which the old 60×80 thumbnail was not. No picture → a small azulejo tile panel in the same frame, so the grid stays even. Decorative (empty alt text), because the title in the same link names the recipe. Space reserved before it loads; pictures below the first screen load as you scroll
+- **Layout**: a photo grid of `recipe-tile`s: 2 columns on mobile, 3 on tablet, 4 on desktop, `{spacing.md}` between columns and `{spacing.base}` between rows. Each tile is a printed card (SKIN October 2026): a 1px ink frame at 10px radius around the picture and the text, with an ink rule between them. Every tile has the same picture frame (4:5), so rows line up whatever the titles
+- **Content**: a result count above the grid ("24 recipes", or "3 of 24 recipes" when searching or filtering); each tile links to `/recipes/:recipeId` and shows, top to bottom: the picture, the category label, the title (2 lines, then truncates), and one meta line only when there is something to say: the recipe's cobalt stars (its latest rated bake), a cobalt heart when favorite, and "Baked 13 Oct" (day and month only, no weekday, so the line fits a 2-column tile; if it still doesn't fit, the date moves to its own line under the stars rather than wrapping mid-phrase). "Not rated" and "Not baked yet" aren't printed; the Status filter covers them. Order is most recently baked or added first; 30 tiles, then "Show more" loads the next 30 below
+- **Picture**: the recipe's cover (SKIN `recipe-picture`): a bake photo chosen as cover, else the reel thumbnail, cropped to 4:5 from its focal point (centre by default). At about 170px wide on a 390px phone, the bake is readable, which the old 60×80 thumbnail was not. No picture → the azulejo field (SKIN `azulejo-fill`) fills the frame, so the grid stays even and the tile looks deliberate. Decorative (empty alt text), because the title in the same link names the recipe. Space reserved before it loads; pictures below the first screen load as you scroll
 - **Behavior**: the whole tile is one link; nothing inside it is separately interactive
 
 ```text
@@ -189,7 +191,7 @@ MOBILE
 | Name | Trigger | Layout change |
 |---|---|---|
 | Loading | Recipes not yet loaded | Search, Filters and the view tabs render; the grid shows 4 placeholder tiles (grout frames and two text bars) in final proportions; the Drafts tab appears once loaded |
-| Empty | No recipes and no drafts | Search, Filters, the view tabs, and the grid hide. A tile panel illustrates the page. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up the Shortcut" link → `/import` (its Set up the Shortcut section) |
+| Empty | No recipes and no drafts | Search, Filters, the view tabs, and the grid hide. Nathan's empty-Library illustration (160px; a tile panel until it exists) illustrates the page. The first viewport shows "Library", a short line "Save your first recipe from a reel", Import from a reel (the sticky bar on mobile, a centered button on desktop), and a "Set up the Shortcut" link → `/import` (its Set up the Shortcut section) |
 | Only drafts | No saved recipes, at least one draft | Search and Filters hide; the page opens on the Drafts view; the Recipes tab shows one line "No saved recipes yet" |
 | No favorites | Favorites view, none marked | One line: "Tap the heart on a recipe to keep it here." |
 | `?favorite=1` | Old links | Opens the Favorites view and rewrites the URL to `?view=favorites` |
@@ -200,7 +202,8 @@ MOBILE
 
 ## 4. ASSUMPTIONS & OPEN QUESTIONS
 
-- **Assumed**: A page header with the H1 "Library" (not a SKELETON section; added so the page has one H1 and a place for the primary action on desktop).
+- **Assumed**: A page header with the H1 (not a SKELETON section; added so the page has one H1 and a place for the primary action on desktop).
+- **Decided** (2026-10-16, Nathan, personality round): The title becomes a display title, "Your *recipes.*", in Fraunces 900 with the last word in italic. The wireframe mock said "Your bakes.", but Bakes is its own tab (the diary), so the Library says recipes and the Bakes page gets "Your *bakes.*". The view tabs are drawn as typographic choice radios, and tiles get ink frames (references: Object & Archive, Vibe).
 - **Assumed**: The primary action is repeated from the shell's Import link. The shell link is navigation; the page action is the one that is visually dominant and sticky on mobile, matching the Recipe page's pattern.
 - **Assumed**: On mobile, filters live in a sheet behind one button, with active filters shown as chips, because four filter controls don't fit a phone's width without horizontal scrolling. Chips wrap instead of scrolling, matching the rule for tabs.
 - **Assumed**: The mobile sheet applies changes on "Show n recipes", while desktop applies each change immediately, because on a phone every change would otherwise rerender the list hidden behind the sheet.
@@ -223,6 +226,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.6.0 (2026-10-16): Personality round (SKIN October 2026): display title "Your *recipes.*"; view tabs drawn as choice radios; recipe tiles framed in ink with cobalt stars; azulejo field for tiles without a picture; empty state uses Nathan's illustration when it exists.
 - 1.5.1 (2026-10-16): First viewport recorded as measured (first row in full, the top of the second); tile dates without the weekday, the date moving under the stars when the line doesn't fit.
 
 - 1.5.0 (2026-10-15): Visual upgrade round: photo grid of recipe tiles (2/3/4 columns) with 4:5 pictures and a tile panel when there's none; Recipes · Favorites · Drafts view tabs replace the Favorites toggle and the Drafts section; tiles show rating and baked date only when they exist; no Import bar in the installed app (SKELETON 1.5.0).

@@ -9,7 +9,8 @@ const SIMULATED_IMPORT_MS = 4500;
 // The fixtures backend's store: fixture data held in server memory (development and
 // Playwright only; see lib/backend/index.ts). Writes change it until the server restarts.
 // - BACKERY_FIXTURE_DELAY_MS simulates latency, so Loading states can be seen.
-// - BACKERY_FIXTURE_SET=empty | only-drafts switches to the Library's empty cases.
+// - BACKERY_FIXTURE_SET=empty | only-drafts | no-favorites switches to the Library's
+//   empty cases, or (no-favorites) the full set with every recipe's favorite off.
 // - The backery_stub_fail_loads=1 cookie makes every load fail (the Error page).
 // - The backery_fixture_ns cookie gives a browser its own copy of the fixtures, so
 //   parallel Playwright tests can't see each other's writes.
@@ -32,8 +33,9 @@ store.__backeryDb ??= new Map();
 
 function seed(): Db {
   const set = process.env.BACKERY_FIXTURE_SET ?? "full";
+  const all = [...RECIPES, ...LIBRARY_RECIPES];
   return structuredClone({
-    recipes: set === "full" ? [...RECIPES, ...LIBRARY_RECIPES] : [],
+    recipes: set === "full" ? all : set === "no-favorites" ? all.map((r) => ({ ...r, favorite: false })) : [],
     drafts: set === "empty" ? [] : DRAFTS,
     importKey: null,
   });

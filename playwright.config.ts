@@ -5,7 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
 // Safari-style bugs. Browsers: npx playwright install chromium webkit.
 // Servers: normal (3100), simulated latency for Loading states (3101), the Library's
 // empty cases: no recipes or drafts (3102), only drafts (3103), and Import turned off,
-// as production starts (3104, and 3105 with an empty Library).
+// as production starts (3104, and 3105 with an empty Library); the full set with no
+// recipe favorited (3106), for the Favorites view's empty state.
 
 export default defineConfig({
   testDir: "tests/visual",
@@ -28,6 +29,7 @@ export default defineConfig({
     // As production starts: Import off (lib/features.ts), with fixtures and with an empty Library.
     { command: "npx next start -p 3104", port: 3104, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures" } },
     { command: "npx next start -p 3105", port: 3105, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures", BACKERY_FIXTURE_SET: "empty" } },
+    { command: "npx next start -p 3106", port: 3106, reuseExistingServer: true, env: { BACKERY_BACKEND: "fixtures", BACKERY_FEATURE_IMPORT: "on", BACKERY_FIXTURE_SET: "no-favorites" } },
   ],
   projects: [
     { name: "mobile-light", use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: "light" } },

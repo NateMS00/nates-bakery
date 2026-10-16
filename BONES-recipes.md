@@ -4,7 +4,7 @@
 > **Primary Action**: Import from a reel → `/import`
 > **Primary Device**: mobile, because the persona opens the library on an iPhone, usually right after saving a reel or when choosing what to bake in the kitchen
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.5.0 · **Updated**: 2026-10-15
+> **Version**: 1.5.1 · **Updated**: 2026-10-16
 
 ---
 
@@ -30,7 +30,7 @@ MAIN
 └── IMPORT_BAR (sticky, mobile, Safari only)
 ```
 
-**First viewport (mobile)**: page title, search field with the Filters button, active filter chips when any, the view tabs, and the first two rows of the grid (four recipes, pictures fully visible on a 390 × 844 screen), then the sticky Import from a reel bar in Safari or the tab bar when installed.
+**First viewport (mobile)**: page title, search field with the Filters button, active filter chips when any, the view tabs, the first row of tiles in full and the top of the second (measured in the build on a 390 × 844 screen; the cut-off row signals that the grid scrolls), then the sticky Import from a reel bar in Safari or the tab bar when installed.
 
 ---
 
@@ -135,7 +135,7 @@ MOBILE
 
 ### Recipes (SKELETON section 4; Recipes and Favorites views)
 - **Layout**: a photo grid of `recipe-tile`s: 2 columns on mobile, 3 on tablet, 4 on desktop, `{spacing.md}` between columns and `{spacing.base}` between rows. Every tile has the same picture frame (4:5), so rows line up whatever the titles
-- **Content**: a result count above the grid ("24 recipes", or "3 of 24 recipes" when searching or filtering); each tile links to `/recipes/:recipeId` and shows, top to bottom: the picture, the category label, the title (2 lines, then truncates), and one meta line only when there is something to say: the recipe's stars (its latest rated bake), a cobalt heart when favorite, and "Baked 13 Oct". "Not rated" and "Not baked yet" aren't printed; the Status filter covers them. Order is most recently baked or added first; 30 tiles, then "Show more" loads the next 30 below
+- **Content**: a result count above the grid ("24 recipes", or "3 of 24 recipes" when searching or filtering); each tile links to `/recipes/:recipeId` and shows, top to bottom: the picture, the category label, the title (2 lines, then truncates), and one meta line only when there is something to say: the recipe's stars (its latest rated bake), a cobalt heart when favorite, and "Baked 13 Oct" (day and month only, no weekday, so the line fits a 2-column tile; if it still doesn't fit, the date moves to its own line under the stars rather than wrapping mid-phrase). "Not rated" and "Not baked yet" aren't printed; the Status filter covers them. Order is most recently baked or added first; 30 tiles, then "Show more" loads the next 30 below
 - **Picture**: the recipe's cover (SKIN `recipe-picture`): a bake photo chosen as cover, else the reel thumbnail, cropped to 4:5 from its focal point (centre by default). At about 170px wide on a 390px phone, the bake is readable, which the old 60×80 thumbnail was not. No picture → a small azulejo tile panel in the same frame, so the grid stays even. Decorative (empty alt text), because the title in the same link names the recipe. Space reserved before it loads; pictures below the first screen load as you scroll
 - **Behavior**: the whole tile is one link; nothing inside it is separately interactive
 
@@ -222,6 +222,8 @@ MOBILE
 ---
 
 ## CHANGE LOG
+
+- 1.5.1 (2026-10-16): First viewport recorded as measured (first row in full, the top of the second); tile dates without the weekday, the date moving under the stars when the line doesn't fit.
 
 - 1.5.0 (2026-10-15): Visual upgrade round: photo grid of recipe tiles (2/3/4 columns) with 4:5 pictures and a tile panel when there's none; Recipes · Favorites · Drafts view tabs replace the Favorites toggle and the Drafts section; tiles show rating and baked date only when they exist; no Import bar in the installed app (SKELETON 1.5.0).
 - 1.3.0 (2026-10-13): Recipe pictures: a 60×80 picture on the left of mobile and tablet cards, a 36×48 picture at the start of desktop rows, a placeholder when there's none (SKELETON 1.4.2).

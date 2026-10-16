@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { TilePanel } from "./Tile";
 import { cx } from "./cx";
 
 /**
@@ -9,10 +8,11 @@ import { cx } from "./cx";
  * recipe-tile, 4:3 in cover-picture, 1:1 in bake-tile — rounded-lg, no border (on
  * porcelain even pale covers separate on their own), cropped from a focal point
  * (centre by default; focal-point choice is a later round). While it loads, the
- * frame is surface-sunken; with no src, or a failed load, it becomes a small
- * tile-panel instead of a bare placeholder, so a recipe without a photo still
- * looks deliberate. Decorative: empty alt text, since the title beside or with it
- * already names the recipe.
+ * frame is plain surface-sunken; with no src, or a failed load, the tile motif
+ * fills the frame edge to edge (cobalt on cobalt wash, bordered), like a tile
+ * itself, so a recipe without a photo still looks deliberate rather than broken.
+ * Decorative: empty alt text, since the title beside or with it already names
+ * the recipe.
  *
  * This is the visual-round replacement for ./RecipePicture.tsx (rounded-sm,
  * hairline border, tile-mark placeholder), which stays wired into the screens that
@@ -67,9 +67,9 @@ export function Picture({
           className={cx("size-full object-cover object-center", status !== "loaded" && "opacity-0")}
         />
       )}
-      {status !== "loaded" && (
-        <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
-          <TilePanel className="h-[55%] w-[65%] max-w-[120px]" />
+      {status === "error" && (
+        <div aria-hidden="true" className="absolute inset-0 border border-primary bg-primary-wash text-primary">
+          <div className="size-full tile-panel-mask" />
         </div>
       )}
       {children}

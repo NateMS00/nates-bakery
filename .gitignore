@@ -37,4 +37,5 @@ next-env.d.ts
 /test-results-audit/
 /test-results-supabase/
 /test-results-unit/
+/test-logs/
 !.env.example

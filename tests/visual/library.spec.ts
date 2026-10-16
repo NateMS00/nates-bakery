@@ -12,7 +12,7 @@ const shot = (page: Page, name: string, fullPage = false) => capture(page, "libr
 // of the fixtures (namespace cookie).
 test.beforeEach(async ({ context }, info) => {
   const value = `${info.project.name}-${info.testId}`;
-  for (const port of [3100, 3101, 3102, 3103]) await context.addCookies([{ name: "backery_fixture_ns", value, url: `http://localhost:${port}` }]);
+  for (const port of [3100, 3101, 3102, 3103, 3106]) await context.addCookies([{ name: "backery_fixture_ns", value, url: `http://localhost:${port}` }]);
 });
 const count = (page: Page) => page.locator("#recipes-heading ~ p[aria-live]");
 const items = (page: Page) => page.locator("#recipes-heading ~ ul > li");
@@ -62,6 +62,13 @@ test("Drafts view: all 7 drafts show, no cap", async ({ page }) => {
   // Search and Filters hide on Drafts.
   await expect(page.getByLabel("Search", { exact: true })).toHaveCount(0);
   await expectTouchTargets(page);
+  // The click above starts the tab's selected-state color transition, and a real
+  // mouse move during .click() can graze a neighboring tab on the way, leaving a
+  // stray :hover; wait the one out and move the other out of frame before the shot.
+  await viewTab(page, "Drafts").evaluate(
+    (el) => new Promise<void>((resolve) => (el.addEventListener("transitionend", () => resolve(), { once: true }), setTimeout(resolve, 200))),
+  );
+  await page.mouse.move(0, 0);
   await shot(page, "03-drafts-view");
 
   // Switching back to Recipes keeps whatever search/filters were set before (BONES).
@@ -288,16 +295,12 @@ test("Favorites view: a favorite set on the Recipe page shows there, with the he
   await shot(page, "11-favorites-view");
 });
 
-// Every recipe the fixtures start with favorited — unfavorite them all first.
-const SEEDED_FAVORITES = ["country-sourdough", "brioche", "cinnamon-buns", "banana-bread", "basque-cheesecake", "fudgy-brownies", "creme-brulee", "pasteis-de-nata", "lemon-drizzle-loaf"];
-
 test("no favorites: one line, no grid", async ({ page }) => {
-  for (const id of SEEDED_FAVORITES) {
-    await ready(page, `/recipes/${id}`);
-    const fav = page.getByRole("button", { name: "Favorite" });
-    if ((await fav.getAttribute("aria-pressed")) === "true") await fav.click();
-  }
-  await ready(page, "/recipes?view=favorites");
+  // :3106 seeds the full set with every recipe's favorite off (store.ts), rather than
+  // clicking through all 9 seeded favorites here to unfavorite them one by one — that
+  // approach was flaky specifically on WebKit (a stray in-flight navigation from one
+  // iteration could still be settling when the next began).
+  await ready(page, "http://localhost:3106/recipes?view=favorites");
   await expect(page.getByText("Tap the heart on a recipe to keep it here.")).toBeVisible();
   await expect(items(page)).toHaveCount(0);
   await shot(page, "12-no-favorites");
@@ -339,7 +342,7 @@ test("loading", async ({ page }) => {
 
 test("recipe tiles are named title first; rating and baked date omitted when absent, same as the visual meta line", async ({ page }) => {
   await ready(page, "/recipes");
-  await expect(items(page).first().getByRole("link")).toHaveAccessibleName("Fudgy brownies, Cookie & bar, rated 5 out of 5, favorite, Baked Mon 28 Sep");
+  await expect(items(page).first().getByRole("link")).toHaveAccessibleName("Fudgy brownies, Cookie & bar, rated 5 out of 5, favorite, Baked 28 Sep");
   await expect(page.getByRole("link", { name: "Lemon bars, Cookie & bar", exact: true })).toBeVisible();
 });
 

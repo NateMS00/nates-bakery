@@ -48,16 +48,20 @@ export function RecipeTile({
         <p className={cx("type-label", disabled ? "text-disabled" : "text-primary")}>{category}</p>
         <p className={cx("type-tile-title mt-[2px] line-clamp-2 text-current", !disabled && "group-hover:underline group-hover:underline-offset-[3px]")}>{title}</p>
         {hasMeta && (
-          <p className={cx("mt-xs flex items-center gap-xs type-caption", disabled ? "text-disabled" : "text-muted")}>
+          // flex-wrap, not a fixed one line: when stars + heart + date don't fit a
+          // narrow tile, the date (last and usually longest) wraps to its own line
+          // below instead of its own text breaking mid-phrase (every piece here is
+          // whitespace-nowrap).
+          <p className={cx("mt-xs flex flex-wrap items-center gap-x-xs gap-y-[2px] type-caption", disabled ? "text-disabled" : "text-muted")}>
             {rating !== null && (
-              <span className="inline-flex gap-[1px]">
+              <span className="inline-flex shrink-0 gap-[1px]">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <StarGlyph key={n} filled={n <= rating} className="size-[13px]" />
                 ))}
               </span>
             )}
-            {favorite && <Heart aria-hidden="true" className={cx("size-[13px]", !disabled && "text-primary")} fill="currentColor" strokeWidth={0} />}
-            {bakedLabel && <span>{bakedLabel}</span>}
+            {favorite && <Heart aria-hidden="true" className={cx("size-[13px] shrink-0", !disabled && "text-primary")} fill="currentColor" strokeWidth={0} />}
+            {bakedLabel && <span className="whitespace-nowrap">{bakedLabel}</span>}
           </p>
         )}
       </div>

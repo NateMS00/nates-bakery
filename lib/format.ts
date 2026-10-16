@@ -57,6 +57,13 @@ export function formatBakeDate(isoDate: string, today: Date = new Date()): strin
   return `${weekday} ${d} ${month}${y === today.getFullYear() ? "" : ` ${y}`}`;
 }
 
+/** "28 Sep" — no weekday, for compact spots like recipe-tile's meta line, where "Baked Mon 28 Sep" wraps at 390px. */
+export function formatShortDate(isoDate: string, today: Date = new Date()): string {
+  const [y, mo, d] = isoDate.split("-").map(Number);
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][mo - 1];
+  return `${d} ${month}${y === today.getFullYear() ? "" : ` ${y}`}`;
+}
+
 /** "13 Oct" (the year only when it isn't the current one) — BONES-import "Import key created". */
 export function formatKeyDate(isoTimestamp: string, today: Date = new Date()): string {
   const d = new Date(isoTimestamp);

@@ -52,15 +52,17 @@ export function BakeTile({
       <div>
         <p className={cx("type-body-sm font-bold text-current", !disabled && "group-hover:underline")}>{title}</p>
         {(rating !== null || bakeLabel) && (
-          <p className={cx("mt-xs flex items-center gap-xs type-caption", disabled ? "text-disabled" : "text-muted")}>
+          // flex-wrap, not a fixed one line — same rule as recipe-tile: never wrap a
+          // piece's own text mid-phrase, fall back to a new line instead.
+          <p className={cx("mt-xs flex flex-wrap items-center gap-x-xs gap-y-[2px] type-caption", disabled ? "text-disabled" : "text-muted")}>
             {rating !== null && (
-              <span className="inline-flex gap-[1px]">
+              <span className="inline-flex shrink-0 gap-[1px]">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <StarGlyph key={n} filled={n <= rating} className="size-[13px]" />
                 ))}
               </span>
             )}
-            {bakeLabel && <span>{bakeLabel}</span>}
+            {bakeLabel && <span className="whitespace-nowrap">{bakeLabel}</span>}
           </p>
         )}
       </div>

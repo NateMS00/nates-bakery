@@ -21,21 +21,34 @@ async function simulateInstalled(page: Page) {
 test.describe(() => {
   test.skip(({ isMobile }) => !isMobile, "the tab bar is mobile-only");
 
-  test("tab bar: the 56px row and the safe-area padding don't collapse into each other", async ({ page }) => {
-    await simulateInstalled(page);
-    await ready(page, "/recipes");
-    const nav = page.getByRole("navigation", { name: "Main" });
-    await expect(nav).toBeVisible();
-    // No real inset in a test browser — fake one via the shared CSS variable
-    // (globals.css), the same indirection env() itself can't be overridden with.
-    await page.addStyleTag({ content: ":root { --safe-area-bottom: 34px; }" });
-    const row = nav.locator("> div").first();
-    const [rowBox, navBox] = await Promise.all([row.boundingBox(), nav.boundingBox()]);
-    expect(rowBox!.height).toBe(56); // the items' own row, unaffected by the inset
-    expect(navBox!.height).toBe(1 + 56 + 34); // its 1px top border, the row, then the simulated safe area
-    const icon = nav.getByRole("link", { name: "Library" }).locator("svg");
-    expect((await icon.boundingBox())!.height).toBeGreaterThan(20); // not squeezed to ~22px total
-  });
+  // Both runs must land on the same 91px: a real iPhone with Settings > Accessibility
+  // > Motion > Reduce Motion on must never get a different layout, only calmer
+  // transitions. (It once did here — globals.css's reduced-motion rule forced
+  // transition-duration to ~0 on every element via the bare `*` selector, which
+  // left transition-property at its browser default of `all`; that combination
+  // silently started transitioning properties no one meant to animate, including
+  // this padding, so a script reading it right after the change — this test, but
+  // also any real layout driven by a live custom-property change — could catch it
+  // mid-transition instead of settled. Fixed by disabling transition/animation
+  // outright under reduced motion instead of merely shortening them.)
+  for (const reducedMotion of ["no-preference", "reduce"] as const) {
+    test(`tab bar: the 56px row and the safe-area padding don't collapse into each other (reduced motion: ${reducedMotion})`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion });
+      await simulateInstalled(page);
+      await ready(page, "/recipes");
+      const nav = page.getByRole("navigation", { name: "Main" });
+      await expect(nav).toBeVisible();
+      // No real inset in a test browser — fake one via the shared CSS variable
+      // (globals.css), the same indirection env() itself can't be overridden with.
+      await page.addStyleTag({ content: ":root { --safe-area-bottom: 34px; }" });
+      const row = nav.locator("> div").first();
+      const [rowBox, navBox] = await Promise.all([row.boundingBox(), nav.boundingBox()]);
+      expect(rowBox!.height).toBe(56); // the items' own row, unaffected by the inset
+      expect(navBox!.height).toBe(1 + 56 + 34); // its 1px top border, the row, then the simulated safe area
+      const icon = nav.getByRole("link", { name: "Library" }).locator("svg");
+      expect((await icon.boundingBox())!.height).toBeGreaterThan(20); // not squeezed to ~22px total
+    });
+  }
 
   test("tab bar: sits flush at the bottom of the viewport", async ({ page }) => {
     await simulateInstalled(page);

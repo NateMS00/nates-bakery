@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { RecipeTile } from "@/components/ui/RecipeTile";
 import { categoryLabel } from "@/lib/data/categories";
 import type { Recipe } from "@/lib/data/types";
-import { formatBakeDate } from "@/lib/format";
+import { formatShortDate } from "@/lib/format";
 
 // BONES-recipes.md 1.5.0 Recipes: a photo grid of recipe-tiles, 2 columns on mobile,
 // 3 on tablet, 4 on desktop, {spacing.md} between columns and {spacing.base} between
@@ -37,7 +37,7 @@ export function RecipeList({ recipes }: { recipes: Recipe[] }) {
                 title={recipe.title}
                 rating={recipe.rating}
                 favorite={recipe.favorite}
-                bakedLabel={lastBaked ? `Baked ${formatBakeDate(lastBaked)}` : null}
+                bakedLabel={lastBaked ? `Baked ${formatShortDate(lastBaked)}` : null}
               />
             </li>
           );

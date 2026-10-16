@@ -1,10 +1,10 @@
 "use client";
 
 import { Copy } from "lucide-react";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmActions } from "@/components/ui/ConfirmDialog";
-import { Dialog } from "@/components/ui/Dialog";
+import { Dialog, type FocusTarget } from "@/components/ui/Dialog";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
 import type { ShareLink } from "@/lib/data/types";
 
@@ -26,7 +26,10 @@ export function ShareDialog({
   shareLink: ShareLink | null;
   onCreate: () => void;
   onRevoke: () => void;
-  returnFocus: RefObject<HTMLElement | null>;
+  /** Defaults to whichever element opened it (Dialog's own opener tracking) — the right
+   * answer on the Recipe page, which has two Share triggers (cover and no-cover headers,
+   * only one ever visible/focusable at a time). */
+  returnFocus?: FocusTarget;
 }) {
   const [copied, setCopied] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);

@@ -13,11 +13,6 @@ import { cx } from "./cx";
  * itself, so a recipe without a photo still looks deliberate rather than broken.
  * Decorative: empty alt text, since the title beside or with it already names
  * the recipe.
- *
- * This is the visual-round replacement for ./RecipePicture.tsx (rounded-sm,
- * hairline border, tile-mark placeholder), which stays wired into the screens that
- * haven't had their Stage C turn yet — used only by the new tile components until
- * they do.
  */
 
 type Status = "loading" | "loaded" | "error";

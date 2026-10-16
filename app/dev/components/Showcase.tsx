@@ -93,7 +93,7 @@ export function Showcase() {
 
         <Demo label="cover-picture">
           <div className="max-w-[480px]">
-            <CoverPicture src="/recipe-pictures/custard-tart.svg" favorite={true} />
+            <CoverPicture src="/recipe-pictures/custard-tart.svg" recipeId="demo" favorite={true} onFavoriteChange={() => {}} onShare={() => {}} />
           </div>
         </Demo>
 

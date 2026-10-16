@@ -161,9 +161,12 @@ test("new entry from Bake Mode: form, save, rating prompt, then the new entry", 
   await page.waitForTimeout(300);
   await shot(page, "08-new-entry");
 
-  // The Recipe page reads the same data: rating 5, latest bake today.
+  // The Recipe page reads the same data: rating 5, latest bake today (read-only there now).
+  // The header's rating line: both the section tab and a Bakes-section row link to the
+  // same #bakes-heading anchor, and the matching bake's own row can coincidentally carry
+  // the same "Rated 5" text too — the combination of href and text is unique to it.
   await page.getByRole("link", { name: "Pastéis de nata" }).click();
-  await expect(page.getByRole("radio", { name: "Rate 5 out of 5" }).first()).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('a[href="#bakes-heading"]').filter({ hasText: /Rated 5 out of 5/ })).toBeVisible();
   await expect(page.getByText("See all bakes (4)")).toBeVisible();
 });
 
@@ -263,9 +266,11 @@ test("edit: the entry menu's Edit, a direct ?edit= link, and an unknown id", asy
   await expect(page.getByText("3 bakes")).toBeVisible();
 });
 
-test("edit: Add notes on the Recipe page opens the latest bake's form", async ({ page }) => {
+test("edit: a bake row on the Recipe page opens its form", async ({ page }) => {
+  // BONES-recipes-detail 1.6.0: the Bakes section's whole row is the link now (no
+  // separate "Add notes" affordance there — that's still Bake Log's own, below).
   await ready(page, "/recipes/lemon-drizzle-loaf");
-  await page.getByRole("link", { name: "Add notes" }).click();
+  await page.getByRole("link", { name: "Sat 5 Sep" }).click();
   await expect(page).toHaveURL(/\/recipes\/lemon-drizzle-loaf\/log\?edit=l-b1$/);
   const dialog = form(page, "Edit bake");
   await expect(dialog).toBeVisible();
@@ -313,7 +318,7 @@ test("delete the last entry: warning, then the empty state", async ({ page }) =>
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 
   await page.getByRole("link", { name: "Lemon drizzle loaf" }).click();
-  await expect(page.getByText("Not baked yet")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
 });
 
 test("entry menu: Edit and Delete", async ({ page }) => {

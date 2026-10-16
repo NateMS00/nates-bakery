@@ -1,11 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
 import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouchTargets, fontsLoaded, phoneWebKit, ready } from "./helpers";
 
-// /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md, plus the
-// Definition of Done checks from CLAUDE.md. Screenshots land in screenshots/recipe/.
+// /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md 1.6.0 (visual
+// round), plus the Definition of Done checks from CLAUDE.md. Screenshots land in
+// screenshots/recipe/. No Mark as baked, Undo, or Rating prompt here any more
+// (SKELETON 1.5.0): rating is read-only, from the latest *rated* bake, and Log bake
+// just links to the Bake Log's own entry form (the Log sheet overlay is a later stage).
 
-const NATA = "/recipes/pasteis-de-nata";
+const NATA = "/recipes/pasteis-de-nata"; // has a cover, 3 bakes, 1 estimate
+const COOKIES = "/recipes/brown-butter-cookies"; // hand-entered: no cover, never baked
+const CROISSANTS = "/recipes/cultured-butter-croissants"; // broken cover; 2 bakes, no photos
+const LEMON = "/recipes/lemon-drizzle-loaf"; // a pale cover; 1 bake, unrated
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "recipe", name, fullPage);
+// The cover (and, from tablet up, every other "desktop-only" header control) is rendered
+// twice — once for mobile, once for tablet/desktop — with CSS (not JS) hiding whichever
+// doesn't apply, the same way the rest of the app handles responsive layout. Both copies
+// are real DOM, so an unscoped query sees both; :visible narrows to the one actually on
+// screen for this project.
+const visiblePictures = (page: Page) => page.locator('[data-testid="picture"]:visible');
 
 // Favorite, rating, bakes, and share links are saved on the server now: each test has
 // its own copy of the fixtures (namespace cookie).
@@ -20,9 +32,13 @@ test("default: pastel de nata (Has estimates)", async ({ page }) => {
   await shot(page, "02-full", true);
 
   await expectPageBasics(page);
-  await expectPageTop(page);
+  // Not expectPageTop here: BONES's full-bleed cover is a deliberate exception to the
+  // standard page-top gap (no cover → the no-cover test below checks it still holds).
+  // The helper also reads main's literal firstElementChild, which on this layout is the
+  // mobile cover wrapper regardless of viewport (display:none on tablet+, not absent) —
+  // not a layout bug, just incompatible with that check's assumption.
 
-  // Has estimates notice between Header and Scale.
+  // Has estimates notice, between the section tabs and Scale.
   await expect(page.getByText("1 amount is an estimate.")).toBeVisible();
 
   await expectTouchTargets(page);
@@ -34,7 +50,7 @@ test("focus ring is a visible 3px outline", async ({ page, isMobile }) => {
   await page.keyboard.press("Tab"); // skip link
   await shot(page, "03-focus-skip-link");
   const outlines: string[] = [];
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 10; i++) {
     await page.keyboard.press("Tab");
     outlines.push(
       await page.evaluate(() => {
@@ -47,8 +63,11 @@ test("focus ring is a visible 3px outline", async ({ page, isMobile }) => {
     );
   }
   for (const o of outlines) expect(o, o).toMatch(/:3px$/);
-  await page.getByRole("radio", { name: "Rate 4 out of 5" }).focus();
-  await shot(page, "04-focus-star");
+  // The 10th stop lands on the rating line (Back, Favorite, Share, Edit, Watch reel,
+  // Rating, Ingredients, Steps, Bakes, Confirm it) — re-focus the rating line itself to
+  // show its ring clearly.
+  await page.getByRole("link", { name: /Rated 4 out of 5, Baked 26 Sep/ }).focus();
+  await shot(page, "04-focus-rating");
 });
 
 test("scale 1.5× updates amounts, yield, and Start baking", async ({ page }) => {
@@ -138,7 +157,9 @@ test("share dialog: copy, revoke, create", async ({ page, context, isMobile, bro
   await shot(page, "11-share-no-link");
   await dialog.getByRole("button", { name: "Create link" }).click();
   await expect(dialog.getByLabel("Share link")).toHaveValue(/\/r\/[a-z0-9]{12}$/);
-  // Esc closes and focus returns to Share.
+  // Esc closes and focus returns to Share — Dialog's own opener tracking now, since the
+  // Recipe page has two Share triggers (cover and no-cover headers) and only one is ever
+  // visible/focusable at a time.
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   if (!isMobile) await expect(share).toBeFocused();
@@ -148,82 +169,65 @@ test("share dialog: copy, revoke, create", async ({ page, context, isMobile, bro
   await expect(dialog).toBeHidden();
 });
 
-test("never baked + unrated: mark as baked, rating prompt, undo", async ({ page }) => {
-  await ready(page, "/recipes/brown-butter-cookies");
-  await expect(page.getByText("Not baked yet")).toBeVisible();
-  await expect(page.getByText(/See all bakes/)).toHaveCount(0);
-  await expect(page.getByText("Not rated")).toBeVisible();
-  await expect(page.getByText("Watch reel")).toHaveCount(0); // manual recipe, no source
-  await page.getByText("Not baked yet").scrollIntoViewIfNeeded();
-  await shot(page, "12-never-baked");
-
-  const mark = page.getByRole("button", { name: "Mark as baked" });
-  await mark.click();
-  const prompt = page.getByRole("dialog", { name: "How was it?" });
-  await expect(prompt).toBeVisible();
-  await expect(prompt.getByRole("radio", { name: "Rate 1 out of 5" })).toBeFocused();
-  await page.waitForTimeout(350);
-  await expectFitsContent(page, "How was it?");
-  // Stars at starSizePrompt (40px), centered, Skip directly below.
-  const star = prompt.getByRole("radio", { name: "Rate 3 out of 5" });
-  expect((await star.locator("svg").boundingBox())?.width).toBe(40);
-  const [dialogBox, starBox, skipBox] = await Promise.all([prompt.boundingBox(), star.boundingBox(), prompt.getByRole("button", { name: "Skip" }).boundingBox()]);
-  expect(Math.abs(starBox!.x + starBox!.width / 2 - (dialogBox!.x + dialogBox!.width / 2))).toBeLessThan(2);
-  expect(Math.abs(skipBox!.x + skipBox!.width / 2 - (dialogBox!.x + dialogBox!.width / 2))).toBeLessThan(2);
-  await shot(page, "13-rating-prompt");
-  await prompt.getByRole("button", { name: "Skip" }).click();
-  await expect(prompt).toBeHidden();
-  await expect(mark).toBeFocused();
-  await expect(page.getByText("Marked as baked today")).toBeVisible();
-  await expect(page.getByText(/See all bakes \(1\)/)).toBeVisible();
-  await shot(page, "14-just-marked");
-  await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.getByText("Not baked yet")).toBeVisible();
+test("cover: floating controls on mobile, beside the text from tablet up", async ({ page, isMobile }) => {
+  await ready(page, NATA);
+  const picture = visiblePictures(page).first();
+  await expect(picture).toHaveAttribute("data-status", "loaded");
+  const fav = page.getByRole("button", { name: "Favorite" });
+  await expect(fav).toHaveAttribute("aria-pressed", "true");
+  if (isMobile) {
+    // Full bleed: no side gutter, flush with the viewport edges.
+    const box = (await picture.boundingBox())!;
+    expect(box.x).toBe(0);
+    expect(box.x + box.width).toBe(page.viewportSize()!.width);
+    const back = page.getByRole("link", { name: "Back to Library" });
+    await expect(back).toHaveAttribute("href", "/recipes");
+  } else {
+    // Desktop/tablet: a plain "Library" back-link, not the cover's floating button —
+    // scoped to the page itself, since the shell's own Primary nav repeats "Library" too.
+    const back = page.locator("#main").getByRole("link", { name: "Library" });
+    await expect(back).toHaveAttribute("href", "/recipes");
+  }
+  await fav.click();
+  await expect(fav).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("link", { name: "Edit" })).toHaveAttribute("href", `${NATA}/edit`);
 });
 
-test("rating prompt: choosing a star saves and closes", async ({ page }) => {
-  await ready(page, "/recipes/lemon-drizzle-loaf");
-  await expect(page.getByText("3 amounts are estimates.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Add notes" })).toBeVisible(); // baked, no notes
-  await page.getByRole("button", { name: "Mark as baked" }).click();
-  await page.getByRole("dialog", { name: "How was it?" }).getByRole("radio", { name: "Rate 4 out of 5" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.getByRole("radio", { name: "Rate 4 out of 5" })).toHaveAttribute("aria-checked", "true");
+test("no cover: a back row, no cover area, the Scale presets in the first viewport", async ({ page }) => {
+  await ready(page, COOKIES);
+  await expect(visiblePictures(page)).toHaveCount(0); // no cover, no bake photos (never baked)
+  await expect(page.locator("#main").getByRole("link", { name: "Library" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Batch size" })).toBeInViewport();
+  await expectPageTop(page); // the standard gap still holds without the cover's bleed exception
+  await shot(page, "12-no-cover");
+});
+
+test("broken cover and bake photos fall back to the placeholder", async ({ page }) => {
+  await ready(page, CROISSANTS);
+  const pictures = visiblePictures(page);
+  await expect(pictures).toHaveCount(3); // the cover, plus two bakes with no photo
+  for (const p of await pictures.all()) {
+    await expect(p).toHaveAttribute("data-status", "error");
+    await expect(p.locator("img")).toHaveCount(0);
+  }
+  await shot(page, "13-broken-cover");
+});
+
+test("a pale cover keeps its hairline border", async ({ page }) => {
+  await ready(page, LEMON);
+  const pale = visiblePictures(page).first();
+  await expect(pale).toHaveAttribute("data-status", "loaded");
 });
 
 test("long recipe with several groups", async ({ page }) => {
-  await ready(page, "/recipes/cultured-butter-croissants");
+  await ready(page, CROISSANTS);
   await expect(page.locator("h3")).toHaveCount(9); // 3 ingredient groups + 6 step groups, Tips included
   await shot(page, "15-long-recipe-first-viewport");
   await shot(page, "16-long-recipe-full", true);
 });
 
-test("recipe picture: no picture, a broken one, and a pale cover", async ({ page }) => {
-  // No picture (hand-entered, no source): no placeholder either — the title block
-  // takes the full width instead (BONES-recipes-detail 1.5.0).
-  await ready(page, "/recipes/brown-butter-cookies");
-  await expect(page.getByTestId("recipe-picture")).toHaveCount(0);
-  await shot(page, "17-no-picture");
-
-  // A picture row exists but the file 404s: falls back to the placeholder frame,
-  // the same one shown while loading.
-  await ready(page, "/recipes/cultured-butter-croissants");
-  const broken = page.getByTestId("recipe-picture");
-  await expect(broken).toHaveAttribute("data-status", "error");
-  await expect(broken.locator("img")).toHaveCount(0);
-  await shot(page, "18-picture-failed-to-load");
-
-  // A very pale cover, close to the light canvas: the 1px hairline edge keeps it
-  // from melting into the page (SKIN recipe-picture).
-  await ready(page, "/recipes/lemon-drizzle-loaf");
-  const pale = page.getByTestId("recipe-picture");
-  await expect(pale).toHaveAttribute("data-status", "loaded");
-  await expect(pale).toHaveCSS("border-style", "solid");
-  await shot(page, "19-pale-cover");
-});
-
 test("Tips: last, unnumbered, a plain list, not part of the step count", async ({ page }) => {
-  await ready(page, "/recipes/cultured-butter-croissants");
+  await ready(page, CROISSANTS);
   const tips = page.locator("h3", { hasText: "Tips" }).locator("xpath=following-sibling::ul[1]");
   await expect(tips.locator("li")).toHaveCount(2);
   await expect(tips.getByText(/^\d+$/)).toHaveCount(0); // no visible step number
@@ -233,17 +237,70 @@ test("Tips: last, unnumbered, a plain list, not part of the step count", async (
   await expect(numbers.last()).toHaveText("14");
 });
 
-test("rating: tap sets, tapping again clears; favorite toggles", async ({ page }) => {
+test("rating line: read-only, scrolls to Bakes; Not baked yet shows no stars", async ({ page }) => {
   await ready(page, NATA);
-  const four = page.getByRole("radio", { name: "Rate 4 out of 5" });
-  await four.click();
-  await expect(page.getByText("Not rated")).toBeVisible();
-  await page.getByRole("radio", { name: "Rate 2 out of 5" }).click();
-  await expect(page.getByRole("radio", { name: "Rate 2 out of 5" })).toHaveAttribute("aria-checked", "true");
-  const fav = page.getByRole("button", { name: "Favorite" });
-  await expect(fav).toHaveAttribute("aria-pressed", "true");
-  await fav.click();
-  await expect(fav).toHaveAttribute("aria-pressed", "false");
+  const rating = page.getByRole("link", { name: /Rated 4 out of 5, Baked 26 Sep/ });
+  await expect(rating).toBeVisible();
+  // Not a control: no radios on the page at all now (rating comes from the Log sheet).
+  await expect(page.getByRole("radio")).toHaveCount(0);
+  await rating.click();
+  await expect(page).toHaveURL(/#bakes-heading$/);
+  await expect(page.getByRole("heading", { name: "Bakes" })).toBeInViewport();
+
+  await ready(page, COOKIES);
+  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
+  await expect(page.getByText("Watch reel")).toHaveCount(0); // manual recipe, no source
+});
+
+test("Bakes: up to 3 entries with photo, stars, and how it turned out; See all bakes", async ({ page }) => {
+  await ready(page, NATA);
+  await page.locator("#bakes-heading").scrollIntoViewIfNeeded();
+  const entries = page.locator('section[aria-labelledby="bakes-heading"] ul[role="list"] > li');
+  await expect(entries).toHaveCount(3); // the fixture has exactly 3; the cap isn't exercised here
+  await expect(entries.first()).toContainText("Sat 26 Sep");
+  await expect(entries.first()).toContainText("Blistered tops and crisp layers");
+  // The unscaled bakes show no "· 1×"; the half-batch one does.
+  await expect(entries.nth(1)).not.toContainText("×");
+  await expect(entries.last()).toContainText("½×");
+  const seeAll = page.getByRole("link", { name: "See all bakes (3)" });
+  await expect(seeAll).toHaveAttribute("href", "/recipes/pasteis-de-nata/log");
+  await shot(page, "14-bakes-section");
+});
+
+test("never baked: Bakes reduces to one line, no See all bakes, no count on the tab", async ({ page }) => {
+  await ready(page, COOKIES);
+  // Scoped to the section tabs: the shell's own Primary nav has a "Bakes" link too (the
+  // Bakes diary, a different page).
+  await expect(page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: "Bakes", exact: true })).toBeVisible(); // no "Bakes 3"
+  await expect(page.getByRole("region", { name: "Bakes" }).getByText("Not baked yet", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /See all bakes/ })).toHaveCount(0);
+});
+
+test("section tabs: sticky, and mark the section nearest the top as you scroll", async ({ page, isMobile }) => {
+  await ready(page, NATA);
+  const nav = page.getByRole("navigation", { name: "Sections" });
+  const ingredients = nav.getByRole("link", { name: isMobile ? "Ingredients" : "Recipe" });
+  const bakesTab = nav.getByRole("link", { name: /^Bakes/ });
+  await expect(ingredients).toHaveAttribute("aria-current", "location");
+  // Scroll well past the header (the cover alone is ~290px at 390 wide) so the tabs have
+  // actually reached their sticky point, not just moved partway there.
+  await page.evaluate(() => window.scrollBy(0, 900));
+  expect(Math.round((await nav.boundingBox())!.y)).toBe(0); // flush with the viewport top
+  // All the way to the end: Bakes becomes current even on a short page where its own
+  // heading can't quite reach the trigger line (the end-of-document case).
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(100);
+  await expect(bakesTab).toHaveAttribute("aria-current", "location");
+});
+
+test("Log bake links to the entry form; Start baking links to Bake Mode", async ({ page }) => {
+  await ready(page, NATA);
+  // Exactly one of each is ever visible (the desktop/mobile copies are display:none, not
+  // just styled away) — Playwright's strict mode would fail these on more than one match.
+  const logBake = page.getByRole("link", { name: "Log bake" });
+  await expect(logBake).toHaveAttribute("href", `${NATA}/log?new=1`);
+  const startBaking = page.getByRole("link", { name: /^Start baking/ });
+  await expect(startBaking).toHaveAttribute("href", `${NATA}/bake?scale=1`);
 });
 
 test("account menu and timer alerts sheet", async ({ page, isMobile }) => {

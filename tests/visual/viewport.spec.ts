@@ -67,18 +67,20 @@ test.beforeEach(async ({ context, page }, info) => {
 });
 
 test("rating sheet: Skip stays visible above Safari's toolbar", async ({ page }) => {
-  await page.goto("/recipes/brown-butter-cookies");
+  // The Recipe page's own Mark as baked is gone (SKELETON 1.5.0): this prompt is reached
+  // by saving a new bake from the Log sheet now.
+  await page.goto("/recipes/brown-butter-cookies/log?new=1");
   await page.getByRole("heading", { level: 1 }).waitFor();
   const visible = 844 - TOOLBAR;
   await setVisible(page, visible);
-  await page.getByRole("button", { name: "Mark as baked" }).click();
-  const sheet = page.getByRole("dialog", { name: "How was it?" });
+  await page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" }).click();
+  const sheet = page.getByRole("dialog", { name: "How was this bake?" });
   await expect(sheet).toBeVisible();
   await page.waitForTimeout(400);
   const [box, skip] = await Promise.all([sheet.boundingBox(), sheet.getByRole("button", { name: "Skip" }).boundingBox()]);
   expect(Math.abs(box!.y + box!.height - visible)).toBeLessThan(1.5); // the sheet ends where the visible area ends
   expect(skip!.y + skip!.height).toBeLessThanOrEqual(visible);
-  await expectContentHeight(page, "How was it?");
+  await expectContentHeight(page, "How was this bake?");
   await shot(page, "01-rating-above-toolbar");
 });
 
@@ -148,13 +150,13 @@ test("while the keyboard is open, a page's action bar steps aside", async ({ pag
 // take their content's height, whatever their insets work out to.
 test("sheets take their content's height when the visible area is taller than the layout viewport", async ({ page }) => {
   const taller = 844 + 40;
-  await page.goto("/recipes/brown-butter-cookies");
+  await page.goto("/recipes/brown-butter-cookies/log?new=1");
   await page.getByRole("heading", { level: 1 }).waitFor();
   await setVisible(page, taller);
-  await page.getByRole("button", { name: "Mark as baked" }).click();
-  await expect(page.getByRole("dialog", { name: "How was it?" })).toBeVisible();
+  await page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("dialog", { name: "How was this bake?" })).toBeVisible();
   await page.waitForTimeout(400);
-  await expectContentHeight(page, "How was it?");
+  await expectContentHeight(page, "How was this bake?");
 
   await page.goto("/recipes/pasteis-de-nata/log");
   await page.getByRole("heading", { level: 1 }).waitFor();
@@ -173,11 +175,11 @@ const ring = (page: Page) =>
   });
 
 test("after a tap, focus moves into and out of sheets without a ring; Tab brings it back", async ({ page }) => {
-  await page.goto("/recipes/brown-butter-cookies");
+  await page.goto("/recipes/brown-butter-cookies/log?new=1");
   await page.getByRole("heading", { level: 1 }).waitFor();
-  const mark = page.getByRole("button", { name: "Mark as baked" });
-  await mark.tap();
-  const sheet = page.getByRole("dialog", { name: "How was it?" });
+  const save = page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" });
+  await save.tap();
+  const sheet = page.getByRole("dialog", { name: "How was this bake?" });
   await expect(sheet.getByRole("radio", { name: "Rate 1 out of 5" })).toBeFocused();
   expect(await ring(page)).toEqual({ name: "Rate 1 out of 5", outline: "none" });
   if (!phoneWebKit()) {
@@ -186,8 +188,11 @@ test("after a tap, focus moves into and out of sheets without a ring; Tab brings
     expect((await ring(page)).outline).toBe("3px");
   }
   await sheet.getByRole("button", { name: "Skip" }).tap();
-  await expect(mark).toBeFocused();
-  expect(await ring(page)).toEqual({ name: "Mark as baked", outline: "none" });
+  // Focus returns to the new entry's own heading (BakeLogView), not a page button —
+  // there's no "Mark as baked" any more to return to.
+  const newEntry = page.getByRole("heading", { level: 2 }).first();
+  await expect(newEntry).toBeFocused();
+  expect((await ring(page)).outline).toBe("none");
 });
 
 test("entry menu sheet: focus starts on the first action, not the close X", async ({ page }) => {

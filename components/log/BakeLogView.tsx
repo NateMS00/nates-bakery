@@ -77,6 +77,15 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
 
+  // Matches globals.css's entry-new animation length. A timer, not onAnimationEnd: under
+  // reduced motion the animation is disabled outright (no transition/animation at all,
+  // app fix this round), so that event would never fire and the highlight would stick.
+  useEffect(() => {
+    if (!highlightId) return;
+    const t = window.setTimeout(() => setHighlightId(null), 2400);
+    return () => window.clearTimeout(t);
+  }, [highlightId]);
+
   const list = useRef<HTMLUListElement>(null);
   const logButton = useRef<HTMLAnchorElement>(null);
   const h1 = useRef<HTMLHeadingElement>(null);
@@ -203,7 +212,6 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
                 <Entry
                   entry={entry}
                   highlighted={entry.id === highlightId}
-                  onHighlightEnd={() => setHighlightId(null)}
                   editHref={editHref(entry)}
                   onEdit={(trigger) => openEdit(entry, trigger)}
                   onAddNotes={(link) => (formOpener.current = link)}
@@ -295,7 +303,6 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
 function Entry({
   entry,
   highlighted,
-  onHighlightEnd,
   editHref,
   onEdit,
   onAddNotes,
@@ -303,7 +310,6 @@ function Entry({
 }: {
   entry: BakeLogEntry;
   highlighted: boolean;
-  onHighlightEnd: () => void;
   editHref: string;
   onEdit: (trigger: HTMLElement | null) => void;
   onAddNotes: (link: HTMLAnchorElement) => void;
@@ -312,10 +318,7 @@ function Entry({
   const date = formatBakeDate(entry.date);
   const hasNotes = Boolean(entry.whatChanged || entry.howItTurnedOut);
   return (
-    <Card
-      className={cx(highlighted && "animate-[entry-new_2400ms_var(--ease-skin)]")}
-      onAnimationEnd={onHighlightEnd}
-    >
+    <Card className={cx(highlighted && "animate-[entry-new_2400ms_var(--ease-skin)]")}>
       <div className="-mt-sm -mr-sm flex items-start justify-between gap-sm">
         <h2 id={headingId(entry.id)} tabIndex={-1} className="pt-sm type-heading text-ink">
           {date}

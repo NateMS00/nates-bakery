@@ -473,7 +473,10 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.waitForURL(/\/recipes\/pasteis-de-nata$/);
   await expect(page.getByText("1 amount is an estimate.")).toHaveCount(0);
-  await expect(page.getByRole("radio", { name: "Rate 4 out of 5" })).toHaveAttribute("aria-checked", "true"); // rating kept
+  // The header's rating line: both the section tab and a Bakes-section row link to the
+  // same #bakes-heading anchor, and the matching bake's own row can coincidentally carry
+  // the same "Rated 4" text too — the combination of href and text is unique to it.
+  await expect(page.locator('a[href="#bakes-heading"]').filter({ hasText: /Rated 4 out of 5/ })).toBeVisible(); // rating kept (read-only on the Recipe page)
 
   await ready(page, "/recipes/pasteis-de-nata/edit");
   await page.getByRole("button", { name: "Delete recipe" }).click();

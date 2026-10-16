@@ -9,23 +9,18 @@ import { cx } from "./cx";
  * centered pseudo-element extends the 40px visible size to a 48px hit area.
  * Always needs an accessible name (`label`).
  */
+export const pictureButtonClass =
+  "relative inline-grid size-[40px] shrink-0 place-items-center rounded-full border border-hairline bg-surface-card text-ink transition-colors duration-(--motion-fast) ease-skin before:absolute before:-inset-xs before:content-[''] hover:bg-surface-sunken active:bg-primary-wash active:text-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:text-disabled [&_svg]:size-icon-sm";
+
 type PictureButtonProps = ComponentProps<"button"> & { label: string };
 
+/** A real `<button>`; for a picture-button that navigates instead, use `pictureButtonClass` on a Link (CoverPicture's Back and Edit). */
 export const PictureButton = forwardRef<HTMLButtonElement, PictureButtonProps>(function PictureButton(
   { label, className, type = "button", children, ...props },
   ref,
 ) {
   return (
-    <button
-      ref={ref}
-      type={type}
-      aria-label={label}
-      className={cx(
-        "relative inline-grid size-[40px] shrink-0 place-items-center rounded-full border border-hairline bg-surface-card text-ink transition-colors duration-(--motion-fast) ease-skin before:absolute before:-inset-xs before:content-[''] hover:bg-surface-sunken active:bg-primary-wash active:text-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:text-disabled [&_svg]:size-icon-sm",
-        className,
-      )}
-      {...props}
-    >
+    <button ref={ref} type={type} aria-label={label} className={cx(pictureButtonClass, className)} {...props}>
       {children}
     </button>
   );

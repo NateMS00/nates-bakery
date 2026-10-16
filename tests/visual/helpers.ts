@@ -42,7 +42,11 @@ export async function ready(page: Page, path: string) {
 /** One h1, the landmarks, and no horizontal scroll. */
 export async function expectPageBasics(page: Page) {
   await expect(page.locator("h1")).toHaveCount(1);
-  for (const landmark of ["header", "nav", "main", "footer"]) await expect(page.locator(landmark)).toHaveCount(1);
+  for (const landmark of ["header", "main", "footer"]) await expect(page.locator(landmark)).toHaveCount(1);
+  // At least one: a page can add its own in-page nav (the Recipe page's section tabs)
+  // alongside the shell's Primary nav — each with its own accessible name, not a
+  // violation, just more than the shell alone has.
+  await expect(page.locator("nav")).not.toHaveCount(0);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 }

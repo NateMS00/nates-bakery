@@ -135,8 +135,13 @@ export const supabaseData: DataBackend = {
   async deleteRecipe(id) {
     if (!UUID.test(id)) return;
     const db = await supabaseServer();
+    // The cascade (0001_init.sql) removes the bake rows, but never touches their
+    // Storage files — read their photo paths before they go with the rows.
+    const { data } = await db.from("bakes").select("photo_path").eq("recipe_id", id);
     const { error } = await db.from("recipes").delete().eq("id", id);
     if (error) fail("deleting a recipe", error);
+    const paths = ((data ?? []) as { photo_path: string | null }[]).map((b) => b.photo_path).filter((p): p is string => Boolean(p));
+    if (paths.length) await db.storage.from(BAKE_PHOTO_BUCKET).remove(paths);
   },
 
   async setFavorite(recipeId, favorite) {

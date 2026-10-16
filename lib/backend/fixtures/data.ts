@@ -145,6 +145,9 @@ export const fixturesData: DataBackend = {
 
   async deleteRecipe(id) {
     const data = await db();
+    // No real Storage here to clean up (fixture photoPaths are static public
+    // assets, never uploaded) — the supabase backend's deleteRecipe is the one
+    // that actually removes the deleted bakes' Storage files.
     data.recipes = data.recipes.filter((r) => r.id !== id);
   },
 

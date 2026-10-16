@@ -144,3 +144,19 @@ test("revoking or deleting ends the link", async () => {
   await t.as("postgres");
   for (const table of TABLES) expect((await t.q<{ n: number }>(`select count(*)::int n from public.${table}`))[0].n, table).toBe(0);
 });
+
+test("deleting a recipe whose cover_bake_id is set: the bakes cascade and the cover's ON DELETE SET NULL fire in the same statement, cleanly", async () => {
+  await t.as("authenticated", OWNER);
+  const [{ save_recipe: id }] = await t.q<{ save_recipe: string }>("select public.save_recipe(null, $1::jsonb)", [JSON.stringify(CONTENT)]);
+  const [{ id: coverBakeId }] = await t.q<{ id: string }>("insert into public.bakes (recipe_id, baked_on, scale) values ($1, '2026-10-01', 1) returning id", [id]);
+  await t.q("insert into public.bakes (recipe_id, baked_on, scale) values ($1, '2026-09-01', 1)", [id]); // a second bake, not the cover
+  await t.q("update public.recipes set cover_bake_id = $1 where id = $2", [coverBakeId, id]);
+
+  // The delete itself must not error: recipes.cover_bake_id's ON DELETE SET NULL
+  // would otherwise try to update the very recipe row the outer DELETE is removing.
+  expect(await t.fails("delete from public.recipes where id = $1", [id])).toBe("");
+
+  await t.as("postgres");
+  expect(await t.q("select id from public.recipes where id = $1", [id])).toEqual([]);
+  expect(await t.q("select id from public.bakes where recipe_id = $1", [id])).toEqual([]); // both bakes cascaded
+});

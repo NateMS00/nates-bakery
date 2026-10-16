@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
-import { Toggle } from "@/components/ui/Toggle";
 import { RATING_OPTIONS, ratingLabel, type LibraryFilters, type Status } from "@/lib/data/library";
 import type { Category } from "@/lib/data/types";
 
@@ -59,7 +58,6 @@ export function FilterRow({
           onChange={(v) => onChange({ ...filters, status: v as Status })}
         />
       </div>
-      <Toggle label="Favorites" checked={filters.favorite} onChange={(favorite) => onChange({ ...filters, favorite })} />
       <Select
         id="filter-rating"
         label="Rating"

@@ -1,42 +1,47 @@
 "use client";
 
-import Link from "next/link";
-import { Heart } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { RecipePicture } from "@/components/ui/RecipePicture";
-import { StarDisplay } from "@/components/ui/StarDisplay";
+import { RecipeTile } from "@/components/ui/RecipeTile";
 import { categoryLabel } from "@/lib/data/categories";
 import type { Recipe } from "@/lib/data/types";
 import { formatBakeDate } from "@/lib/format";
 
-// BONES Recipes 1.3.0: 30 items, then Show more loads the next 30 below. Desktop
-// (1280 and up): one row per recipe, the recipe picture (36×48) at the start of the
-// title column (title 5 cols, category 2, rating 2, last baked 2, favorite 1). Mobile
-// and tablet: a card, the picture (60×80) on the left, category/title/rating+favorite
-// +last-baked stacked on its right, since the row's 12 columns are too narrow at 768.
-// SKIN recipe-item: the whole item is one link.
+// BONES-recipes.md 1.5.0 Recipes: a photo grid of recipe-tiles, 2 columns on mobile,
+// 3 on tablet, 4 on desktop, {spacing.md} between columns and {spacing.base} between
+// rows. 30 items, then Show more loads the next 30 below.
 
 const PAGE = 30;
 
 export function RecipeList({ recipes }: { recipes: Recipe[] }) {
   const [shown, setShown] = useState(PAGE);
-  const list = useRef<HTMLUListElement>(null);
+  const grid = useRef<HTMLUListElement>(null);
 
   function showMore() {
     const firstNew = shown;
     setShown(shown + PAGE);
-    requestAnimationFrame(() => list.current?.children[firstNew]?.querySelector("a")?.focus());
+    requestAnimationFrame(() => grid.current?.children[firstNew]?.querySelector("a")?.focus());
   }
 
   return (
     <>
-      <ul ref={list} role="list" className="mt-sm flex flex-col gap-sm">
-        {recipes.slice(0, shown).map((recipe) => (
-          <li key={recipe.id}>
-            <RecipeItem recipe={recipe} />
-          </li>
-        ))}
+      <ul ref={grid} role="list" className="mt-sm grid grid-cols-2 gap-x-md gap-y-base tablet:grid-cols-3 desktop:grid-cols-4">
+        {recipes.slice(0, shown).map((recipe) => {
+          const lastBaked = recipe.bakeLog[0]?.date;
+          return (
+            <li key={recipe.id}>
+              <RecipeTile
+                href={`/recipes/${recipe.id}`}
+                picture={recipe.cover}
+                category={categoryLabel(recipe.category)}
+                title={recipe.title}
+                rating={recipe.rating}
+                favorite={recipe.favorite}
+                bakedLabel={lastBaked ? `Baked ${formatBakeDate(lastBaked)}` : null}
+              />
+            </li>
+          );
+        })}
       </ul>
       {recipes.length > shown && (
         <Button variant="text" onClick={showMore} className="mt-sm -ml-sm">
@@ -44,51 +49,5 @@ export function RecipeList({ recipes }: { recipes: Recipe[] }) {
         </Button>
       )}
     </>
-  );
-}
-
-/**
- * The card's name, title first, so a screen reader's links list sorts by recipe; the
- * visible title still starts it (WCAG 2.5.3). The rest follows the card's content.
- */
-function cardName(recipe: Recipe, baked: string) {
-  const rating = recipe.rating === null ? "not rated" : `rated ${recipe.rating} out of 5`;
-  return [recipe.title, categoryLabel(recipe.category), rating, recipe.favorite && "favorite", baked].filter(Boolean).join(", ");
-}
-
-function RecipeItem({ recipe }: { recipe: Recipe }) {
-  const lastBaked = recipe.bakeLog[0]?.date;
-  const baked = lastBaked ? `Baked ${formatBakeDate(lastBaked)}` : "Not baked yet";
-  return (
-    <Link
-      href={`/recipes/${recipe.id}`}
-      aria-label={cardName(recipe, baked)}
-      className="grid grid-cols-[auto_1fr] items-start gap-x-md gap-y-xs rounded-lg border border-hairline bg-surface-card p-base text-ink transition-colors duration-(--motion-fast) ease-skin hover:border-primary active:border-primary active:bg-primary-wash focus-visible:outline-offset-2 desktop:grid-cols-12 desktop:items-center desktop:gap-x-(--gutter) desktop:gap-y-0"
-    >
-      <RecipePicture src={recipe.cover} className="w-[60px] h-[80px] desktop:hidden" />
-      <div className="grid gap-y-xs desktop:contents">
-        <span className="type-label text-primary desktop:order-2 desktop:col-span-2">{categoryLabel(recipe.category)}</span>
-        <span className="flex items-center gap-sm desktop:order-1 desktop:col-span-5">
-          <RecipePicture src={recipe.cover} className="hidden w-[36px] h-[48px] desktop:block" />
-          <span className="line-clamp-2 type-heading">{recipe.title}</span>
-        </span>
-        <span className="flex items-center gap-md desktop:contents">
-          <span className="desktop:order-3 desktop:col-span-2">
-            <StarDisplay rating={recipe.rating} />
-          </span>
-          <span className="desktop:order-5 desktop:col-span-1 desktop:justify-self-end">
-            {recipe.favorite && (
-              <>
-                <Heart aria-hidden="true" className="size-icon-sm text-primary" fill="currentColor" strokeWidth={1.8} />
-                <span className="sr-only">Favorite</span>
-              </>
-            )}
-          </span>
-          <span className="ml-auto type-caption text-muted desktop:order-4 desktop:col-span-2 desktop:ml-0">
-            {baked}
-          </span>
-        </span>
-      </div>
-    </Link>
   );
 }

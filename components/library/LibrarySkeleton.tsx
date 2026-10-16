@@ -1,9 +1,11 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-// BONES Loading: Search and Filters render; Recipes shows 6 placeholder items in
-// final proportions; Drafts stay hidden until loaded. Search and Filters are drawn as
-// placeholders in their final shape, because their options come from the data.
+// BONES-recipes.md 1.5.0 Loading: Search, Filters and the view tabs render; the grid
+// shows 4 placeholder tiles (grout frames and two text bars) in final proportions;
+// the Drafts tab appears once loaded (its count isn't known yet). Search and Filters
+// are drawn as placeholders in their final shape, because their options come from
+// the data.
 
 export function LibrarySkeleton({ importEnabled }: { importEnabled: boolean }) {
   return (
@@ -15,7 +17,7 @@ export function LibrarySkeleton({ importEnabled }: { importEnabled: boolean }) {
         <h1 className="type-display-md text-ink desktop:type-display-lg">Library</h1>
         <div
           data-action-bar
-          className="z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:bg-transparent tablet:p-0 tablet:shadow-none"
+          className="z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+var(--safe-area-bottom))] shadow-bar tablet:static tablet:bg-transparent tablet:p-0 tablet:shadow-none"
         >
           <ButtonLink href={importEnabled ? "/import" : "/recipes/new"} variant="primary" className="w-full tablet:w-auto">
             {importEnabled ? "Import from a reel" : "New recipe"}
@@ -30,21 +32,26 @@ export function LibrarySkeleton({ importEnabled }: { importEnabled: boolean }) {
         </div>
       </div>
       <div className="mt-base flex flex-wrap items-end gap-lg max-tablet:hidden">
-        {[3.5, 5, 2, 2.75].map((w, i) => (
+        {[3.5, 5, 2.75].map((w, i) => (
           <div key={i} className="flex flex-col gap-xs">
             <Skeleton className="h-md w-2xl" />
             <Skeleton className="h-control-height rounded-md" style={{ width: `calc(var(--spacing-3xl) * ${w})` }} />
           </div>
         ))}
       </div>
-      <Skeleton className="mt-lg h-lg w-1/4 desktop:mt-xl" />
-      <Skeleton className="mt-sm h-md w-xl" />
-      <ul className="mt-sm flex flex-col gap-sm">
-        {Array.from({ length: 6 }, (_, i) => (
-          <li key={i} className="grid gap-y-sm rounded-lg border border-hairline bg-surface-card p-base desktop:grid-cols-12 desktop:items-center desktop:gap-x-(--gutter)">
-            <Skeleton className="h-md w-2xl desktop:order-2 desktop:col-span-2" />
-            <Skeleton className={`h-lg desktop:order-1 desktop:col-span-5 ${i % 2 ? "w-3/5" : "w-4/5"}`} />
-            <Skeleton className="h-base w-1/3 desktop:order-3 desktop:col-span-2 desktop:w-3/4" />
+      {/* View tabs: Recipes and Favorites only — Drafts' count isn't known yet. */}
+      <div role="tablist" aria-label="Library views" className="mt-base flex gap-sm">
+        <span className="inline-flex h-10 items-center rounded-md bg-primary px-md type-button text-[15px] text-on-primary">Recipes</span>
+        <span className="inline-flex h-10 items-center rounded-md bg-surface-sunken px-md type-button text-[15px] text-body">Favorites</span>
+      </div>
+      <ul className="mt-lg grid grid-cols-2 gap-x-md gap-y-base desktop:mt-xl tablet:grid-cols-3 desktop:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <li key={i} className="flex flex-col gap-sm">
+            <Skeleton className="aspect-[4/5] w-full rounded-lg" />
+            <div className="flex flex-col gap-xs">
+              <Skeleton className="h-md w-2/5" />
+              <Skeleton className={`h-lg ${i % 2 ? "w-3/5" : "w-4/5"}`} />
+            </div>
           </li>
         ))}
       </ul>

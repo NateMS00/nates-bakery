@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/Button";
 import { ChoiceChips } from "@/components/ui/ChoiceChips";
 import { Dialog } from "@/components/ui/Dialog";
 import { Segmented } from "@/components/ui/Segmented";
-import { Toggle } from "@/components/ui/Toggle";
 import { NO_FILTERS, RATING_OPTIONS, type LibraryFilters, type Status } from "@/lib/data/library";
 import type { Category } from "@/lib/data/types";
 import { STATUS_OPTIONS, type CategoryCount } from "./FilterControls";
 
 // BONES Filters sheet (mobile): sized to its content with a footer pinned to its
-// bottom. Category and Rating as wrapping choice chips, Status segmented, Favorites
-// toggle; footer with Clear and "Show n recipes" (n updates live). All four filters
-// fit on 390 × 844; if not, the body scrolls above the footer. Changes apply only on
-// Show; the close X, Esc, backdrop, or swipe discard them. Remount (key) per open.
+// bottom. Category and Rating as wrapping choice chips, Status segmented; footer
+// with Clear and "Show n recipes" (n updates live, for whichever view — Recipes or
+// Favorites — opened it). All three filters fit on 390 × 844; if not, the body
+// scrolls above the footer. Changes apply only on Show; the close X, Esc, backdrop,
+// or swipe discard them. Remount (key) per open.
 
 export function FiltersSheet({
   open,
@@ -66,7 +66,6 @@ export function FiltersSheet({
           <span className="type-label text-muted">Status</span>
           <Segmented label="Status" value={draft.status} options={STATUS_OPTIONS} onChange={(v) => setDraft({ ...draft, status: v as Status })} />
         </div>
-        <Toggle label="Favorites" checked={draft.favorite} onChange={(favorite) => setDraft({ ...draft, favorite })} />
         <ChoiceChips
           label="Rating"
           labelId="sheet-rating"

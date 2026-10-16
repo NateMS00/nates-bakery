@@ -5,9 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { ChipFilter } from "@/components/ui/ChipFilter";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { TextLink } from "@/components/ui/TextLink";
 import { TilePanel } from "@/components/ui/Tile";
+import { ViewTabs } from "@/components/ui/ViewTab";
 import { useInstalled } from "@/components/shell/useInstalled";
 import { categoryLabel } from "@/lib/data/categories";
 import {
@@ -19,7 +19,9 @@ import {
   ratingLabel,
   sortRecipes,
   writeFilters,
+  writeView,
   type LibraryFilters,
+  type View,
 } from "@/lib/data/library";
 import { pollImports, useDrafts } from "@/lib/data/store";
 import type { Draft, Recipe } from "@/lib/data/types";
@@ -29,11 +31,12 @@ import { FiltersSheet } from "./FiltersSheet";
 import { RecipeList } from "./RecipeList";
 import { SearchField } from "./SearchField";
 
-// /recipes (Library), BONES-recipes.md. Sections in SKELETON order: Search, Filters,
-// Drafts, Recipes, with a page header for the H1 and the primary action (Import from a
-// reel), which is the sticky action-bar on mobile. Query state lives in the URL.
-// With the Import feature off (lib/features.ts), the primary action is New recipe,
-// there are no drafts, and nothing mentions reels.
+// /recipes (Library), BONES-recipes.md 1.5.0. Sections in SKELETON order: Search,
+// Filters, Views (Recipes · Favorites · Drafts), then the active view's panel, with
+// a page header for the H1 and the primary action (Import from a reel), which is the
+// sticky action-bar on mobile. Query state lives in the URL. With the Import feature
+// off (lib/features.ts), the primary action is New recipe, there are no drafts, and
+// nothing mentions reels.
 
 export function LibraryView({
   recipes,
@@ -53,21 +56,21 @@ export function LibraryView({
   const [sheetKey, setSheetKey] = useState(0);
   const [searchKey, setSearchKey] = useState(0);
   const filtersButton = useRef<HTMLButtonElement>(null);
+  const viewTabs = useRef<HTMLDivElement>(null);
   const initiallyImporting = useMemo(() => new Set(initialDrafts.filter((d) => d.status === "importing").map((d) => d.id)), [initialDrafts]);
 
   useEffect(() => pollImports(initialDrafts), [initialDrafts]);
 
-  const sorted = useMemo(() => sortRecipes(recipes), [recipes]);
-  const results = sorted.filter((r) => matches(r, query));
-  const categories = categoryCounts(recipes);
-  const filterCount = activeFilterCount(query);
-  const searching = query.q !== "" || filterCount > 0;
+  const isEmpty = recipes.length === 0 && drafts.length === 0;
+  const onlyDrafts = recipes.length === 0 && drafts.length > 0;
+  const view: View = query.view ?? (onlyDrafts ? "drafts" : "recipes");
 
   function replace(params: URLSearchParams) {
     const q = params.toString();
     window.history.replaceState(null, "", q ? `${pathname}?${q}` : pathname);
   }
   const setFilters = (f: LibraryFilters) => replace(writeFilters(new URLSearchParams(searchParams.toString()), f));
+  const setView = (v: View) => replace(writeView(new URLSearchParams(searchParams.toString()), v));
   const setSearch = (q: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (q) params.set("q", q);
@@ -79,8 +82,25 @@ export function LibraryView({
     setSearchKey((k) => k + 1);
   }
 
-  const isEmpty = recipes.length === 0 && drafts.length === 0;
-  const onlyDrafts = recipes.length === 0 && drafts.length > 0;
+  // BONES: an old ?favorite=1 link opens Favorites (parseLibraryQuery already reads
+  // it) and rewrites the URL to ?view=favorites — once, on arrival, never again.
+  useEffect(() => {
+    if (searchParams.get("favorite") === "1") replace(writeView(new URLSearchParams(searchParams.toString()), "favorites"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time cleanup of the URL this page was opened with, not a reaction to later changes
+  }, []);
+
+  const sorted = useMemo(() => sortRecipes(recipes), [recipes]);
+  const base = view === "favorites" ? sorted.filter((r) => r.favorite) : sorted;
+  const results = view === "drafts" ? [] : base.filter((r) => matches(r, { ...query, view }));
+  const categories = categoryCounts(recipes);
+  const filterCount = activeFilterCount(query);
+  const searching = query.q !== "" || filterCount > 0;
+
+  /** The Drafts tab hides once it's empty; focus moves to the Recipes tab (BONES). */
+  function onLastDraftDiscarded() {
+    setView("recipes");
+    requestAnimationFrame(() => viewTabs.current?.querySelector<HTMLElement>("[role=tab]")?.focus());
+  }
 
   return (
     <>
@@ -94,7 +114,7 @@ export function LibraryView({
         <EmptyState importEnabled={importEnabled} />
       ) : (
         <>
-          {!onlyDrafts && (
+          {view !== "drafts" && (
             <>
               {/* Search, with the Filters button beside it on mobile */}
               <div className="mt-base desktop:max-w-[calc(var(--col)*8+var(--gutter)*7)]">
@@ -136,7 +156,6 @@ export function LibraryView({
                   {query.status !== "all" && (
                     <ChipFilter label={query.status === "baked" ? "Baked" : "Not baked yet"} onRemove={() => setFilters({ ...query, status: "all" })} />
                   )}
-                  {query.favorite && <ChipFilter label="Favorites" onRemove={() => setFilters({ ...query, favorite: false })} />}
                   {query.rating && (
                     <ChipFilter label={ratingLabel(query.rating).label} spoken={ratingLabel(query.rating).spoken} onRemove={() => setFilters({ ...query, rating: null })} />
                   )}
@@ -150,7 +169,7 @@ export function LibraryView({
                 open={sheetOpen}
                 applied={query}
                 categories={categories}
-                countFor={(f) => sorted.filter((r) => matches(r, { ...f, q: query.q })).length}
+                countFor={(f) => base.filter((r) => matches(r, { ...f, q: query.q, view })).length}
                 onApply={(f) => {
                   setFilters(f);
                   setSheetOpen(false);
@@ -161,48 +180,64 @@ export function LibraryView({
             </>
           )}
 
-          {/* Drafts: hidden while searching or filtering (SKELETON). initialDrafts, not
-              the live-filtered count, so discarding down to zero doesn't unmount the
-              section out from under its own "Draft discarded · Undo" notice. */}
-          {initialDrafts.length > 0 && !searching && <DraftsSection drafts={drafts} initiallyImporting={initiallyImporting} />}
+          <div ref={viewTabs} className="mt-base">
+            <ViewTabs
+              label="Library views"
+              value={view}
+              onChange={(v) => setView(v as View)}
+              options={[
+                { value: "recipes", label: "Recipes" },
+                { value: "favorites", label: "Favorites" },
+                ...(drafts.length > 0 ? [{ value: "drafts", label: "Drafts", count: drafts.length }] : []),
+              ]}
+            />
+          </div>
 
-          <section aria-labelledby="recipes-heading" className="mt-lg desktop:mt-xl">
-            <SectionHeading id="recipes-heading" tabIndex={-1} className="outline-none">
-              Recipes
-            </SectionHeading>
-            {onlyDrafts ? (
-              <p className="mt-sm type-body-md text-muted">No saved recipes yet</p>
-            ) : (
-              <>
-                <p aria-live="polite" className="mt-sm type-label text-muted">
-                  {!searching
-                    ? `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"}`
-                    : results.length === 0
-                      ? `No matches out of ${recipes.length} recipes`
-                      : `${results.length} of ${recipes.length} recipes`}
+          {view === "drafts" ? (
+            <div className="mt-lg desktop:mt-xl">
+              <DraftsSection drafts={drafts} initiallyImporting={initiallyImporting} onLastDiscarded={onLastDraftDiscarded} />
+            </div>
+          ) : (
+            <section aria-labelledby="recipes-heading" className="mt-lg desktop:mt-xl">
+              <h2 id="recipes-heading" className="sr-only">
+                {view === "favorites" ? "Favorites" : "Recipes"}
+              </h2>
+              {base.length === 0 ? (
+                <p className="mt-sm type-body-md text-muted">
+                  {view === "favorites" ? "Tap the heart on a recipe to keep it here." : "No saved recipes yet"}
                 </p>
-                {results.length > 0 ? (
-                  <RecipeList key={searchParams.toString()} recipes={results} />
-                ) : (
-                  <div className="mt-sm rounded-lg border border-hairline bg-surface-card p-base">
-                    <p className="type-body-md text-ink">Nothing matches</p>
-                    <div className="mt-xs flex flex-wrap gap-x-base">
-                      {query.q && (
-                        <Button variant="text" onClick={clearSearch} className="-ml-sm">
-                          Clear search
-                        </Button>
-                      )}
-                      {filterCount > 0 && (
-                        <Button variant="text" onClick={() => setFilters(NO_FILTERS)} className={query.q ? undefined : "-ml-sm"}>
-                          Clear filters
-                        </Button>
-                      )}
+              ) : (
+                <>
+                  <p aria-live="polite" className="mt-sm type-label text-muted">
+                    {!searching
+                      ? `${base.length} ${base.length === 1 ? "recipe" : "recipes"}`
+                      : results.length === 0
+                        ? `No matches out of ${base.length} recipes`
+                        : `${results.length} of ${base.length} recipes`}
+                  </p>
+                  {results.length > 0 ? (
+                    <RecipeList key={searchParams.toString()} recipes={results} />
+                  ) : (
+                    <div className="mt-sm rounded-lg border border-hairline bg-surface-card p-base">
+                      <p className="type-body-md text-ink">Nothing matches</p>
+                      <div className="mt-xs flex flex-wrap gap-x-base">
+                        {query.q && (
+                          <Button variant="text" onClick={clearSearch} className="-ml-sm">
+                            Clear search
+                          </Button>
+                        )}
+                        {filterCount > 0 && (
+                          <Button variant="text" onClick={() => setFilters(NO_FILTERS)} className={query.q ? undefined : "-ml-sm"}>
+                            Clear filters
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
+                  )}
+                </>
+              )}
+            </section>
+          )}
         </>
       )}
     </>
@@ -220,7 +255,7 @@ function PrimaryAction({ importEnabled, installed, centered = false }: { importE
     <div
       data-action-bar
       className={
-        "z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:static tablet:z-auto tablet:bg-transparent tablet:p-0 tablet:shadow-none" +
+        "z-20 max-tablet:pin-bottom bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+var(--safe-area-bottom))] shadow-bar tablet:static tablet:z-auto tablet:bg-transparent tablet:p-0 tablet:shadow-none" +
         (centered ? " tablet:mt-lg" : "") +
         (installed ? " max-tablet:hidden" : "")
       }

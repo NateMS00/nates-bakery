@@ -269,10 +269,11 @@ test("Save blocked, then saved as a recipe", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Chocolate tahini babka");
   await expect(page.getByText("Makes 2 loaves")).toBeVisible();
   await expect(page.getByText("@braided.bea")).toBeVisible();
-  // It left Drafts and joined the Library.
+  // It left Drafts and joined the Library (Drafts is a view tab now, not shown by default).
   await page.goto("/recipes");
-  await expect(page.locator("#drafts-heading ~ ul")).not.toContainText("Chocolate tahini babka");
   await expect(page.locator("#recipes-heading ~ ul > li").first()).toContainText("Chocolate tahini babka");
+  await page.getByRole("tab", { name: /^Drafts/ }).click();
+  await expect(page.locator("#drafts-heading ~ ul")).not.toContainText("Chocolate tahini babka");
 });
 
 test("Save failed keeps the edits and offers Retry", async ({ page, context }) => {
@@ -334,6 +335,7 @@ test("Discard confirmation", async ({ page }) => {
   await discard.click();
   await dialog.getByRole("button", { name: "Discard", exact: true }).click();
   await page.waitForURL(/\/recipes$/);
+  await page.getByRole("tab", { name: /^Drafts/ }).click(); // Drafts is a view tab now, not shown by default
   await expect(page.locator("#drafts-heading ~ ul")).not.toContainText("Chocolate tahini");
 });
 

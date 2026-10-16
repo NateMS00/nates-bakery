@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant (no tab bar; with a cover, the cover replaces the header)
-> **Version**: 1.6.0 · **Updated**: 2026-10-15
+> **Version**: 1.6.1 · **Updated**: 2026-10-16
 
 ---
 
@@ -42,7 +42,7 @@ MAIN
 ## 2. SECTIONS
 
 ### Header (SKELETON section 1)
-- **Layout**: mobile: the cover full bleed at the very top (SKIN `cover-picture`, 4:3, edge to edge, under the status bar), with Back on its top-left corner and Favorite, Share, Edit on its top-right corner as `picture-button`s; below it, the text block full width. Tablet and desktop: the cover inside the content column, rounded, 8 of 12 cols (5 of 8 on tablet), with the text block in the remaining 4 cols beside it (3 on tablet) and Back, Favorite, Share, Edit and Start baking as normal buttons above the text, in one row. No cover: a back row ("‹ Library" with Favorite, Share, Edit at its end), then the text block, as on desktop today
+- **Layout**: mobile: the cover full bleed at the very top (SKIN `cover-picture`, 4:3, edge to edge, under the status bar), with Back on its top-left corner and Favorite, Share, Edit on its top-right corner as `picture-button`s; below it, the text block full width. Tablet and desktop: the cover inside the content column, rounded, 8 of 12 cols (5 of 8 on tablet), with the text block in the remaining 4 cols beside it (3 on tablet): the back link with Favorite, Share and Edit in one row at its top, then the text, then Start baking full width of that column under the rating line (as in the diagram). No cover: a back row ("‹ Library" with Favorite, Share, Edit at its end), then the text block, as on desktop today
 - **Content**: Back (on the cover: an arrow labeled "Back to Library"; elsewhere "‹ Library") → `/recipes`; Favorite toggle (pressed state exposed); Share (opens Share dialog); Edit → `/recipes/:recipeId/edit`; category label above the title; title as the H1 (wraps, never truncates); one muted credit line "@creator · Watch reel · Makes 36 cookies · 1 h 20 min" (wraps as needed; Watch reel opens the reel in a new tab; parts hide when missing); the rating as small stars in amarelo, read-only, from the latest rated bake, followed by "Baked 13 Oct" or "Not baked yet"; with no rated bake, only the bake status shows (no empty star row)
 - **Picture**: the cover is the recipe's cover (SKELETON 1.5.0): a bake photo set as cover, else the reel thumbnail. Decorative (empty alt), since the title names the recipe. Space reserved before it loads. When the reel cover is a person rather than the bake, the fix is a bake photo set as cover (Log sheet), not a smaller picture
 - **Behavior**: yield updates when the scale changes. Favorite toggles in place. The stars are not a control: a bake's rating is set in the Log sheet. Tapping the rating scrolls to Bakes
@@ -205,7 +205,7 @@ MOBILE
 
 | Name | Trigger | Layout change |
 |---|---|---|
-| Loading | Recipe data not yet loaded | Placeholders in final proportions: a grout cover area (only if the recipe is known to have a cover), title block, scale row, 8 ingredient rows, 4 steps; action bar shown disabled |
+| Loading | Recipe data not yet loaded | Placeholders in final proportions: a grout cover area (always reserved, because the loading screen can't know yet whether the recipe has a cover; most imported recipes do, so this is the smaller jump), title block, scale row, 8 ingredient rows, 4 steps; action bar shown disabled |
 | Has estimates | Any ingredient is still Estimated | A one-line notice between Header and Scale: "3 amounts are estimates. Confirm them" → `/recipes/:recipeId/edit`; full width on both devices |
 | Never baked | Bake log is empty | Bakes reduces to one line "Not baked yet"; See all bakes is hidden; the section tab reads "Bakes" without a count |
 | No cover | Recipe has no cover picture | No cover area: a back row with Favorite, Share and Edit, then the text block; the first viewport reaches the Scale presets |
@@ -238,6 +238,8 @@ MOBILE
 ---
 
 ## CHANGE LOG
+
+- 1.6.1 (2026-10-16): From the build: the loading cover area is always reserved; the desktop prose now matches the diagram (Start baking full width under the rating line).
 
 - 1.6.0 (2026-10-15): Visual upgrade round: full-bleed 4:3 cover with picture buttons (mobile), cover beside the text on desktop; one credit line; read-only rating from the latest rated bake; sticky section tabs (Ingredients, Steps, Bakes); Scale without a visible heading; Latest Bake becomes Bakes (up to 3 entries with photo and stars); Log bake beside Start baking opens the Log sheet; Mark as baked, its Undo and the Rating prompt removed (SKELETON 1.5.0).
 - 1.5.2 (2026-10-15): Open note: the Header picture is to be redesigned in the visual upgrade round.

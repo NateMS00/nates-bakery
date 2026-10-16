@@ -202,14 +202,17 @@ test("no cover: a back row, no cover area, the Scale presets in the first viewpo
   await shot(page, "12-no-cover");
 });
 
-test("broken cover and bake photos fall back to the placeholder", async ({ page }) => {
+test("broken cover falls back to the placeholder; its two bakes have no photo of their own", async ({ page }) => {
   await ready(page, CROISSANTS);
-  const pictures = visiblePictures(page);
-  await expect(pictures).toHaveCount(3); // the cover, plus two bakes with no photo
-  for (const p of await pictures.all()) {
-    await expect(p).toHaveAttribute("data-status", "error");
-    await expect(p.locator("img")).toHaveCount(0);
-  }
+  // Only the cover: neither of this recipe's bakes has its own photo, and a Bakes-section
+  // row with no photo renders no square at all (not even the placeholder).
+  const cover = visiblePictures(page);
+  await expect(cover).toHaveCount(1);
+  await expect(cover).toHaveAttribute("data-status", "error");
+  await expect(cover.locator("img")).toHaveCount(0);
+  const rows = page.locator('section[aria-labelledby="bakes-heading"] ul[role="list"] > li');
+  await expect(rows).toHaveCount(2);
+  for (const row of await rows.all()) await expect(row.locator('[data-testid="picture"]')).toHaveCount(0);
   await shot(page, "13-broken-cover");
 });
 
@@ -252,7 +255,7 @@ test("rating line: read-only, scrolls to Bakes; Not baked yet shows no stars", a
   await expect(page.getByText("Watch reel")).toHaveCount(0); // manual recipe, no source
 });
 
-test("Bakes: up to 3 entries with photo, stars, and how it turned out; See all bakes", async ({ page }) => {
+test("Bakes: up to 3 entries with photo, stars, and how it turned out; See all bakes", async ({ page, isMobile }) => {
   await ready(page, NATA);
   await page.locator("#bakes-heading").scrollIntoViewIfNeeded();
   const entries = page.locator('section[aria-labelledby="bakes-heading"] ul[role="list"] > li');
@@ -264,6 +267,15 @@ test("Bakes: up to 3 entries with photo, stars, and how it turned out; See all b
   await expect(entries.last()).toContainText("½×");
   const seeAll = page.getByRole("link", { name: "See all bakes (3)" });
   await expect(seeAll).toHaveAttribute("href", "/recipes/pasteis-de-nata/log");
+  // scrollIntoViewIfNeeded only scrolls the minimum distance, landing Bakes near the
+  // bottom edge — on mobile, Steps (6-8 visible here) is genuinely nearest the top under
+  // the sticky bar at this exact position, not Bakes (desktop has no separate Steps tab:
+  // Ingredients and Steps are one "Recipe" tab there). Wait for the scroll-spy to actually
+  // settle there (a real check, not just a screenshot: a stale tab wouldn't fail without it).
+  await expect(page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: isMobile ? "Steps" : "Recipe" })).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
   await shot(page, "14-bakes-section");
 });
 
@@ -276,21 +288,42 @@ test("never baked: Bakes reduces to one line, no See all bakes, no count on the 
   await expect(page.getByRole("link", { name: /See all bakes/ })).toHaveCount(0);
 });
 
+test("never baked with a cover: every fresh import looks like this", async ({ page }) => {
+  await ready(page, "/recipes/pita");
+  await expect(visiblePictures(page).first()).toHaveAttribute("data-status", "loaded");
+  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Bakes" }).getByText("Not baked yet", { exact: true })).toBeVisible();
+  await shot(page, "23-never-baked-with-cover");
+});
+
 test("section tabs: sticky, and mark the section nearest the top as you scroll", async ({ page, isMobile }) => {
   await ready(page, NATA);
   const nav = page.getByRole("navigation", { name: "Sections" });
   const ingredients = nav.getByRole("link", { name: isMobile ? "Ingredients" : "Recipe" });
-  const bakesTab = nav.getByRole("link", { name: /^Bakes/ });
   await expect(ingredients).toHaveAttribute("aria-current", "location");
   // Scroll well past the header (the cover alone is ~290px at 390 wide) so the tabs have
   // actually reached their sticky point, not just moved partway there.
   await page.evaluate(() => window.scrollBy(0, 900));
   expect(Math.round((await nav.boundingBox())!.y)).toBe(0); // flush with the viewport top
-  // All the way to the end: Bakes becomes current even on a short page where its own
-  // heading can't quite reach the trigger line (the end-of-document case).
+  // All the way to the end: NATA's Bakes section has real entries, tall enough that its own
+  // heading is still well short of the trigger line even at the document's end — some
+  // earlier section is still genuinely nearest the top under the sticky bar, not Bakes
+  // (exactly which one depends on the viewport's own reflow, so only that much is checked).
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(100);
-  await expect(bakesTab).toHaveAttribute("aria-current", "location");
+  await expect(nav.getByRole("link", { name: /^Bakes/ })).not.toHaveAttribute("aria-current", "location");
+
+  // The fallback case this all exists for: on desktop, Never baked (Bakes is one line) ends
+  // the page before anything reaches the trigger line at all — the last section is still
+  // marked current once there's nowhere left to scroll, not whatever the default first
+  // section is. (On mobile this same fixture's own Steps legitimately reaches the trigger
+  // on its own at the document's end, which is just as correct a result — not every
+  // viewport's content folds short enough to exercise the fallback itself.)
+  test.skip(isMobile, "desktop-only: this fixture needs a layout where nothing else reaches the trigger line first");
+  await ready(page, COOKIES);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(100);
+  await expect(page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: /^Bakes/ })).toHaveAttribute("aria-current", "location");
 });
 
 test("Log bake links to the entry form; Start baking links to Bake Mode", async ({ page }) => {
@@ -304,7 +337,9 @@ test("Log bake links to the entry form; Start baking links to Bake Mode", async 
 });
 
 test("account menu and timer alerts sheet", async ({ page, isMobile }) => {
-  await ready(page, NATA);
+  // A no-cover recipe: with one, the cover replaces the header on mobile (BONES-
+  // recipes-detail 1.6.1) and there's no Account button to reach from there at all.
+  await ready(page, COOKIES);
   await page.getByRole("button", { name: "Account" }).click();
   // Bakes is in the menu on phones only (BONES-shell 1.7.0); tablet and desktop
   // already have it in the header, so the menu doesn't repeat it.

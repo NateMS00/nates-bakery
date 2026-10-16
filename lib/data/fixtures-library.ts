@@ -90,7 +90,8 @@ export const LIBRARY_RECIPES: Recipe[] = [
   simple({ id: "country-sourdough", title: "Country sourdough", category: "bread", rating: 5, favorite: true, baked: fortnightly("2026-09-27", 24), created: "2026-06-02", makes: LOAF, minutes: 1440, creator: "wildyeast.ines" }),
   simple({ id: "focaccia", title: "Rosemary focaccia", category: "bread", rating: 4, baked: ["2026-09-22"], created: "2026-07-11", makes: [1, "tray", "trays"], minutes: 300, creator: "panificio.leo" }),
   simple({ id: "bagels", title: "New York bagels", category: "bread", rating: 3, baked: ["2026-05-18"], created: "2026-05-10", makes: [8, "bagel", "bagels"], minutes: 960, creator: "boilandbake" }),
-  simple({ id: "pita", title: "Pillowy pita", category: "bread", created: "2026-09-20", makes: [8, "pita", "pitas"], minutes: 120, creator: "levant.kitchen" }),
+  // A cover but never baked: every fresh import looks like this (the reel thumbnail, no bakes yet).
+  simple({ id: "pita", title: "Pillowy pita", category: "bread", created: "2026-09-20", makes: [8, "pita", "pitas"], minutes: 120, creator: "levant.kitchen", cover: "/recipe-pictures/custard-tart.svg" }),
   simple({ id: "brioche", title: "Brioche Nanterre", category: "viennoiserie", rating: 5, favorite: true, baked: ["2026-09-06"], created: "2026-04-21", makes: LOAF, minutes: 900, creator: "boulangerie.mo" }),
   simple({ id: "pain-au-chocolat", title: "Pain au chocolat", category: "viennoiserie", rating: 4, baked: ["2026-07-19"], created: "2026-07-01", makes: [12, "pastry", "pastries"], minutes: 1320, creator: "laminated.lou" }),
   simple({ id: "cinnamon-buns", title: "Cardamom and cinnamon buns", category: "viennoiserie", rating: 5, favorite: true, baked: ["2026-09-19", "2026-08-02"], created: "2026-03-14", makes: [12, "bun", "buns"], minutes: 210, creator: "fika.frida" }),

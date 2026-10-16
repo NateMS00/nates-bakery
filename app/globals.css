@@ -102,12 +102,27 @@
   --vv-height: 100dvh;
 }
 
-/* The home-indicator safe area, as a custom property rather than env() called
-   directly, so a test can override it (env() itself can't be overridden — there's
-   no real inset in a desktop browser, headless or not). Everything that needs the
-   bottom safe area (the tab bar, its body padding below) reads this instead. */
+/* The home-indicator and status-bar safe areas, as custom properties rather than
+   env() called directly, so a test can override them (env() itself can't be
+   overridden — there's no real inset in a desktop browser, headless or not).
+   Everything that needs them (the tab bar and its body padding below; the
+   Recipe page's cover, which replaces the header on mobile) reads these instead. */
 :root {
   --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-top: env(safe-area-inset-top);
+}
+
+/* BONES-recipes-detail: with a cover, it replaces the header on mobile — no logo row
+   or tile band above it, the cover starts at the very top under the status bar. The
+   page marks its cover wrapper with data-replaces-header; main's own top padding
+   (SKIN Page Top) would otherwise still push the cover down by itself. */
+@media (max-width: 767.98px) {
+  body:has([data-replaces-header]) header {
+    display: none;
+  }
+  body:has([data-replaces-header]) main {
+    padding-top: 0;
+  }
 }
 
 /* Pinned to the bottom of what's on screen: above iOS Safari's toolbar and, while it's

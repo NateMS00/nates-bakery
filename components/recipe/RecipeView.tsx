@@ -63,11 +63,22 @@ export function RecipeView({ initial }: { initial: Recipe }) {
     let frame = 0;
     function update() {
       frame = 0;
-      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
       let next: SectionId = SECTIONS[0];
+      let anyPassed = false;
       headings.forEach((el, i) => {
-        if (atBottom || el.getBoundingClientRect().top <= TRIGGER) next = SECTIONS[i];
+        if (el.getBoundingClientRect().top <= TRIGGER) {
+          next = SECTIONS[i];
+          anyPassed = true;
+        }
       });
+      // A short last section (Never baked: Bakes is one line) can end the page before its
+      // own heading ever reaches the trigger line — there's nowhere left to scroll, but it's
+      // still the one actually on screen. Only promotes it when nothing else has passed the
+      // trigger either: once an earlier section legitimately has (Bakes with real entries,
+      // tall enough that reaching the document's end doesn't mean its own heading is near
+      // the top yet), that section is still the one nearest the top, not Bakes.
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
+      if (atBottom && !anyPassed) next = SECTIONS[SECTIONS.length - 1];
       setCurrent(next);
     }
     const onScroll = () => {
@@ -76,9 +87,17 @@ export function RecipeView({ initial }: { initial: Recipe }) {
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    // A page short enough to need no scrolling at all (Never baked: Bakes is one line)
+    // never fires either of the above even once — and a taller one's images can still be
+    // loading in when this effect's first, synchronous update() runs, changing the
+    // document's real height after the fact with nothing to react to it. A ResizeObserver
+    // on the document catches both: any layout settling, not just an actual scroll.
+    const observer = new ResizeObserver(onScroll);
+    observer.observe(document.documentElement);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      observer.disconnect();
       cancelAnimationFrame(frame);
     };
   }, [recipe.id]);
@@ -120,12 +139,16 @@ export function RecipeView({ initial }: { initial: Recipe }) {
       {/* Header (SKELETON section 1) */}
       {hasCover ? (
         <>
-          <div className="-mx-(--gutter) -mt-lg tablet:hidden">
+          {/* data-replaces-header (globals.css): on mobile the cover IS the header — no
+              logo row or tile band above it, starting flush under the status bar. main's
+              own top padding is zeroed by that same rule, so nothing but this div decides
+              the top offset here (none: it starts at true y=0). */}
+          <div data-replaces-header className="-mx-(--gutter) tablet:hidden">
             <CoverPicture src={recipe.cover} recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
           </div>
           <div className="mt-base tablet:mt-0 tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:grid-cols-12">
             <div className="hidden tablet:block tablet:col-span-5 desktop:col-span-8">
-              <Picture src={recipe.cover} aspectRatio="4 / 3" rounded="lg" className="w-full" />
+              <Picture src={recipe.cover} aspectRatio="4 / 3" rounded="lg" className="max-h-[56vh] w-full" />
             </div>
             <div className="tablet:col-span-3 desktop:col-span-4">
               <div className="hidden items-center gap-xs tablet:flex">
@@ -312,15 +335,17 @@ function Dotted({ parts }: { parts: (ReactNode | null | undefined | false)[] }) 
   ));
 }
 
-/** One Bakes-section row: a 64px photo (or the placeholder), date + scale + stars, and a 2-line "how it turned out" preview. One link to the Log sheet entry. */
+/** One Bakes-section row: a 64px photo only when the bake has one (no photo → no square,
+ * no placeholder; the text starts at the left edge), date + scale + stars, and a 2-line
+ * "how it turned out" preview. One link to the Log sheet entry. */
 function BakeEntryRow({ recipeId, entry }: { recipeId: string; entry: BakeLogEntry }) {
   const href = `/recipes/${recipeId}/log?edit=${encodeURIComponent(entry.id)}`;
   return (
     <Link
       href={href}
-      className="group -m-xs flex gap-base rounded-lg p-xs transition-colors duration-(--motion-fast) ease-skin hover:bg-surface-sunken focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+      className="group -m-xs flex min-h-touch-min items-center gap-base rounded-lg p-xs transition-colors duration-(--motion-fast) ease-skin hover:bg-surface-sunken focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
     >
-      <Picture src={entry.photo ?? null} aspectRatio="1 / 1" rounded="md" className="w-[64px]" />
+      {entry.photo && <Picture src={entry.photo} aspectRatio="1 / 1" rounded="md" className="w-[64px]" />}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-x-sm gap-y-xs">
           <p className="type-body-md text-ink">

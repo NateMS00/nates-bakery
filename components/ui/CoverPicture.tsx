@@ -9,7 +9,9 @@ import { PictureButton, pictureButtonClass } from "./PictureButton";
  * and inside the content column from tablet up, capped at 56% of the viewport
  * height. Back and Edit navigate (real links styled as picture-buttons);
  * Favorite and Share are real buttons. No cover → no cover area at all (the
- * caller's job).
+ * caller's job). On mobile this replaces the app header (globals.css's
+ * data-replaces-header), so the floating controls clear the status bar/notch
+ * themselves (env(safe-area-inset-top), via the shared --safe-area-top).
  */
 export function CoverPicture({
   src,
@@ -26,7 +28,7 @@ export function CoverPicture({
 }) {
   return (
     <Picture src={src} aspectRatio="4 / 3" rounded="lg" className="max-h-[56vh] w-full max-tablet:rounded-none">
-      <div className="absolute inset-x-sm top-sm flex items-start justify-between">
+      <div className="absolute inset-x-sm top-[max(var(--spacing-sm),var(--safe-area-top))] flex items-start justify-between">
         <Link href="/recipes" aria-label="Back to Library" className={pictureButtonClass}>
           <ChevronLeft aria-hidden="true" strokeWidth={2.2} />
         </Link>

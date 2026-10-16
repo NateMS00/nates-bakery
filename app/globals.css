@@ -103,6 +103,14 @@
   --vv-height: 100dvh;
 }
 
+/* The home-indicator safe area, as a custom property rather than env() called
+   directly, so a test can override it (env() itself can't be overridden — there's
+   no real inset in a desktop browser, headless or not). Everything that needs the
+   bottom safe area (the tab bar, its body padding below) reads this instead. */
+:root {
+  --safe-area-bottom: env(safe-area-inset-bottom);
+}
+
 /* Pinned to the bottom of what's on screen: above iOS Safari's toolbar and, while it's
    open, the keyboard. Anchored from the top (offset + height of the visual viewport,
    then pulled up by its own height), because the bottom of the layout viewport can sit
@@ -150,7 +158,7 @@ dialog :is(input, textarea, select) {
    page's own sticky action. */
 @media (max-width: 767.98px) {
   body:has([data-tab-bar]) {
-    padding-bottom: calc(var(--spacing-tab-bar) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--spacing-tab-bar) + var(--safe-area-bottom));
   }
   html[data-keyboard-open] [data-tab-bar] {
     display: none;

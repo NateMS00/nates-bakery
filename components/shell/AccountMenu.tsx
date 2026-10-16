@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { User } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { IconButton } from "@/components/ui/IconButton";
 import { cx } from "@/components/ui/cx";
@@ -26,6 +27,7 @@ export function AccountMenu() {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+  const current = usePathname() === "/account";
 
   useEffect(() => {
     if (!open) return;
@@ -68,8 +70,9 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? "account-menu" : undefined}
+        aria-current={current ? "page" : undefined}
         onClick={() => setOpen((v) => !v)}
-        className={open ? "bg-primary-wash text-primary" : undefined}
+        className={cx((open || current) && "bg-primary-wash text-primary")}
       >
         <User aria-hidden="true" strokeWidth={1.8} />
       </IconButton>

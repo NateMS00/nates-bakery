@@ -18,21 +18,30 @@ export interface TabBarItemConfig {
  */
 export function TabBar({ items, className }: { items: TabBarItemConfig[]; className?: string }) {
   return (
-    <nav aria-label="Main" className={cx("flex h-tab-bar border-t border-hairline bg-canvas pb-[env(safe-area-inset-bottom)]", className)}>
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          aria-current={item.current ? "page" : undefined}
-          className={cx(
-            "flex min-w-touch-min flex-1 flex-col items-center justify-center gap-[2px] text-muted transition-colors duration-(--motion-fast) ease-skin hover:text-ink focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-focus-ring [&_svg]:size-icon",
-            item.current && "font-bold text-primary",
-          )}
-        >
-          {item.icon}
-          <span className="type-caption text-[13px]">{item.label}</span>
-        </Link>
-      ))}
+    // The 56px row and the safe-area padding are on separate elements on purpose:
+    // put pb-[...] on the same element as h-tab-bar and the padding eats into the
+    // fixed height instead of adding below it — on an iPhone (34px of it) that
+    // leaves the items about 22px tall, not 56. pin-bottom (SKIN "pinned to the
+    // bottom"): without it this sits in normal document flow and scrolls away
+    // with the page instead of staying put; `data-tab-bar`'s body padding (its
+    // sibling CSS rule) reserves the matching space so it never covers content.
+    <nav aria-label="Main" className={cx("z-20 pin-bottom border-t border-hairline bg-canvas pb-[var(--safe-area-bottom)]", className)}>
+      <div className="flex h-tab-bar">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={item.current ? "page" : undefined}
+            className={cx(
+              "flex min-w-touch-min flex-1 flex-col items-center justify-center gap-[2px] text-muted transition-colors duration-(--motion-fast) ease-skin hover:text-ink focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-focus-ring [&_svg]:size-icon",
+              item.current && "font-bold text-primary",
+            )}
+          >
+            {item.icon}
+            <span className="type-caption text-[13px]">{item.label}</span>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }

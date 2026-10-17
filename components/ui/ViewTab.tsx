@@ -28,7 +28,7 @@ export function ViewTabs({
   className?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={cx("flex flex-wrap gap-x-lg gap-y-sm", className)}>
+    <div role="tablist" aria-label={label} className={cx("flex flex-wrap gap-x-md gap-y-0 tablet:gap-x-lg tablet:gap-y-sm", className)}>
       {options.map((option) => {
         const selected = option.value === value;
         return (

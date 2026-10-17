@@ -369,7 +369,8 @@ components:
   button-text:
     backgroundColor: "transparent"
     textColor: "{colors.primary}"
-    typography: "{typography.button}"
+    typography: "{typography.body-md}"
+    fontWeight: 700
     minHeight: "{sizing.touch-min}"
     padding: "0 {spacing.sm}"
     textDecoration: "none"
@@ -1142,6 +1143,8 @@ components:
   view-tab:
     look: "{components.choice-radio}"
     semantics: "tablist"
+    groupGapMobile: "{spacing.md}"
+    wrapRowGap: "0"
     countTypography: "{typography.label-mono}"
   section-tabs:
     backgroundColor: "{colors.canvas}"
@@ -1533,7 +1536,7 @@ Weight 900 must survive subsetting (October 2026; it was cut at 700 before). Dec
 - Times inside step text ("15 min") are not set in mono; they use `time-mark`, bold in the reading face and the body text color, so the sentence keeps its rhythm and nothing looks like a link.
 - Atkinson's zero is slashed in both the Mono and Next cuts, with no plain alternate. It stays: telling 0 from O at arm's length is worth the slightly technical look.
 - Weight, not size alone, carries hierarchy in the sans: 400 to read, 500 for steps and amounts, 700 for actions and labels.
-- Uppercase appears only in `label` (+0.9px) and `button` (+1.2px), and only for one to three words. `label-mono` is always lowercase.
+- Uppercase appears only in `label` (+0.9px) and `button` (+1.2px, on pill buttons, nav links and back links), and only for one to three words. `button-text` stays sentence case. `label-mono` is always lowercase.
 
 ### Font Substitutes
 All three faces are free (SIL Open Font License) and self-hosted. Fallbacks, in order: Fraunces → Iowan Old Style → Georgia; Atkinson Hyperlegible Next → Avenir Next → system-ui; Atkinson Hyperlegible Mono → SF Mono → ui-monospace. Fallbacks must keep tabular figures for amounts (`font-variant-numeric: tabular-nums`).
@@ -1612,7 +1615,7 @@ This system is border-first: cards, tiles and list items use a 1px `{colors.outl
 
 **`button-destructive`** — Terracotta fill (`{colors.error}`) with `{colors.on-primary}` text; used only as the confirming action inside a destructive confirmation (Discard, Delete, Leave, Revoke), never as the first button a user sees. States: hover underlines the label (the colour already sits at its darkest safe value); active presses 1px; focus 3px ring; disabled grey glaze.
 
-**`button-text`** — No fill, cobalt `{typography.button}` label, `{sizing.touch-min}` hit height. For low-emphasis actions: Discard (the entry point), Read more, Show less, Show more, Show all, Clear filters, Skip, Undo, Close. States: hover underlines at 3px offset; active darkens to `{colors.primary-active}`; focus 3px ring with `{rounded.sm}`; disabled `{colors.disabled}`.
+**`button-text`** — No fill, cobalt label in the reading face, bold, sentence case (`{typography.body-md}` at 700), `{sizing.touch-min}` hit height. Unlike the pill buttons it is never uppercase mono: it often sits inside or right after a sentence ("1 amount is an estimate. Confirm it"), where uppercase reads as a shout and as a separate button. For low-emphasis actions: Discard (the entry point), Read more, Show less, Show more, Show all, Clear filters, Skip, Undo, Close. States: hover underlines at 3px offset; active darkens to `{colors.primary-active}`; focus 3px ring with `{rounded.sm}`; disabled `{colors.disabled}`.
 
 **`icon-button`** — A `{sizing.touch-min}` square with a `{sizing.icon}` icon in `{colors.ink}`; always has an accessible name. Used for Share, Edit, row menus, account, Exit, Pause, Clear timer. States: hover fills `{colors.surface-sunken}`; active fills `{colors.primary-wash}` and turns the icon cobalt; focus 3px ring; disabled `{colors.disabled}` icon.
 
@@ -1728,7 +1731,7 @@ This system is border-first: cards, tiles and list items use a 1px `{colors.outl
 
 **`tab-bar`** + **`tab-bar-item`** — The bottom navigation of the installed app (Home Screen mode only; BONES-shell): canvas fill, a hairline on top, `{sizing.tab-bar}` tall plus the home-indicator safe area, four equal items, each an icon over a 13px label. The current tab is cobalt with a bold label and `aria-current="page"`; others are muted (5.9:1). Hidden on detail and task screens (Recipe, Review Import, Edit, Bake Mode, Bake Log), which have their own sticky action. States: hover ink; active (current) cobalt and bold; focus 3px inset ring; disabled grey.
 
-**`view-tab`** — The Library's view switcher (Recipes, Favorites, Drafts), drawn as a row of `choice-radio`s ("(●) Recipes  ( ) Favorites  ( ) Drafts") with an optional count in `label-mono`. It looks like a radio group but stays built as a tab list (`role="tablist"`, `aria-selected`, arrow keys), because that's what it does. States as `choice-radio`.
+**`view-tab`** — The Library's view switcher (Recipes, Favorites, Drafts), drawn as a row of `choice-radio`s ("(●) Recipes  ( ) Favorites  ( ) Drafts") with an optional count in `label-mono`. It looks like a radio group but stays built as a tab list (`role="tablist"`, `aria-selected`, arrow keys), because that's what it does; the glyph is `aria-hidden`. Under 768px the gap between choices is `{spacing.md}` so all three fit one row at 390px; if they still wrap (larger text), the next line sits directly under the first (each choice is already 48px tall), never with an extra gap. States as `choice-radio`.
 
 **`section-tabs`** + **`section-tab`** — Anchor tabs on the Recipe page (Ingredients, Steps, Bakes): mono `tab` text, muted until current, with a 3px cobalt bar under the current one and an ink rule under the row, sticky under the top of the screen once the cover scrolls away. They jump to sections of one long page and mark the section in view; they never hide content, because a baker cross-checks steps and grams constantly. Built as links with `aria-current="location"`, not as a tab panel.
 

@@ -183,10 +183,22 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
     requestAnimationFrame(() => list.current?.children[firstNew]?.querySelector<HTMLElement>("h2")?.focus());
   }
 
+  // "Use as recipe cover" (BONES-recipes-log.md): on by default while this bake's
+  // photo already is the cover, or the cover is still the reel thumbnail (so the
+  // first bake photo fixes a bad reel cover for free); off once some other bake
+  // has already been chosen, so later photos don't silently replace it.
   const formInitial: EntryValues =
     form?.mode === "edit"
-      ? entryValues(form.entry)
-      : entryValues({ date: todayIso(), scale: bakedScale, rating: null, photoPath: null, whatChanged: "", howItTurnedOut: "" });
+      ? entryValues({ ...form.entry, useAsCover: recipe.coverBakeId === form.entry.id || recipe.coverBakeId === null })
+      : entryValues({
+          date: todayIso(),
+          scale: bakedScale,
+          rating: null,
+          photoPath: null,
+          whatChanged: "",
+          howItTurnedOut: "",
+          useAsCover: recipe.coverBakeId === null,
+        });
 
   return (
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">

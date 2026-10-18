@@ -104,6 +104,17 @@ export async function deleteBake(recipeId: string, entryId: string) {
   await (await data()).deleteBake(recipeId, entryId);
 }
 
+/** The Log sheet's photo slot: uploaded as soon as it's picked (already resized to
+ * a JPEG client-side, lib/photo-resize.ts), ahead of Save. Null means it failed. */
+export async function uploadBakePhoto(bytes: ArrayBuffer): Promise<string | null> {
+  return (await data()).uploadBakePhoto(bytes);
+}
+
+/** A photo uploaded ahead of Save but then replaced, removed, or never saved. */
+export async function deleteBakePhoto(path: string) {
+  await (await data()).deleteBakePhoto(path);
+}
+
 export async function createShareLink(recipeId: string): Promise<ShareLink | null> {
   return (await data()).createShareLink(recipeId);
 }

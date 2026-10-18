@@ -52,6 +52,15 @@ export interface DataBackend {
   addBake(recipeId: string, fields: BakeFields): Promise<BakeLogEntry | null>;
   updateBake(recipeId: string, entryId: string, fields: BakeFields): Promise<boolean>;
   deleteBake(recipeId: string, entryId: string): Promise<void>;
+  /** The Log sheet's photo slot: already a resized JPEG (lib/photo-resize.ts),
+   * uploaded as soon as it's picked, ahead of Save. Returns its Storage path, or
+   * null if the upload failed (BONES-recipes-log.md's "Photo uploading" state). */
+  uploadBakePhoto(bytes: ArrayBuffer): Promise<string | null>;
+  /** A photo uploaded ahead of Save but then replaced, removed, or never saved at
+   * all (the form closed without saving) — addBake/updateBake/deleteBake already
+   * clean up a *saved* bake's old or removed photo on their own; this is only for
+   * one that was never attached to a bake in the first place. Best-effort. */
+  deleteBakePhoto(path: string): Promise<void>;
   createShareLink(recipeId: string): Promise<ShareLink | null>;
   revokeShareLink(recipeId: string): Promise<void>;
 

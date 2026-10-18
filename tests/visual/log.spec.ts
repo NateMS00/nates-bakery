@@ -367,6 +367,99 @@ test("entry menu: Edit and Delete", async ({ page }) => {
   await expect(form(page, "Edit bake").getByLabel("What changed")).toHaveValue(/./);
 });
 
+// A genuine 1×1 RGB PNG (not just a signature-only stub), so lib/photo-resize.ts's
+// createImageBitmap step has something real to decode.
+const TINY_PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC", "base64");
+const pickPhoto = (dialog: ReturnType<typeof form>, name = "photo.png") => dialog.locator('input[type="file"]').setInputFiles({ name, mimeType: "image/png", buffer: TINY_PNG });
+
+test("photo slot: add, upload states, replace, remove; 'Use as recipe cover' on by default for a reel-thumbnail cover", async ({ page }) => {
+  // Lemon drizzle loaf's cover is still its reel thumbnail (coverBakeId null).
+  await ready(page, "/recipes/lemon-drizzle-loaf/log?new=1");
+  const dialog = form(page);
+  await expect(dialog.getByRole("button", { name: "Add a photo" })).toBeVisible();
+  await expect(dialog.getByText("Can become the recipe's cover")).toBeVisible();
+  await expect(dialog.getByRole("switch")).toHaveCount(0);
+
+  await pickPhoto(dialog);
+  // Transient: a 4:3 preview appears at once, Replace reads "Uploading…" while it's in flight.
+  await expect(dialog.locator('[data-testid="picture"]')).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Uploading…" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Remove" })).toBeVisible();
+  // On by default: the recipe has no chosen cover yet, so this photo would become it.
+  const cover = dialog.getByRole("switch", { name: "Use as recipe cover" });
+  await expect(cover).toHaveAttribute("aria-checked", "true");
+  await cover.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(350);
+  await shot(page, "14-photo-added");
+
+  // Replace: picking again re-uploads, with the same states.
+  await dialog.getByRole("button", { name: "Replace" }).click();
+  await pickPhoto(dialog, "photo2.png");
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+
+  // Remove: back to "Add a photo", the toggle gone with it.
+  await dialog.getByRole("button", { name: "Remove" }).click();
+  await expect(dialog.getByRole("button", { name: "Add a photo" })).toBeVisible();
+  await expect(dialog.getByRole("switch")).toHaveCount(0);
+
+  // Add it back, leave "Use as recipe cover" on, and save.
+  await pickPhoto(dialog);
+  await expect(cover).toHaveAttribute("aria-checked", "true");
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+  // The new entry (today's date) sorts first; its photo is now the cover.
+  await expect(page.getByRole("listitem").first().getByText("Cover")).toBeVisible();
+});
+
+test("photo slot: 'Use as recipe cover' off once another bake is the cover; a failed upload offers Retry; Save waits on one still uploading", async ({ page, context }) => {
+  // Pastéis de nata already has a chosen cover (a different bake), so a new
+  // bake's photo defaults to NOT replacing it.
+  await ready(page, `${NATA}?new=1`);
+  const dialog = form(page);
+  await pickPhoto(dialog);
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Use as recipe cover" })).toHaveAttribute("aria-checked", "false");
+
+  // A failed upload: the slot shows the error and Retry, the entry's own save isn't blocked by it.
+  await context.addCookies([{ name: "backery_stub_fail_saves", value: "1", url: "http://localhost:3100" }]);
+  await dialog.getByRole("button", { name: "Replace" }).click();
+  await pickPhoto(dialog, "photo2.png");
+  const failedNotice = dialog.getByText("Photo didn't upload. Try again");
+  await expect(failedNotice).toBeVisible();
+  await page.waitForTimeout(350);
+  await shot(page, "15-photo-upload-failed");
+
+  // Save pressed while a (now failing) upload is still in flight: Save itself
+  // waits on it, then blocks rather than saving a bake it can't attach the photo to.
+  await dialog.getByRole("button", { name: "Retry" }).click();
+  await expect(dialog.getByRole("button", { name: "Uploading…" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog.getByRole("button", { name: "Uploading photo…" })).toBeVisible();
+  await expect(failedNotice).toBeVisible();
+  await expect(dialog).toBeVisible();
+
+  // Clearing the stub and retrying lets it go through, and Save proceeds normally.
+  await context.clearCookies({ name: "backery_stub_fail_saves" });
+  await dialog.getByRole("button", { name: "Retry" }).click();
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Save" }).click();
+  await expect(dialog).toBeHidden();
+  // Not the cover (the toggle was off): the existing cover bake keeps its chip alone.
+  await expect(page.getByText("Cover")).toHaveCount(1);
+});
+
+test("photo slot: editing the bake that's already the cover preloads its photo with the toggle on", async ({ page }) => {
+  await ready(page, NATA);
+  await page.getByRole("button", { name: "More actions, Sat 26 Sep bake" }).click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const dialog = form(page, "Edit bake");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('[data-testid="picture"]')).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Use as recipe cover" })).toHaveAttribute("aria-checked", "true");
+});
+
 test.describe("today is the owner's local date", () => {
   // Bogotá is UTC−5: at 8 pm on 30 Sep it is already 1 Oct in UTC.
   test.use({ timezoneId: "America/Bogota" });

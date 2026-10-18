@@ -200,6 +200,23 @@ export const fixturesData: DataBackend = {
     if (r.coverBakeId === entryId) r.coverBakeId = null;
   },
 
+  // Fixtures have no Storage to actually upload to: a fake upload picks one of the
+  // app's own static recipe pictures (cycling through them) and waits a beat, so
+  // the Log sheet's "Uploading photo…" busy state is still something to look at.
+  // backery_stub_fail_saves (the same STUB cookie as Save) fails it too, for the
+  // "Photo didn't upload" state.
+  async uploadBakePhoto(bytes) {
+    await simulatedLatency();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (await failing()) return null;
+    const pictures = ["/recipe-pictures/custard-tart.svg", "/recipe-pictures/berry.svg", "/recipe-pictures/chocolate.svg", "/recipe-pictures/pale-meringue.svg"];
+    return pictures[Math.abs(bytes.byteLength) % pictures.length];
+  },
+
+  async deleteBakePhoto() {
+    // No real Storage here to clean up (fixture photoPaths are static public assets).
+  },
+
   async createShareLink(recipeId): Promise<ShareLink | null> {
     const r = await findRecipe(recipeId);
     if (!r) return null;

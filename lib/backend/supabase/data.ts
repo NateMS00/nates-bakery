@@ -231,6 +231,24 @@ export const supabaseData: DataBackend = {
     if (path) await db.storage.from(BAKE_PHOTO_BUCKET).remove([path]);
   },
 
+  async uploadBakePhoto(bytes) {
+    const db = await supabaseServer();
+    const {
+      data: { user },
+    } = await db.auth.getUser();
+    if (!user) return null;
+    const path = `${user.id}/${crypto.randomUUID()}.jpg`;
+    const { error } = await db.storage.from(BAKE_PHOTO_BUCKET).upload(path, bytes, { contentType: "image/jpeg" });
+    if (error) console.error(`uploadBakePhoto: upload failed: ${error.message}`);
+    return error ? null : path;
+  },
+
+  async deleteBakePhoto(path) {
+    const db = await supabaseServer();
+    const { error } = await db.storage.from(BAKE_PHOTO_BUCKET).remove([path]);
+    if (error) console.error(`deleteBakePhoto: ${error.message}`);
+  },
+
   async createShareLink(recipeId) {
     const db = await supabaseServer();
     // One link per recipe: keep an existing one, otherwise the database makes a token.

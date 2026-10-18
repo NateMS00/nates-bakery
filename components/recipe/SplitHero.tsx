@@ -1,10 +1,6 @@
-import { Pencil, Share } from "lucide-react";
-import Link from "next/link";
 import { AzulejoFill } from "@/components/ui/AzulejoFill";
-import { BackLink } from "@/components/ui/BackLink";
-import { FavoriteToggle } from "@/components/ui/FavoriteToggle";
-import { IconButton, iconButtonClass } from "@/components/ui/IconButton";
 import type { Recipe } from "@/lib/data/types";
+import { HeroTopRow } from "./HeroTopRow";
 import { RecordCard } from "./RecordCard";
 import { StagedPhoto } from "./StagedPhoto";
 
@@ -34,20 +30,14 @@ export function SplitHero({
   logHref: string;
 }) {
   return (
-    <div className="grid h-[min(calc(100svh_-_64px),760px)] grid-cols-2 divide-x divide-outline">
+    // mr-[calc(50%-50vw)]: the azulejo half bleeds to the window's right edge
+    // (BONES 1.7.1) — this classic "break out one side only" trick cancels
+    // exactly the empty margin main's own centered max-width leaves on the
+    // right, without touching the left edge, which stays at the content
+    // column's own left edge.
+    <div className="grid h-[min(calc(100svh_-_64px),760px)] grid-cols-2 divide-x divide-outline mr-[calc(50%_-_50vw)]">
       <div className="flex flex-col px-xl py-lg">
-        <div className="flex items-center gap-xs">
-          <BackLink href="/recipes">Library</BackLink>
-          <div className="ml-auto flex items-center gap-xs">
-            <FavoriteToggle pressed={favorite} onChange={onFavoriteChange} />
-            <IconButton label="Share" aria-haspopup="dialog" onClick={onShare}>
-              <Share aria-hidden="true" strokeWidth={1.8} />
-            </IconButton>
-            <Link href={`/recipes/${recipe.id}/edit`} aria-label="Edit" className={iconButtonClass}>
-              <Pencil aria-hidden="true" strokeWidth={1.8} />
-            </Link>
-          </div>
-        </div>
+        <HeroTopRow recipeId={recipe.id} favorite={favorite} onFavoriteChange={onFavoriteChange} onShare={onShare} />
         <div className="flex flex-1 flex-col items-center justify-center">
           <StagedPhoto recipe={recipe} />
         </div>

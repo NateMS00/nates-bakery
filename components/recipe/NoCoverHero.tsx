@@ -1,18 +1,18 @@
 import { AzulejoFill } from "@/components/ui/AzulejoFill";
-import { HeroControls } from "@/components/ui/HeroControls";
 import type { Recipe } from "@/lib/data/types";
+import { HeroTopRow } from "./HeroTopRow";
 import { RecordCard } from "./RecordCard";
 
 /**
  * SKIN split-hero, no cover (desktop, 1280px and up): a recipe with no photo
- * collapses the two-column split into one full-width azulejo field, half the
- * usual height (there's no staged photo to give it the full height for), with the
- * record card and both actions centred on it. The same floating picture-button
- * controls as the mobile/tablet azulejo field (HeroControls) sit on its corners,
- * since there's no separate top row here the way split-hero's left column has one
- * — BONES-recipes-detail 1.7.0 gives this case one line ("one full-width
- * half-height field... with the card centred on it") without diagramming it, so
- * this is a faithful reading rather than a literal spec.
+ * collapses the two-column split into the same plain top row as split-hero
+ * (BONES-recipes-detail 1.7.1: no buttons float on the pattern on desktop,
+ * unlike mobile/tablet's azulejo field), then one full-width azulejo field at
+ * half the usual height (there's no staged photo to give it the full height
+ * for), with the record card and both actions centred on it. The field bleeds
+ * to the window's right edge like split-hero's own azulejo half, for the same
+ * reason — BONES gives this case one line without diagramming it, so the bleed
+ * here is a consistency reading rather than a literal spec.
  */
 export function NoCoverHero({
   recipe,
@@ -32,10 +32,12 @@ export function NoCoverHero({
   logHref: string;
 }) {
   return (
-    <div className="relative flex h-[min(calc((100svh_-_64px)/2),380px)] items-center justify-center">
-      <AzulejoFill className="absolute inset-0" />
-      <HeroControls recipeId={recipe.id} favorite={favorite} onFavoriteChange={onFavoriteChange} onShare={onShare} />
-      <RecordCard recipe={recipe} scale={scale} bakeHref={bakeHref} logHref={logHref} actions className="relative z-10 w-full max-w-[min(400px,80%)]" />
+    <div>
+      <HeroTopRow recipeId={recipe.id} favorite={favorite} onFavoriteChange={onFavoriteChange} onShare={onShare} className="py-lg" />
+      <div className="relative mr-[calc(50%_-_50vw)] flex h-[min(calc((100svh_-_64px)/2),380px)] items-center justify-center">
+        <AzulejoFill className="absolute inset-0" />
+        <RecordCard recipe={recipe} scale={scale} bakeHref={bakeHref} logHref={logHref} actions className="relative z-10 w-full max-w-[min(400px,80%)]" />
+      </div>
     </div>
   );
 }

@@ -186,7 +186,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         )}
       </div>
 
-      <SectionTabs options={tabOptions} current={tabCurrent} className="sticky top-0 z-20 -mx-(--gutter) mt-lg px-(--gutter) desktop:mt-xl" />
+      <SectionTabs options={tabOptions} current={tabCurrent} className="sticky top-0 z-20 mt-2xl desktop:mt-section-lg" />
 
       {estimates > 0 && (
         <Notice
@@ -202,14 +202,12 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         </Notice>
       )}
 
-      <div className="mt-2xl tablet:grid tablet:items-start tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-section-lg desktop:grid-cols-12">
+      <div className="mt-lg tablet:grid tablet:items-start tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-xl desktop:grid-cols-12">
         {/* Left column: Ingredients, with Scale on its heading line, sticky beside Steps from tablet up */}
         <div className="tablet:sticky tablet:top-touch-min tablet:col-span-4 desktop:col-span-4">
           <section aria-labelledby="ingredients-heading">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-base gap-y-sm">
-              <SectionHeading id="ingredients-heading">Ingredients</SectionHeading>
-              <ScaleControl scale={scale} onChange={setScale} />
-            </div>
+            <SectionHeading id="ingredients-heading">Ingredients</SectionHeading>
+            <ScaleControl scale={scale} onChange={setScale} className="mt-sm" />
             <IngredientList groups={recipe.ingredientGroups} ingredients={recipe.ingredients} scale={scale} />
           </section>
         </div>

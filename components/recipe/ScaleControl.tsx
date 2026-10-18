@@ -10,7 +10,7 @@ import { SCALE_MAX, SCALE_MIN, SCALE_PRESETS, formatScale } from "@/lib/format";
 
 const isPreset = (n: number) => (SCALE_PRESETS as readonly number[]).includes(n);
 
-export function ScaleControl({ scale, onChange }: { scale: number; onChange: (scale: number) => void }) {
+export function ScaleControl({ scale, onChange, className }: { scale: number; onChange: (scale: number) => void; className?: string }) {
   const [customOpen, setCustomOpen] = useState(!isPreset(scale));
   const [draft, setDraft] = useState(isPreset(scale) ? "" : String(scale));
   const [error, setError] = useState<string>();
@@ -53,6 +53,8 @@ export function ScaleControl({ scale, onChange }: { scale: number; onChange: (sc
       name="scale"
       value={customOpen ? "custom" : String(scale)}
       onChange={choose}
+      compact
+      className={className}
       options={SCALE_PRESETS.map((p) => ({ value: String(p), label: formatScale(p), ariaLabel: p === 0.5 ? "Half" : undefined })).concat({
         value: "custom",
         label: "Custom",

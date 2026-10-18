@@ -37,9 +37,9 @@ export function RecordCard({
   return (
     <div data-testid="record-card" className={cx("rounded-tile border border-outline bg-canvas p-base text-ink", className)}>
       <dl>
-        <Row label="recipe">
+        <TitleRow label="recipe">
           <h1 className="type-heading">{recipe.title}</h1>
-        </Row>
+        </TitleRow>
         {recipe.source && (
           <Row label="from">
             <span className="type-voice">
@@ -92,6 +92,18 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
     <div className="flex items-baseline justify-between gap-base border-b border-outline py-sm">
       <dt className="type-label-mono shrink-0 text-muted">{label}</dt>
       <dd className="text-right text-ink">{children}</dd>
+    </div>
+  );
+}
+
+/** SKIN record-row, titleLayout "stacked": the recipe row alone — label above, the
+ * title (often long, "Brown butter chocolate chip cookies") left-aligned and full
+ * width under it, instead of wrapping right-aligned over three lines. */
+function TitleRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-xs border-b border-outline py-sm">
+      <dt className="type-label-mono text-muted">{label}</dt>
+      <dd className="text-left text-ink">{children}</dd>
     </div>
   );
 }

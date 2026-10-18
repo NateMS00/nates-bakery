@@ -13,7 +13,11 @@ export interface ChoiceRadioOption {
  * (never display:none — the label's native click-forwarding is what makes the
  * whole 48px row the target, which only works with a real form control inside
  * it), grouped in a fieldset with a legend. The glyph is decorative: the
- * selected option already reads as selected from its own radio state.
+ * selected option already reads as selected from its own radio state. `compact`
+ * (SKIN groupGapCompact): every group uses it under 768px or in a column
+ * narrower than 480px — a caller in a column that's always that narrow (Scale,
+ * in the Ingredients column at every breakpoint) passes it unconditionally
+ * rather than trying to express the container-width half with a media query.
  */
 export function ChoiceRadio({
   legend,
@@ -21,6 +25,7 @@ export function ChoiceRadio({
   options,
   value,
   onChange,
+  compact = false,
   className,
   children,
 }: {
@@ -29,12 +34,13 @@ export function ChoiceRadio({
   options: ChoiceRadioOption[];
   value: string;
   onChange: (value: string) => void;
+  compact?: boolean;
   className?: string;
   /** Trailing content in the same wrapping row as the options (Scale's Custom field). */
   children?: React.ReactNode;
 }) {
   return (
-    <fieldset className={cx("flex flex-wrap items-center gap-x-lg gap-y-sm", className)}>
+    <fieldset className={cx("flex flex-wrap items-center", compact ? "gap-x-md gap-y-0" : "gap-x-lg gap-y-sm", className)}>
       <legend className="sr-only">{legend}</legend>
       {options.map((option) => {
         const checked = option.value === value;

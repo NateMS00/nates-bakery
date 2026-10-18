@@ -24,3 +24,30 @@ export function deriveRecipeRating(recipe: { rating: number | null; bakeLog: Bak
 export function bakeCount(n: number): string {
   return n === 1 ? "1 bake" : `${n} bakes`;
 }
+
+export type Milestone = { kind: "first" } | { kind: "best" } | { kind: "nth"; n: number };
+
+/**
+ * After-save milestone check (BONES-recipes-log.md, Nathan 2026-10-16, corrected
+ * 2026-10-16): one per save, in priority order —
+ * - first: the recipe's first bake ever (not the baker's first bake overall).
+ * - best: `newEntry`'s rating is higher than every *earlier rated* bake of this
+ *   recipe. A first-ever rating doesn't count (nothing earlier to beat), so it
+ *   never makes every recipe's first rating a "best".
+ * - nth: every 5th bake of this recipe (5, 10, 15…), by total count including
+ *   `newEntry`.
+ * `allEntries` must already include `newEntry` (sortLog's order, any order is
+ * fine here since only counts and a max are taken).
+ */
+export function detectMilestone(allEntries: BakeLogEntry[], newEntry: BakeLogEntry): Milestone | null {
+  if (allEntries.length === 1) return { kind: "first" };
+
+  const earlierRated = allEntries.filter((e) => e.id !== newEntry.id && e.rating !== null);
+  if (newEntry.rating !== null && earlierRated.length > 0 && newEntry.rating > Math.max(...earlierRated.map((e) => e.rating!))) {
+    return { kind: "best" };
+  }
+
+  if (allEntries.length % 5 === 0) return { kind: "nth", n: allEntries.length };
+
+  return null;
+}

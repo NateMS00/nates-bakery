@@ -4,22 +4,21 @@ import { forwardRef, useRef, useState, type KeyboardEvent } from "react";
 import { StarGlyph } from "./Star";
 import { cx } from "./cx";
 
-// SKIN star-rating: five 22px stars, each its own 48px target and radio option.
-// Pressing the current rating clears it. Arrow keys move and select, as radios do.
+// SKIN star-rating: five stars, each its own 48px target and radio option. Arrow
+// keys move and select, as radios do; pressing the current rating clears it.
 
 export const StarRating = forwardRef<HTMLDivElement, {
   value: number | null;
   onChange: (value: number | null) => void;
   label?: string;
   showUnrated?: boolean;
-  /**
-   * Rating prompt mode: stars at starSizePrompt (40px), every press saves (no clearing),
-   * arrow keys only move focus so a keyboard user can pick before saving, and the
-   * first star (or the current rating) takes dialog focus.
-   */
-  prompt?: boolean;
+  /** 40px (the Log sheet's star field) instead of the default 22px. */
+  large?: boolean;
+  /** Marks the current rating (or the first star, unrated) data-autofocus, for a
+   * Dialog that should open with focus here (the Log sheet, for a new bake). */
+  autoFocus?: boolean;
   className?: string;
-}>(function StarRating({ value, onChange, label = "Rating", showUnrated = false, prompt = false, className }, ref) {
+}>(function StarRating({ value, onChange, label = "Rating", showUnrated = false, large = false, autoFocus = false, className }, ref) {
   const [hover, setHover] = useState<number | null>(null);
   const [popped, setPopped] = useState<number | null>(null);
   const [focused, setFocused] = useState<number | null>(null);
@@ -29,7 +28,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
   function choose(n: number) {
     setPopped(n);
     window.setTimeout(() => setPopped(null), 120); // motion.fast
-    onChange(!prompt && n === value ? null : n);
+    onChange(n === value ? null : n);
   }
 
   function onKeyDown(e: KeyboardEvent, index: number) {
@@ -39,7 +38,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
     const next = (index + move + 5) % 5;
     setFocused(next);
     buttons.current[next]?.focus();
-    if (!prompt) onChange(next + 1);
+    onChange(next + 1);
   }
 
   return (
@@ -48,7 +47,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
         ref={ref}
         role="radiogroup"
         aria-label={label}
-        className={cx("flex", !prompt && "-ml-[calc((var(--spacing-touch-min)-22px)/2)]")}
+        className={cx("flex", !large && "-ml-[calc((var(--spacing-touch-min)-22px)/2)]")}
         onMouseLeave={() => setHover(null)}
       >
         {[1, 2, 3, 4, 5].map((n, i) => (
@@ -62,7 +61,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
             aria-checked={value === n}
             aria-label={`Rate ${n} out of 5`}
             tabIndex={i === focusIndex ? 0 : -1}
-            data-autofocus={prompt && i === focusIndex ? true : undefined}
+            data-autofocus={autoFocus && i === focusIndex ? true : undefined}
             onClick={() => choose(n)}
             onKeyDown={(e) => onKeyDown(e, i)}
             onMouseEnter={() => setHover(n)}
@@ -71,11 +70,7 @@ export const StarRating = forwardRef<HTMLDivElement, {
             <StarGlyph
               filled={hover === null && value !== null && n <= value}
               preview={hover !== null && n <= hover}
-              className={cx(
-                prompt ? "size-[40px]" : "size-[22px]",
-                "transition-transform duration-(--motion-fast) ease-skin",
-                popped === n && "scale-[1.08]",
-              )}
+              className={cx(large ? "size-[40px]" : "size-[22px]", "transition-transform duration-(--motion-fast) ease-skin", popped === n && "scale-[1.08]")}
             />
           </button>
         ))}

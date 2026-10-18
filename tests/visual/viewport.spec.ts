@@ -66,22 +66,21 @@ test.beforeEach(async ({ context, page }, info) => {
   await fakeVisualViewport(page);
 });
 
-test("rating sheet: Skip stays visible above Safari's toolbar", async ({ page }) => {
-  // The Recipe page's own Mark as baked is gone (SKELETON 1.5.0): this prompt is reached
-  // by saving a new bake from the Log sheet now.
+test("celebration: Done stays visible above Safari's toolbar", async ({ page }) => {
+  // A never-baked recipe's first save is always a milestone (BONES-recipes-log.md):
+  // the full-screen Celebration, not a sheet, but its own fixed inset-0 still has to
+  // respect the visible area, not the layout viewport, same as everything else here.
   await page.goto("/recipes/brown-butter-cookies/log?new=1");
   await page.getByRole("heading", { level: 1 }).waitFor();
   const visible = 844 - TOOLBAR;
   await setVisible(page, visible);
-  await page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" }).click();
-  const sheet = page.getByRole("dialog", { name: "How was this bake?" });
-  await expect(sheet).toBeVisible();
+  await page.getByRole("dialog", { name: "Log this bake" }).getByRole("button", { name: "Save", exact: true }).click();
+  const celebration = page.getByRole("dialog", { name: /in the book/ });
+  await expect(celebration).toBeVisible();
   await page.waitForTimeout(400);
-  const [box, skip] = await Promise.all([sheet.boundingBox(), sheet.getByRole("button", { name: "Skip" }).boundingBox()]);
-  expect(Math.abs(box!.y + box!.height - visible)).toBeLessThan(1.5); // the sheet ends where the visible area ends
-  expect(skip!.y + skip!.height).toBeLessThanOrEqual(visible);
-  await expectContentHeight(page, "How was this bake?");
-  await shot(page, "01-rating-above-toolbar");
+  const done = await celebration.getByRole("button", { name: "Done" }).boundingBox();
+  expect(done!.y + done!.height).toBeLessThanOrEqual(visible);
+  await shot(page, "01-celebration-above-toolbar");
 });
 
 test("action bars and Bake Mode's step nav sit above the toolbar", async ({ page }) => {
@@ -105,7 +104,7 @@ test("action bars and Bake Mode's step nav sit above the toolbar", async ({ page
 
 test("log form: Save sits just above the keyboard and the focused field scrolls into view", async ({ page }) => {
   await page.goto("/recipes/pasteis-de-nata/log?new=1");
-  const form = page.getByRole("dialog", { name: "Log a bake" });
+  const form = page.getByRole("dialog", { name: "Log this bake" });
   await expect(form).toBeVisible();
   const result = form.getByLabel("How it turned out");
   await result.focus();
@@ -150,14 +149,6 @@ test("while the keyboard is open, a page's action bar steps aside", async ({ pag
 // take their content's height, whatever their insets work out to.
 test("sheets take their content's height when the visible area is taller than the layout viewport", async ({ page }) => {
   const taller = 844 + 40;
-  await page.goto("/recipes/brown-butter-cookies/log?new=1");
-  await page.getByRole("heading", { level: 1 }).waitFor();
-  await setVisible(page, taller);
-  await page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("dialog", { name: "How was this bake?" })).toBeVisible();
-  await page.waitForTimeout(400);
-  await expectContentHeight(page, "How was this bake?");
-
   await page.goto("/recipes/pasteis-de-nata/log");
   await page.getByRole("heading", { level: 1 }).waitFor();
   await setVisible(page, taller);
@@ -175,19 +166,24 @@ const ring = (page: Page) =>
   });
 
 test("after a tap, focus moves into and out of sheets without a ring; Tab brings it back", async ({ page }) => {
+  // A never-baked recipe's first save is always a milestone: Celebration, not a sheet,
+  // but the same focus-without-a-ring-on-tap rule applies to it.
   await page.goto("/recipes/brown-butter-cookies/log?new=1");
   await page.getByRole("heading", { level: 1 }).waitFor();
-  const save = page.getByRole("dialog", { name: "Log a bake" }).getByRole("button", { name: "Save" });
+  const save = page.getByRole("dialog", { name: "Log this bake" }).getByRole("button", { name: "Save", exact: true });
   await save.tap();
-  const sheet = page.getByRole("dialog", { name: "How was this bake?" });
-  await expect(sheet.getByRole("radio", { name: "Rate 1 out of 5" })).toBeFocused();
-  expect(await ring(page)).toEqual({ name: "Rate 1 out of 5", outline: "none" });
+  const celebration = page.getByRole("dialog", { name: /in the book/ });
+  await expect(celebration).toBeVisible();
+  // Focus starts on the title (BONES-recipes-log.md).
+  const title = celebration.getByRole("heading", { level: 1 });
+  await expect(title).toBeFocused();
+  expect(await ring(page)).toEqual({ name: "First bake, in the book.", outline: "none" });
   if (!phoneWebKit()) {
     // Keyboard Tab doesn't reach buttons in iPhone-sized WebKit (helpers.ts).
     await page.keyboard.press("Tab");
     expect((await ring(page)).outline).toBe("3px");
   }
-  await sheet.getByRole("button", { name: "Skip" }).tap();
+  await celebration.getByRole("button", { name: "Done" }).tap();
   // Focus returns to the new entry's own heading (BakeLogView), not a page button —
   // there's no "Mark as baked" any more to return to.
   const newEntry = page.getByRole("heading", { level: 2 }).first();

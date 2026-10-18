@@ -203,8 +203,9 @@ dialog :is(input, textarea, select) {
 }
 
 /* Bake Log: a newly saved entry briefly draws attention (cobalt wash and border), then
-   settles back to the card. Under reduced motion it is skipped; focus still moves. */
+   settles back to the record-card's own resting colors. Under reduced motion it is
+   skipped; focus still moves. */
 @keyframes entry-new {
   0%, 45% { background-color: var(--color-primary-wash); border-color: var(--color-primary); }
-  100% { background-color: var(--color-surface-card); border-color: var(--color-hairline); }
+  100% { background-color: var(--color-canvas); border-color: var(--color-outline); }
 }

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { ButtonLink } from "@/components/ui/Button";
+import { RecordRow } from "@/components/ui/RecordRow";
 import { StarGlyph } from "@/components/ui/Star";
 import { ExternalLink, tallHitArea } from "@/components/ui/TextLink";
 import { cx } from "@/components/ui/cx";
@@ -37,41 +37,41 @@ export function RecordCard({
   return (
     <div data-testid="record-card" className={cx("rounded-tile border border-outline bg-canvas p-base text-ink", className)}>
       <dl>
-        <TitleRow label="recipe">
+        <RecordRow label="recipe" stacked>
           <h1 className="type-heading">{recipe.title}</h1>
-        </TitleRow>
+        </RecordRow>
         {recipe.source && (
-          <Row label="from">
+          <RecordRow label="from">
             <span className="type-voice">
               @{recipe.source.creatorHandle} ·{" "}
               <ExternalLink href={recipe.source.reelUrl} className={tallHitArea}>
                 Watch reel
               </ExternalLink>
             </span>
-          </Row>
+          </RecordRow>
         )}
-        <Row label="kind">
+        <RecordRow label="kind">
           <span className="type-body-md">{categoryLabel(recipe.category)}</span>
-        </Row>
+        </RecordRow>
         {recipe.rating !== null && (
-          <Row label="rating">
+          <RecordRow label="rating">
             <a href="#bakes-heading" className={cx("inline-flex items-center gap-[1px] rounded-sm focus-visible:outline-offset-2", tallHitArea)}>
               <span className="sr-only">Rated {recipe.rating} out of 5, jump to Bakes</span>
               {[1, 2, 3, 4, 5].map((n) => (
                 <StarGlyph key={n} filled={n <= recipe.rating!} className="size-[15px]" />
               ))}
             </a>
-          </Row>
+          </RecordRow>
         )}
-        <Row label="baked">
+        <RecordRow label="baked">
           <span className="type-body-md">{bakedLabel}</span>
-        </Row>
-        <Row label="yield">
+        </RecordRow>
+        <RecordRow label="yield">
           <span className="type-body-md">
             {formatYieldCompact(recipe.yield, scale)}
             {durationLabel && <span className="text-muted"> · {durationLabel}</span>}
           </span>
-        </Row>
+        </RecordRow>
       </dl>
       {actions && (
         <div className="mt-base flex gap-sm">
@@ -83,27 +83,6 @@ export function RecordCard({
           </ButtonLink>
         </div>
       )}
-    </div>
-  );
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex items-baseline justify-between gap-base border-b border-outline py-sm">
-      <dt className="type-label-mono shrink-0 text-muted">{label}</dt>
-      <dd className="text-right text-ink">{children}</dd>
-    </div>
-  );
-}
-
-/** SKIN record-row, titleLayout "stacked": the recipe row alone — label above, the
- * title (often long, "Brown butter chocolate chip cookies") left-aligned and full
- * width under it, instead of wrapping right-aligned over three lines. */
-function TitleRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-xs border-b border-outline py-sm">
-      <dt className="type-label-mono text-muted">{label}</dt>
-      <dd className="text-left text-ink">{children}</dd>
     </div>
   );
 }

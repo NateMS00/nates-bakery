@@ -5,20 +5,27 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmActions } from "@/components/ui/ConfirmDialog";
 import { Dialog, type FocusTarget } from "@/components/ui/Dialog";
 import { Notice } from "@/components/ui/Notice";
+import { StarRating } from "@/components/ui/StarRating";
 import { TextField } from "@/components/ui/TextField";
 import { Textarea } from "@/components/ui/Textarea";
 import type { BakeFields } from "@/lib/data/actions";
 import { SCALE_MAX, SCALE_MIN, todayIso } from "@/lib/format";
+import { BakedOnField } from "./BakedOnField";
 
-// BONES Entry form: a full-screen sheet on mobile (two text fields and the keyboard
-// don't fit a partial sheet), a 6-column modal from tablet up. Date, Scale, What
-// changed, How it turned out; Save and Cancel pinned to the bottom. Focus starts on
-// What changed. Closing with changes asks first, inside the form (Discard changes).
-
-// rating and photoPath have no control on this pre-visual-round form yet
-// (BONES-recipes-log.md's Log sheet replaces this entirely in Stage C); they're
-// still carried through from `initial` so editing an entry here never silently
-// erases a rating or photo it already had.
+// BONES-recipes-log.md, the Log sheet: a full-screen sheet on mobile (two text
+// fields and the keyboard don't fit a partial sheet), a 6-column modal from
+// tablet up. "Baked on" and Scale as one row of compact controls, then the five
+// stars (optional, at the Log sheet's larger size), How it turned out, What
+// changed. Save only, full width, with "Only the date is required." under it —
+// there's no Cancel button, the close X cancels. Focus starts on the first star
+// for a new bake and on How it turned out when editing. Closing with changes
+// asks first, inside the form (Discard changes).
+//
+// The photo slot (camera/library picker, upload, Replace/Remove, "Use as recipe
+// cover") isn't built yet — Stage 4a's second commit (Nathan, 2026-10-17): the
+// bucket and its policies already exist (migration 0005), only the upload action
+// doesn't. photoPath is still carried through from `initial` so editing an entry
+// here never silently erases a photo it already had.
 export type EntryValues = { date: string; scale: string; rating: number | null; photoPath: string | null; whatChanged: string; howItTurnedOut: string };
 
 export function entryValues(fields: BakeFields): EntryValues {
@@ -85,15 +92,20 @@ export function EntryForm({
   const dateRef = useRef<HTMLInputElement>(null);
   const scaleRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
-  const firstNote = useRef<HTMLTextAreaElement>(null);
+  const turnedOutRef = useRef<HTMLTextAreaElement>(null);
+  const changedRef = useRef<HTMLTextAreaElement>(null);
+  // Whichever of the two notes fields was last focused, for "Keep editing" to return
+  // to — not always the same one, now that there are two (How it turned out, What
+  // changed). Defaults to How it turned out, matching its own autofocus-on-edit.
+  const lastNoteFocused = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (confirming) keepRef.current?.focus();
   }, [confirming]);
 
-  // Only the fields this form can actually change (rating and photoPath have no
-  // control here yet, and are never anything but what `initial` already carried).
-  const dirty = (["date", "scale", "whatChanged", "howItTurnedOut"] as const).some((k) => values[k].trim() !== initial[k].trim());
+  const dirty = (["date", "scale", "rating", "whatChanged", "howItTurnedOut"] as const).some((k) =>
+    typeof values[k] === "string" ? values[k].trim() !== (initial[k] as string).trim() : values[k] !== initial[k],
+  );
 
   function requestClose() {
     if (busy) return;
@@ -104,8 +116,8 @@ export function EntryForm({
 
   function keepEditing() {
     setConfirming(false);
-    // Back to where the writing was; What changed if focus had left the fields.
-    requestAnimationFrame(() => firstNote.current?.focus());
+    // Back to where the writing was.
+    requestAnimationFrame(() => (lastNoteFocused.current ?? turnedOutRef.current)?.focus());
   }
 
   const set = (k: keyof EntryValues) => (value: string) => {
@@ -135,7 +147,7 @@ export function EntryForm({
     <Dialog
       open={open}
       onClose={requestClose}
-      title={mode === "new" ? "Log a bake" : "Edit bake"}
+      title={mode === "new" ? "Log this bake" : "Edit bake"}
       modalColumns={6}
       sheetHeight="full"
       returnFocus={returnFocus}
@@ -160,13 +172,11 @@ export function EntryForm({
             />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-sm tablet:flex tablet:justify-end">
-            <Button variant="secondary" onClick={requestClose}>
-              Cancel
-            </Button>
-            <Button type="submit" form={formId} variant="primary" aria-busy={busy || undefined}>
+          <div className="flex flex-col items-center gap-xs">
+            <Button type="submit" form={formId} variant="primary" aria-busy={busy || undefined} className="w-full">
               {busy ? "Saving…" : "Save"}
             </Button>
+            <p className="type-caption text-muted">Only the date is required.</p>
           </div>
         )
       }
@@ -174,17 +184,7 @@ export function EntryForm({
       <form id={formId} noValidate onSubmit={submit} className="flex flex-col gap-base pt-xs">
         {failed && <Notice tone="error">Couldn&apos;t save this bake. Check your connection and try again.</Notice>}
         <div className="grid grid-cols-2 gap-base">
-          <TextField
-            ref={dateRef}
-            id={`${id}-date`}
-            label="Date"
-            type="date"
-            required
-            max={todayIso()}
-            value={values.date}
-            error={errors.date}
-            onChange={(e) => set("date")(e.target.value)}
-          />
+          <BakedOnField ref={dateRef} id={`${id}-date`} value={values.date} error={errors.date} onChange={set("date")} />
           <TextField
             ref={scaleRef}
             id={`${id}-scale`}
@@ -198,28 +198,38 @@ export function EntryForm({
             onChange={(e) => set("scale")(e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-xs">
-          <label htmlFor={`${id}-changed`} className="type-label text-muted">
-            What changed
-          </label>
-          <Textarea
-            ref={firstNote}
-            id={`${id}-changed`}
-            data-autofocus
-            value={values.whatChanged}
-            placeholder="Less sugar, hotter oven, longer proof…"
-            onChange={(e) => set("whatChanged")(e.target.value)}
-          />
-        </div>
+        <StarRating
+          value={values.rating}
+          onChange={(n) => setValues((v) => ({ ...v, rating: n }))}
+          large
+          autoFocus={mode === "new"}
+          className="justify-center"
+        />
         <div className="flex flex-col gap-xs">
           <label htmlFor={`${id}-result`} className="type-label text-muted">
             How it turned out
           </label>
           <Textarea
+            ref={turnedOutRef}
             id={`${id}-result`}
+            data-autofocus={mode === "edit" ? true : undefined}
             value={values.howItTurnedOut}
             placeholder="Crisp base, custard a little loose…"
             onChange={(e) => set("howItTurnedOut")(e.target.value)}
+            onFocus={() => (lastNoteFocused.current = turnedOutRef.current)}
+          />
+        </div>
+        <div className="flex flex-col gap-xs">
+          <label htmlFor={`${id}-changed`} className="type-label text-muted">
+            What changed
+          </label>
+          <Textarea
+            ref={changedRef}
+            id={`${id}-changed`}
+            value={values.whatChanged}
+            placeholder="Less sugar, hotter oven, longer proof…"
+            onChange={(e) => set("whatChanged")(e.target.value)}
+            onFocus={() => (lastNoteFocused.current = changedRef.current)}
           />
         </div>
       </form>

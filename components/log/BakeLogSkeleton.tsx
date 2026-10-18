@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 // BONES Loading: the Page header renders (the recipe title isn't known yet, so the
 // back link is a placeholder), and Entries shows 3 placeholder entries in final
-// proportions. Log a bake shows disabled.
+// proportions. Log a bake shows disabled. The loading state can't know yet whether
+// the log is empty, so it always shows the non-empty header — the smaller jump,
+// since most recipes with any traffic here have at least one bake.
 
 export function BakeLogSkeleton() {
   return (
@@ -17,7 +18,9 @@ export function BakeLogSkeleton() {
       </div>
       <div className="mt-xs flex items-start justify-between gap-lg">
         <div>
-          <h1 className="type-display-md text-ink desktop:type-display-lg">Bake log</h1>
+          <h1 className="type-display-xl">
+            Bake <span className="italic font-[family-name:var(--font-fraunces-italic)]">log.</span>
+          </h1>
           <Skeleton className="mt-sm h-base w-2xl" />
         </div>
         <div
@@ -32,18 +35,34 @@ export function BakeLogSkeleton() {
       <ul role="list" className="mt-lg flex flex-col gap-md desktop:mt-xl">
         {[0, 1, 2].map((i) => (
           <li key={i}>
-            <Card>
-              <Skeleton className="h-lg w-1/3" />
-              <Skeleton className="mt-base h-md w-2xl" />
-              <Skeleton className="mt-sm h-base w-full" />
-              <Skeleton className="mt-xs h-base w-3/4" />
-              {i < 2 && (
+            <div className="rounded-tile border border-outline bg-canvas p-base">
+              <div className="flex items-center justify-between gap-sm border-b border-outline py-sm">
+                <Skeleton className="h-base w-3xl" />
+                <Skeleton className="size-touch-min rounded-md" />
+              </div>
+              {i === 0 && (
                 <>
-                  <Skeleton className="mt-base h-md w-3xl" />
-                  <Skeleton className="mt-sm h-base w-5/6" />
+                  <div className="border-b border-outline py-sm">
+                    <Skeleton className="h-base w-[70px]" />
+                  </div>
+                  {/* Skeleton's own rounded-sm is close enough here (established elsewhere this round). */}
+                  <Skeleton className="my-sm aspect-[4/3] w-full" />
                 </>
               )}
-            </Card>
+              {i < 2 && (
+                <>
+                  <div className="border-b border-outline py-sm">
+                    <Skeleton className="h-sm w-3xl" />
+                    <Skeleton className="mt-xs h-base w-full" />
+                    <Skeleton className="mt-[2px] h-base w-3/4" />
+                  </div>
+                  <div className="py-sm">
+                    <Skeleton className="h-sm w-3xl" />
+                    <Skeleton className="mt-xs h-base w-5/6" />
+                  </div>
+                </>
+              )}
+            </div>
           </li>
         ))}
       </ul>

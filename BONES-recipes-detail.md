@@ -4,7 +4,7 @@
 > **Primary Action**: Start baking → `/recipes/:recipeId/bake?scale=`
 > **Primary Device**: mobile, because the persona reads recipes on an iPhone in the kitchen, often from arm's length with busy hands
 > **Shell**: BONES-shell.md, App variant (no tab bar; on mobile and tablet the cover or the azulejo field replaces the header)
-> **Version**: 1.7.0 · **Updated**: 2026-10-16
+> **Version**: 1.7.1 · **Updated**: 2026-10-17
 
 ---
 
@@ -47,9 +47,9 @@ MAIN
 ## 2. SECTIONS
 
 ### Hero (SKELETON section 1)
-- **Layout, desktop (1280px and up)**: SKIN `split-hero`, two equal halves with an ink rule between them, at most one viewport tall (capped at 760px). Left half: a top row with "‹ Library" at its start and Favorite, Share, Edit (`icon-button`s) at its end; under it, the photo staged like a framed print (glazed-card mat, ink frame, at most 72% of the half's width, centred); under the photo, the photo switch. Right half: `azulejo-fill` edge to edge with the record card centred on it (at most 400px wide). The app header stays above the hero on desktop
-- **Layout, mobile and tablet (under 1280px)**: the cover full bleed at the very top (SKIN `cover-picture`, 4:3, under the status bar on mobile; inside the content column, capped at 56% of the viewport height, on tablet), with Back on its top-left corner and Favorite, Share, Edit on its top-right as `picture-button`s; the record card overlaps the cover's bottom edge by 32px, inset by the page gutter. Start baking and Log bake live in the action bar, not in the card
-- **No cover (any size)**: the azulejo field takes the cover's place (desktop: one full-width half-height field instead of the split, with the card centred on it; mobile: a 200px-tall field with Back, Favorite, Share, Edit on it as `picture-button`s and the card overlapping its bottom edge). A recipe without a photo looks deliberate, not empty
+- **Layout, desktop (1280px and up)**: SKIN `split-hero`, two equal halves with an ink rule between them; the right half's azulejo field bleeds to the right edge of the window (the left half keeps the content column's left edge), at most one viewport tall (capped at 760px). Left half: a top row with "‹ Library" at its start and Favorite, Share, Edit (`icon-button`s) at its end; under it, the photo staged like a framed print (glazed-card mat, ink frame, at most 72% of the half's width, centred); under the photo, the photo switch. Right half: `azulejo-fill` edge to edge with the record card centred on it (at most 400px wide). The app header stays above the hero on desktop
+- **Layout, mobile and tablet (under 1280px)**: the cover full bleed at the very top (SKIN `cover-picture`, 4:3, under the status bar on mobile; inside the content column, capped at 56% of the viewport height, on tablet), with Back on its top-left corner and Favorite, Share, Edit on its top-right as `picture-button`s; the record card overlaps the cover's bottom edge by 32px, inset by the page gutter (on tablet too, where the cover sits inside the content column). Start baking and Log bake live in the action bar, not in the card
+- **No cover (any size)**: the azulejo field takes the cover's place. Desktop: the same top row as the split hero ("‹ Library" at its start, Favorite, Share, Edit as `icon-button`s at its end) above one full-width field at half the split hero's height, with the card centred on it; no buttons float on the pattern on desktop. Mobile and tablet: a 200px-tall field with Back, Favorite, Share, Edit on it as `picture-button`s and the card overlapping its bottom edge. A recipe without a photo looks deliberate, not empty
 - **Record card content** (SKIN `record-card`, a description list): `recipe` the title (the page's H1, Fraunces, wraps, never truncates) · `from` "@creator · Watch reel" in the voice italic (Watch reel opens the reel in a new tab; a hand-entered recipe shows its source text, or the row is hidden) · `kind` the category · `rating` cobalt stars, read-only, from the latest rated bake (row hidden when nothing is rated) · `baked` "4 times · last 28 Sep" or "Not yet" · `yield` "12 rolls · 3 h 40" (parts hide when missing). Desktop adds the two actions at the bottom of the card: Start baking (`button-primary`, with the scale when it isn't 1×) and Log bake (`button-secondary`), side by side
 - **Photo switch** (desktop, SKIN `choice-radio`): "(●) Latest bake  ( ) Cover  ( ) Last 4". Shown only when there are at least two distinct photos; options that would show the same photo are left out. Last 4 turns the frame into a 2×2 contact sheet of the four newest bake photos. The choice is a view preference, not saved. Under it, nothing else
 - **Picture**: the cover is the recipe's cover (SKELETON 1.5.0): a bake photo set as cover, else the reel thumbnail. Decorative (empty alt), since the title names the recipe. Space reserved before it loads
@@ -102,7 +102,7 @@ MOBILE (sticky after the cover)
 ```
 
 ### Scale (SKELETON section 3)
-- **Layout**: on the Ingredients heading line: the H2 "Ingredients" at its start, the scale choices at its end (desktop and tablet); on mobile the choices take their own row directly under the heading. SKIN `choice-radio`s in a fieldset with the accessible name "Scale"; each choice keeps a 48px target; when the row doesn't fit, it wraps (never scrolls, never shrinks)
+- **Layout**: one row directly under the H2 "Ingredients" on every device (the four-column desktop column is too narrow to share the heading line). SKIN `choice-radio`s in a fieldset with the accessible name "Scale", with the compact gap; each choice keeps a 48px target; when the row doesn't fit, it wraps with no extra row gap (never scrolls, never shrinks)
 - **Content**: "( ) ½×  (●) 1×  ( ) 1.5×  ( ) 2×  ( ) Custom"; Custom reveals a number field in the same row (0.25× to 10×)
 - **Behavior**: changing the value updates `?scale=` in place (no navigation), every amount, the yield in the record card, and the Start baking label
 
@@ -123,7 +123,7 @@ MOBILE
 ```
 
 ### Ingredients (SKELETON section 4)
-- **Layout**: desktop left column (4 of 12 cols; 4 of 8 on tablet), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width. Starts 120px below the hero on desktop (SKIN `{spacing.section-lg}`), 48px on mobile. Rows ruled in ink (SKIN `ingredient-row`)
+- **Layout**: desktop left column (4 of 12 cols; 4 of 8 on tablet), sticky while Steps scroll past it, so amounts stay visible while reading steps; mobile full width. The 120px pause (SKIN `{spacing.section-lg}`; 48px on mobile) sits between the hero and the section tabs; after the tabs (and the estimates notice, when shown) content follows at the normal section gap (`{spacing.xl}` desktop, `{spacing.lg}` mobile). The tabs' ink rule spans the content column, aligned with its edges. Rows ruled in ink (SKIN `ingredient-row`)
 - **Content**: one row per ingredient: name on the left (wraps to at most 2 lines, then truncates), scaled amount in grams on the right (aligned on a shared right edge so numbers line up); an Estimated or Converted marker under the name; tapping a Converted marker reveals the original stated amount ("was 1 cup") on the line under it. An ingredient note (a creator's remark kept from the import, or one added in the editor) shows as one muted line under the ingredient, always visible. When the recipe has component groups (Crust, Filling, Frosting…), each group gets a heading and a medium gap before it, in the recipe's order. No limit on rows or groups: everything shows
 - **Behavior**: amounts under 10 g show one decimal only when it isn't zero ("3.5 g", but "8 g", never "8.0 g"); "to taste" ingredients show that text instead of an amount
 
@@ -254,6 +254,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.7.1 (2026-10-17): From the Stage 3 review: desktop no-cover hero keeps the split hero's top row (no buttons on the pattern); the split hero's azulejo half bleeds to the window's right edge; the card overlaps the cover on tablet too; scale always on its own row under the heading, compact gap, no extra row gap when wrapping; the 120px pause moves before the section tabs; the tabs' rule aligns with the content column; the record card's title row is stacked (SKIN).
 - 1.7.0 (2026-10-16): Personality round (SKIN October 2026): the Header becomes the Hero with a record card (recipe, from, kind, rating, baked, yield); desktop split hero (staged photo with a photo switch, azulejo field with the card and both actions), capped at one screen; mobile cover with the card overlapping; azulejo field for recipes without a cover; scale as choice radios on the Ingredients heading line; the latest "What changed" note opens Steps; 120px pause before the content on desktop; action bar on tablet too.
 - 1.6.1 (2026-10-16): From the build: the loading cover area is always reserved; the desktop prose now matches the diagram (Start baking full width under the rating line).
 

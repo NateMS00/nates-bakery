@@ -1284,6 +1284,7 @@ components:
     valueTypography: "{typography.body-md}"
     valueColor: "{colors.ink}"
     titleTypography: "{typography.heading}"
+    titleLayout: "stacked"
     voiceTypography: "{typography.voice}"
   choice-radio:
     glyphTypography: "{typography.amount}"
@@ -1293,6 +1294,8 @@ components:
     textColor: "{colors.muted}"
     gap: "{spacing.sm}"
     groupGap: "{spacing.lg}"
+    groupGapCompact: "{spacing.md}"
+    wrapRowGap: "0"
     minHeight: "{sizing.touch-min}"
   choice-radio-hover:
     textColor: "{colors.ink}"
@@ -1573,7 +1576,7 @@ The signature pattern is one square tile, repeated. Draw it as an inline SVG at 
 </svg>
 ```
 
-Quarter circles in each corner meet their neighbours to form full circles across tiles, and the centre diamond gives each tile its own rhythm, which is the classic azulejo effect: a simple unit that becomes a field. The motif is always `aria-hidden` and never carries meaning. Nothing is ever set directly on it: the only thing allowed on top is a solid `record-card` inside `split-hero`, where `azulejo-fill` stands in for a recipe without a photo.
+Quarter circles in each corner meet their neighbours to form full circles across tiles, and the centre diamond gives each tile its own rhythm, which is the classic azulejo effect: a simple unit that becomes a field. The motif is always `aria-hidden` and never carries meaning. Nothing is ever set directly on it: the only things allowed on top are solid components, the `record-card` and, on phones and tablets where the field replaces a cover, the `picture-button`s (Back, Favorite, Share, Edit), the same as on a cover photo.
 
 ---
 
@@ -1743,9 +1746,9 @@ This system is border-first: cards, tiles and list items use a 1px `{colors.outl
 
 **`display-title`** — A top-level page title in `display-xl`, where one word may switch to Fraunces italic or to outline (1.5px stroke, transparent fill): "Your *bakes.*", "Bake no. 05". The accent word is still real text in the heading, so screen readers read the title normally. Outline only at 44px and up. One per page, on Library, Bakes and the celebration screen.
 
-**`record-card`** + **`record-row`** — The recipe as a catalogue record, the centre of the Recipe page: a porcelain card with a 1px ink edge at `{rounded.tile}`, holding rows of `label-mono` label on the left (lowercase, muted: recipe, from, rating, baked, yield) and the value on the right (the title in `heading` Fraunces, the source in `voice` italic, stars, mono counts and times), each row closed by an ink rule. Built as a description list (`dl`, `dt`, `dd`); the title row's value is the page's H1. The card ends with the page's actions: Start baking (`button-primary`) and Log bake (`button-secondary`) side by side.
+**`record-card`** + **`record-row`** — The recipe as a catalogue record, the centre of the Recipe page: a porcelain card with a 1px ink edge at `{rounded.tile}`, holding rows of `label-mono` label on the left (lowercase, muted: recipe, from, rating, baked, yield) and the value on the right (the title in `heading` Fraunces, the source in `voice` italic, stars, mono counts and times), each row closed by an ink rule. The title row is stacked: its label on one line and the title under it, left-aligned, full width of the card, because long titles ("Brown butter chocolate chip cookies") wrapped right-aligned over three lines are hard to read. The other rows keep label left, value right. Built as a description list (`dl`, `dt`, `dd`); the title row's value is the page's H1. The card ends with the page's actions: Start baking (`button-primary`) and Log bake (`button-secondary`) side by side.
 
-**`choice-radio`** — A typographic single choice, from the catalogue look: "(●) 1×  ( ) 2×". A mono glyph, `( )` or `(●)` with the dot in cobalt, followed by the label in `tab`; unselected options are muted (5.9:1, never faded with opacity), the selected one ink. Built on a real, visually hidden `input type="radio"` (never `display: none`) inside a `fieldset` with a legend, so it is keyboard- and screen-reader-native; the whole label is the 48px target. Used for scale presets, the Library views (as tabs), the cover/bake photo switch in `split-hero`, and short option sets in sheets. States: hover ink text; active (selected) ink text and cobalt dot; focus 3px ring around glyph and label; disabled grey.
+**`choice-radio`** — A typographic single choice, from the catalogue look: "(●) 1×  ( ) 2×". A mono glyph, `( )` or `(●)` with the dot in cobalt, followed by the label in `tab`; unselected options are muted (5.9:1, never faded with opacity), the selected one ink. Built on a real, visually hidden `input type="radio"` (never `display: none`) inside a `fieldset` with a legend, so it is keyboard- and screen-reader-native; the whole label is the 48px target. Used for scale presets, the Library views (as tabs), the cover/bake photo switch in `split-hero`, and short option sets in sheets. Every group uses `groupGapCompact` (`{spacing.md}`) under 768px and in columns narrower than 480px; when a group wraps, the next line sits directly under the first (each choice is already 48px tall), never with an extra row gap. States: hover ink text; active (selected) ink text and cobalt dot; focus 3px ring around glyph and label; disabled grey.
 
 **`split-hero`** — The Recipe page's first screen on desktop (1280px and up): two halves, at most one viewport tall (capped at 760px), with an ink rule between them. Left: the bake photo staged like a framed print, on a glazed-card mat with an ink frame, at most 72% of the half's width, with a `choice-radio` under it to switch between the latest bake, the cover and all bakes. Right: `azulejo-fill` with the `record-card` centred on it, solid, never translucent. The rest of the page (ingredients and method) follows on plain canvas after `{spacing.section-lg}`. Below 1280px the hero becomes the `cover-picture` with the `record-card` overlapping its bottom edge by 32px.
 

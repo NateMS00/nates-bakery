@@ -17,9 +17,10 @@ export function TileBand({ className }: { className?: string }) {
 }
 
 /**
- * tile-panel: a field of the motif for empty states (3:2 by default) and, small and
- * inset, for a missing picture (SKIN recipe-picture, visual round) — pass
- * `aspectRatio` to match the frame it sits in instead of the default.
+ * tile-panel: a bordered field of the motif for illustration slots (empty states,
+ * 3:2 by default) — pass `aspectRatio` to match the frame it sits in instead of the
+ * default. A missing or absent picture (SKIN recipe-picture) is `azulejo-fill`
+ * instead, unbordered at its own 56px repeat — Picture's own built-in error state.
  */
 export function TilePanel({ className, aspectRatio = "3 / 2" }: { className?: string; aspectRatio?: string }) {
   return (

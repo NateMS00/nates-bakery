@@ -71,7 +71,7 @@ export function Picture({
       )}
       {status === "error" && (
         <div aria-hidden="true" className="absolute inset-0 bg-primary-wash text-primary">
-          <div className="size-full tile-panel-mask" />
+          <div className="size-full azulejo-mask" />
         </div>
       )}
       {children}

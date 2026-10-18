@@ -93,8 +93,19 @@ const pasteisDeNata: Recipe = {
       whatChanged: "Rolled the log tighter and baked 2 minutes longer at the highest setting.",
       howItTurnedOut: "Blistered tops and crisp layers. Custard still a little loose in the middle.",
     },
-    { id: "nata-b2", date: "2026-09-12", scale: 1, rating: null, photoPath: null, howItTurnedOut: "Pale tops. Oven wasn't hot enough." },
-    { id: "nata-b1", date: "2026-08-30", scale: 0.5, rating: null, photoPath: null },
+    {
+      id: "nata-b2",
+      date: "2026-09-12",
+      scale: 1,
+      rating: null,
+      // Distinct from nata-b3's photo (chosen as cover) and nata-b1's, so the Hero's
+      // photo switch has a real "Last 4" contact sheet to show (BONES-recipes-detail
+      // 1.7.0): Latest bake and Cover collapse to one option since they're the same
+      // photo, leaving Latest bake + Last 4 (2 distinct bake photos).
+      photoPath: "/recipe-pictures/custard-tart.svg",
+      howItTurnedOut: "Pale tops. Oven wasn't hot enough.",
+    },
+    { id: "nata-b1", date: "2026-08-30", scale: 0.5, rating: null, photoPath: "/recipe-pictures/berry.svg" },
   ],
   shareLink: { token: "nata-k7p2qw", createdAt: "2026-09-27T10:12:00Z" },
   createdAt: "2026-08-28T19:40:00Z",

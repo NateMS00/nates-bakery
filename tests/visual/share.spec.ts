@@ -46,13 +46,16 @@ test("shared recipe: first viewport, full page, and page checks (signed out)", a
   await expectShareShell(page);
   await expectPageTop(page);
   await expectTouchTargets(page);
-  await expectFocusRings(page, 4);
+  // Watch reel, Scale (one native radio-group stop now, not one per preset — Tab moves
+  // between controls, arrow keys move within the group), Privacy: 3 stops, not 4.
+  await expectFocusRings(page, 3);
 
   // Never shown to friends: back link, favorite, share, edit, rating controls, bake log.
   for (const name of ["Library", "Favorite", "Share", "Edit", "Start baking", "Mark as baked"]) {
     await expect(page.getByRole("button", { name, exact: true }).or(page.getByRole("link", { name, exact: true }))).toHaveCount(0);
   }
-  await expect(page.getByRole("radio")).toHaveCount(0);
+  // Scale is a real radio group now (ChoiceRadio), and friends can scale a recipe —
+  // the absence checks above and below are what actually guards privacy here.
   await expect(page.getByText("Latest bake")).toHaveCount(0);
   await expect(page.getByText(/See all bakes|Not baked yet/)).toHaveCount(0);
   // Nothing private reaches the browser.
@@ -84,7 +87,7 @@ test("shared recipe: first viewport, full page, and page checks (signed out)", a
 
 test("scale: the friend's scale lives in their URL", async ({ page }) => {
   await ready(page, NATA);
-  await page.getByRole("button", { name: "2×" }).click();
+  await page.getByRole("radio", { name: "2×" }).click();
   await expect(page).toHaveURL(/\?scale=2$/);
   await expect(page.getByRole("listitem").filter({ hasText: "Egg yolks" })).toContainText("216");
   await shot(page, "03-scaled");
@@ -185,8 +188,8 @@ test.describe("owner", () => {
 test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control fits", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await ready(page, NATA);
-  const group = page.getByRole("group", { name: "Batch size" });
-  const [track, custom] = await Promise.all([group.boundingBox(), group.getByRole("button", { name: "Custom" }).boundingBox()]);
+  const group = page.getByRole("group", { name: "Scale" });
+  const [track, custom] = await Promise.all([group.boundingBox(), group.getByRole("radio", { name: "Custom" }).boundingBox()]);
   expect(custom!.x + custom!.width).toBeLessThanOrEqual(track!.x + track!.width);
   await page.evaluate(() => document.fonts.ready);
   await shot(page, "09-tablet");

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { capture, expectFitsContent, expectPageBasics, expectPageTop, expectTouchTargets, fontsLoaded, phoneWebKit, ready } from "./helpers";
+import { capture, expectFitsContent, expectPageBasics, expectTouchTargets, fontsLoaded, phoneWebKit, ready } from "./helpers";
 
 // /recipes/:recipeId: every state and overlay in BONES-recipes-detail.md 1.6.0 (visual
 // round), plus the Definition of Done checks from CLAUDE.md. Screenshots land in
@@ -18,6 +18,12 @@ const shot = (page: Page, name: string, fullPage = false) => capture(page, "reci
 // are real DOM, so an unscoped query sees both; :visible narrows to the one actually on
 // screen for this project.
 const visiblePictures = (page: Page) => page.locator('[data-testid="picture"]:visible');
+// The record card is rendered twice too (mobile/tablet's stacked Hero, and desktop's
+// split-hero or no-cover hero), same reasoning as visiblePictures above. getByRole is
+// already scoped to the visible one on its own (hidden content drops out of the
+// accessibility tree), but getByText matches raw DOM content regardless of visibility,
+// so anything read off the card by text needs this instead.
+const visibleRecordCard = (page: Page) => page.locator('[data-testid="record-card"]:visible');
 
 // Favorite, rating, bakes, and share links are saved on the server now: each test has
 // its own copy of the fixtures (namespace cookie).
@@ -66,32 +72,32 @@ test("focus ring is a visible 3px outline", async ({ page, isMobile }) => {
   // The 10th stop lands on the rating line (Back, Favorite, Share, Edit, Watch reel,
   // Rating, Ingredients, Steps, Bakes, Confirm it) — re-focus the rating line itself to
   // show its ring clearly.
-  await page.getByRole("link", { name: /Rated 4 out of 5, Baked 26 Sep/ }).focus();
+  await page.getByRole("link", { name: /Rated 4 out of 5, jump to Bakes/ }).focus();
   await shot(page, "04-focus-rating");
 });
 
 test("scale 1.5× updates amounts, yield, and Start baking", async ({ page }) => {
   await ready(page, NATA);
-  await page.getByRole("button", { name: "1.5×" }).click();
+  await page.getByRole("radio", { name: "1.5×" }).click();
   await expect(page).toHaveURL(/scale=1\.5/);
-  await expect(page.getByText("Makes 18 tarts")).toBeVisible();
+  await expect(visibleRecordCard(page).getByText("18 tarts")).toBeVisible();
   await expect(page.getByRole("link", { name: /Start baking · 1\.5×/ })).toHaveAttribute("href", `${NATA}/bake?scale=1.5`);
   await expect(page.locator("li", { hasText: "Plain flour" }).first()).toContainText("375");
   await expect(page.locator("li", { hasText: "Fine salt" })).toContainText("5.3");
   // Under 10 g, no trailing ".0": salt 3.5 g × 2 = 7 g.
-  await page.getByRole("button", { name: "2×" }).click();
+  await page.getByRole("radio", { name: "2×" }).click();
   await expect(page.locator("li", { hasText: "Fine salt" })).toHaveText("Fine salt7g");
   await expect(page.locator("li", { hasText: "Fine salt" })).not.toContainText("7.0");
-  await page.getByRole("button", { name: "1.5×" }).click();
+  await page.getByRole("radio", { name: "1.5×" }).click();
   await shot(page, "05-scale-1.5");
 });
 
 test("custom scale rounds the yield with 'about'", async ({ page }) => {
   await ready(page, NATA);
-  await page.getByRole("button", { name: "Custom" }).click();
+  await page.getByRole("radio", { name: "Custom" }).click();
   await page.getByLabel("Custom scale").fill("1.3");
   await page.getByLabel("Custom scale").press("Enter");
-  await expect(page.getByText("Makes about 16 tarts")).toBeVisible();
+  await expect(visibleRecordCard(page).getByText("about 16 tarts")).toBeVisible();
   await page.getByLabel("Custom scale").fill("12");
   await page.getByLabel("Custom scale").press("Enter");
   await expect(page.getByText("Enter a number from 0.25 to 10")).toBeVisible();
@@ -103,7 +109,7 @@ test("invalid scale renders 1× and corrects the URL", async ({ page }) => {
   await page.goto(`${NATA}?scale=banana`);
   await expect(page).toHaveURL(new RegExp(`${NATA}$`));
   await page.getByRole("heading", { level: 1 }).waitFor();
-  await expect(page.getByRole("button", { name: "1×" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("radio", { name: "1×" })).toBeChecked();
 });
 
 test("an ingredient note shows as a muted line under the ingredient", async ({ page }) => {
@@ -193,12 +199,14 @@ test("cover: floating controls on mobile, beside the text from tablet up", async
   await expect(page.getByRole("link", { name: "Edit" })).toHaveAttribute("href", `${NATA}/edit`);
 });
 
-test("no cover: a back row, no cover area, the Scale presets in the first viewport", async ({ page }) => {
+test("no cover: an azulejo field, the record card overlapping it, the Scale presets in the first viewport", async ({ page, isMobile }) => {
   await ready(page, COOKIES);
   await expect(visiblePictures(page)).toHaveCount(0); // no cover, no bake photos (never baked)
-  await expect(page.locator("#main").getByRole("link", { name: "Library" })).toBeVisible();
-  await expect(page.getByRole("group", { name: "Batch size" })).toBeInViewport();
-  await expectPageTop(page); // the standard gap still holds without the cover's bleed exception
+  // Not expectPageTop here (see the default test above): main's literal firstElementChild
+  // is always the mobile/tablet Hero wrapper, display:none or not, at every breakpoint now
+  // that a no-cover recipe shares the same dual-rendered Hero structure as a cover one.
+  if (!isMobile) await expect(page.locator("#main").getByRole("link", { name: "Library" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Scale" })).toBeInViewport();
   await shot(page, "12-no-cover");
 });
 
@@ -240,18 +248,22 @@ test("Tips: last, unnumbered, a plain list, not part of the step count", async (
   await expect(numbers.last()).toHaveText("14");
 });
 
-test("rating line: read-only, scrolls to Bakes; Not baked yet shows no stars", async ({ page }) => {
+test("rating line: read-only, scrolls to Bakes; the row is hidden with nothing rated", async ({ page }) => {
   await ready(page, NATA);
-  const rating = page.getByRole("link", { name: /Rated 4 out of 5, Baked 26 Sep/ });
+  // The exact "jump to Bakes" suffix, not just "Rated 4 out of 5": a Bakes-entry row
+  // also reads "Rated 4 out of 5" for its own stars, and would otherwise match too.
+  const rating = page.getByRole("link", { name: /Rated 4 out of 5, jump to Bakes/ });
   await expect(rating).toBeVisible();
-  // Not a control: no radios on the page at all now (rating comes from the Log sheet).
-  await expect(page.getByRole("radio")).toHaveCount(0);
+  // Not a control: the rating row is a link, not a radio (rating comes from the Log sheet) —
+  // Scale's real radios are elsewhere on this same page, so this is scoped to the row itself.
+  await expect(rating.getByRole("radio")).toHaveCount(0);
   await rating.click();
   await expect(page).toHaveURL(/#bakes-heading$/);
   await expect(page.getByRole("heading", { name: "Bakes" })).toBeInViewport();
 
   await ready(page, COOKIES);
-  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Rated/ })).toHaveCount(0); // never baked, nothing rated: the row is hidden
+  await expect(visibleRecordCard(page).getByText("Not yet")).toBeVisible(); // the record card's baked row
   await expect(page.getByText("Watch reel")).toHaveCount(0); // manual recipe, no source
 });
 
@@ -291,7 +303,7 @@ test("never baked: Bakes reduces to one line, no See all bakes, no count on the 
 test("never baked with a cover: every fresh import looks like this", async ({ page }) => {
   await ready(page, "/recipes/pita");
   await expect(visiblePictures(page).first()).toHaveAttribute("data-status", "loaded");
-  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
+  await expect(visibleRecordCard(page).getByText("Not yet")).toBeVisible(); // the record card's baked row
   await expect(page.getByRole("region", { name: "Bakes" }).getByText("Not baked yet", { exact: true })).toBeVisible();
   await shot(page, "23-never-baked-with-cover");
 });
@@ -301,9 +313,10 @@ test("section tabs: sticky, and mark the section nearest the top as you scroll",
   const nav = page.getByRole("navigation", { name: "Sections" });
   const ingredients = nav.getByRole("link", { name: isMobile ? "Ingredients" : "Recipe" });
   await expect(ingredients).toHaveAttribute("aria-current", "location");
-  // Scroll well past the header (the cover alone is ~290px at 390 wide) so the tabs have
-  // actually reached their sticky point, not just moved partway there.
-  await page.evaluate(() => window.scrollBy(0, 900));
+  // Scroll well past the Hero (desktop's split hero alone can run to ~760px, plus the
+  // 120px pause before Ingredients) so the tabs have actually reached their sticky
+  // point, not just moved partway there.
+  await page.evaluate(() => window.scrollBy(0, 1300));
   expect(Math.round((await nav.boundingBox())!.y)).toBe(0); // flush with the viewport top
   // All the way to the end: NATA's Bakes section has real entries, tall enough that its own
   // heading is still well short of the trigger line even at the document's end — some
@@ -318,8 +331,12 @@ test("section tabs: sticky, and mark the section nearest the top as you scroll",
   // marked current once there's nowhere left to scroll, not whatever the default first
   // section is. (On mobile this same fixture's own Steps legitimately reaches the trigger
   // on its own at the document's end, which is just as correct a result — not every
-  // viewport's content folds short enough to exercise the fallback itself.)
+  // viewport's content folds short enough to exercise the fallback itself.) A taller
+  // viewport than the project default leaves less to scroll below a short no-cover
+  // Hero (desktop's azulejo field is capped at 380px, half split-hero's own height),
+  // reliably keeping Ingredients short of the trigger even at the very end.
   test.skip(isMobile, "desktop-only: this fixture needs a layout where nothing else reaches the trigger line first");
+  await page.setViewportSize({ width: 1440, height: 1100 });
   await ready(page, COOKIES);
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(100);
@@ -337,13 +354,14 @@ test("Log bake links to the entry form; Start baking links to Bake Mode", async 
 });
 
 test("account menu and timer alerts sheet", async ({ page, isMobile }) => {
-  // A no-cover recipe: with one, the cover replaces the header on mobile (BONES-
-  // recipes-detail 1.6.1) and there's no Account button to reach from there at all.
+  // The Recipe page's header isn't reachable on mobile for any recipe any more
+  // (BONES-recipes-detail 1.7.0): a cover, or its azulejo-field stand-in with no
+  // cover, always replaces it there. Covered on tablet/desktop, where the header
+  // stays; the phones-only "Bakes" menu item is covered on other pages.
+  test.skip(isMobile, "the Recipe page's header isn't reachable on mobile any more (BONES-recipes-detail 1.7.0)");
   await ready(page, COOKIES);
   await page.getByRole("button", { name: "Account" }).click();
-  // Bakes is in the menu on phones only (BONES-shell 1.7.0); tablet and desktop
-  // already have it in the header, so the menu doesn't repeat it.
-  await expect(page.getByRole("menuitem")).toHaveText(isMobile ? ["Bakes", "Timer alerts", "Sign out", "Privacy"] : ["Timer alerts", "Sign out", "Privacy"]);
+  await expect(page.getByRole("menuitem")).toHaveText(["Timer alerts", "Sign out", "Privacy"]);
   await shot(page, "17-account-menu");
   await page.getByRole("menuitem", { name: "Timer alerts" }).click();
   const sheet = page.getByRole("dialog", { name: "Get timer alerts on a locked phone" });
@@ -406,20 +424,24 @@ test("loading state", async ({ page }) => {
   if (!phoneWebKit()) await shot(page, "21-loading");
 });
 
-test("tablet: Scale and Ingredients take 4 of 8 columns, and the Scale control fits", async ({ page }) => {
+test("tablet: Ingredients and Steps take 4 of 8 columns, and the Scale control fits", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await ready(page, NATA);
-  const group = page.getByRole("group", { name: "Batch size" });
+  const group = page.getByRole("group", { name: "Scale" });
   const [track, custom, steps] = await Promise.all([
     group.boundingBox(),
-    group.getByRole("button", { name: "Custom" }).boundingBox(),
+    group.getByRole("radio", { name: "Custom" }).boundingBox(),
     page.getByRole("heading", { name: "Steps" }).boundingBox(),
   ]);
   expect(custom!.x + custom!.width).toBeLessThanOrEqual(track!.x + track!.width);
   // Two equal columns: Steps starts at the middle of the content area.
   expect(Math.abs(steps!.x - (768 / 2 + 12))).toBeLessThan(40);
+  // choice-radio only guarantees minHeight (SKIN): each choice's label hugs its own
+  // text, not an equal-width track like the old segmented control, so height (not
+  // width) is what's checked for each — matching the Library's view-tabs already.
+  // The input fills its label exactly (absolute, inset-0), so its own box is the hit area.
   for (const name of ["Half", "1×", "1.5×", "2×", "Custom"]) {
-    expect((await group.getByRole("button", { name, exact: true }).boundingBox())!.width).toBeGreaterThanOrEqual(48);
+    expect((await group.getByRole("radio", { name, exact: true }).boundingBox())!.height).toBeGreaterThanOrEqual(48);
   }
   await page.evaluate(() => document.fonts.ready);
   await shot(page, "22-tablet");

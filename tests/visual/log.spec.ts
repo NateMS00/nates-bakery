@@ -162,11 +162,13 @@ test("new entry from Bake Mode: form, save, rating prompt, then the new entry", 
   await shot(page, "08-new-entry");
 
   // The Recipe page reads the same data: rating 5, latest bake today (read-only there now).
-  // The header's rating line: both the section tab and a Bakes-section row link to the
-  // same #bakes-heading anchor, and the matching bake's own row can coincidentally carry
-  // the same "Rated 5" text too — the combination of href and text is unique to it.
+  // The record card's rating row: a Bakes-section row can coincidentally carry the same
+  // "Rated 5" text too, so the row's own "jump to Bakes" suffix picks it out uniquely.
+  // getByRole, not getByText or a CSS locator: the record card renders twice (mobile/
+  // tablet's stacked Hero, desktop's split hero), and only getByRole is scoped to the
+  // one actually on screen (a display:none subtree drops out of the accessibility tree).
   await page.getByRole("link", { name: "Pastéis de nata" }).click();
-  await expect(page.locator('a[href="#bakes-heading"]').filter({ hasText: /Rated 5 out of 5/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Rated 5 out of 5, jump to Bakes/ })).toBeVisible();
   await expect(page.getByText("See all bakes (4)")).toBeVisible();
 });
 
@@ -318,7 +320,9 @@ test("delete the last entry: warning, then the empty state", async ({ page }) =>
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 
   await page.getByRole("link", { name: "Lemon drizzle loaf" }).click();
-  await expect(page.getByRole("link", { name: "Not baked yet" })).toBeVisible();
+  // The record card's rating row disappears with nothing rated; its baked row reads
+  // "Not yet" instead (getByText, not getByRole: there's no link here any more).
+  await expect(page.locator('[data-testid="record-card"]:visible').getByText("Not yet")).toBeVisible();
 });
 
 test("entry menu: Edit and Delete", async ({ page }) => {

@@ -3,6 +3,8 @@ import { cx } from "./cx";
 export interface ChoiceRadioOption {
   value: string;
   label: string;
+  /** Overrides the accessible name when the visible label doesn't read well aloud ("½×" → "Half"). */
+  ariaLabel?: string;
 }
 
 /**
@@ -20,6 +22,7 @@ export function ChoiceRadio({
   value,
   onChange,
   className,
+  children,
 }: {
   legend: string;
   name: string;
@@ -27,9 +30,11 @@ export function ChoiceRadio({
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  /** Trailing content in the same wrapping row as the options (Scale's Custom field). */
+  children?: React.ReactNode;
 }) {
   return (
-    <fieldset className={cx("flex flex-wrap gap-x-lg gap-y-sm", className)}>
+    <fieldset className={cx("flex flex-wrap items-center gap-x-lg gap-y-sm", className)}>
       <legend className="sr-only">{legend}</legend>
       {options.map((option) => {
         const checked = option.value === value;
@@ -44,7 +49,12 @@ export function ChoiceRadio({
               value={option.value}
               checked={checked}
               onChange={() => onChange(option.value)}
-              className="absolute inset-0 opacity-0"
+              aria-label={option.ariaLabel}
+              // size-full, not just inset-0: a native radio is a replaced element with
+              // its own intrinsic size, which WebKit keeps even when absolutely
+              // positioned with every inset at 0 — only an explicit 100%/100% reliably
+              // stretches it to the label's full hit area in every engine.
+              className="absolute inset-0 size-full opacity-0"
             />
             <span aria-hidden="true" className={cx("type-amount", checked ? "text-primary" : "text-muted")}>
               {checked ? "(●)" : "( )"}
@@ -53,6 +63,7 @@ export function ChoiceRadio({
           </label>
         );
       })}
+      {children}
     </fieldset>
   );
 }

@@ -55,6 +55,15 @@
   mask: var(--tile-svg) 0 0 / var(--spacing-tile-repeat) var(--spacing-tile-repeat) repeat;
 }
 
+/* SKIN azulejo-fill: the motif as a full field, no frame, at its own 56px repeat
+   (not spacing-tile-repeat's 32px, which is tile-panel's — a bordered, smaller-repeat
+   cousin for illustration slots, not this full-bleed one). */
+@utility azulejo-mask {
+  background-color: currentColor;
+  -webkit-mask: var(--tile-svg) 0 0 / 56px 56px repeat;
+  mask: var(--tile-svg) 0 0 / 56px 56px repeat;
+}
+
 @keyframes skeleton-shimmer {
   0%, 100% { background-color: var(--color-surface-sunken); }
   50% { background-color: var(--color-hairline); }
@@ -163,6 +172,20 @@ dialog :is(input, textarea, select) {
   /* While the keyboard is open, a page's action bar would ride on top of it and cover
      what's being typed, so it steps aside (as the editor's Save bar always has). */
   html[data-keyboard-open] [data-action-bar] {
+    display: none;
+  }
+}
+
+/* BONES-recipes-detail 1.7.0: the Recipe page's action bar stays pinned through
+   tablet too (desktop keeps both actions in the record card instead, with no bar),
+   so it marks itself with data-action-bar-tablet for its own, wider reservation —
+   data-action-bar alone stays mobile-only above, for pages like Library whose bar
+   goes static (no reservation needed) from tablet up. */
+@media (max-width: 1279.98px) {
+  body:has([data-action-bar-tablet]) {
+    padding-bottom: calc(var(--spacing-touch-min) + 2 * var(--spacing-md) + env(safe-area-inset-bottom));
+  }
+  html[data-keyboard-open] [data-action-bar-tablet] {
     display: none;
   }
 }

@@ -41,7 +41,11 @@ export async function ready(page: Page, path: string) {
 
 /** One h1, the landmarks, and no horizontal scroll. */
 export async function expectPageBasics(page: Page) {
-  await expect(page.locator("h1")).toHaveCount(1);
+  // :visible, not a bare count: a page can render a breakpoint's content twice with
+  // CSS (not JS) choosing which one is on screen — same pattern as visiblePictures
+  // in recipe.spec.ts. The display:none copy is correctly invisible to assistive
+  // tech too, so this still reflects what "one h1" actually means for a reader.
+  await expect(page.locator("h1:visible")).toHaveCount(1);
   for (const landmark of ["header", "main", "footer"]) await expect(page.locator(landmark)).toHaveCount(1);
   // At least one: a page can add its own in-page nav (the Recipe page's section tabs)
   // alongside the shell's Primary nav — each with its own accessible name, not a

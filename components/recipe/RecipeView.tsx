@@ -1,41 +1,39 @@
 "use client";
 
-import { Pencil, Share } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { BackLink } from "@/components/ui/BackLink";
+import { useEffect, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { CoverPicture } from "@/components/ui/CoverPicture";
-import { FavoriteToggle } from "@/components/ui/FavoriteToggle";
-import { IconButton, iconButtonClass } from "@/components/ui/IconButton";
+import { HeroControls } from "@/components/ui/HeroControls";
+import { HeroField } from "@/components/ui/HeroField";
 import { Notice } from "@/components/ui/Notice";
 import { Picture } from "@/components/ui/Picture";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SectionTabs, type SectionTabOption } from "@/components/ui/SectionTabs";
 import { StarGlyph } from "@/components/ui/Star";
-import { ExternalLink, TextLink, tallHitArea } from "@/components/ui/TextLink";
+import { TextLink } from "@/components/ui/TextLink";
 import { TABLET_UP, useMediaQuery } from "@/components/ui/useMediaQuery";
-import { cx } from "@/components/ui/cx";
-import { categoryLabel } from "@/lib/data/categories";
 import { useOwnerRecipe } from "@/lib/data/useOwnerRecipe";
 import type { BakeLogEntry, Recipe } from "@/lib/data/types";
-import { formatBakeDate, formatDuration, formatScale, formatShortDate, formatYield, parseScale } from "@/lib/format";
+import { formatBakeDate, formatScale, parseScale } from "@/lib/format";
 import { IngredientList } from "./IngredientList";
+import { NoCoverHero } from "./NoCoverHero";
+import { RecordCard } from "./RecordCard";
 import { ScaleControl } from "./ScaleControl";
 import { ShareDialog } from "./ShareDialog";
+import { SplitHero } from "./SplitHero";
 import { StepList } from "./StepList";
 
-// /recipes/:recipeId (Recipe), BONES-recipes-detail.md 1.6.0 (visual round): full-bleed
-// cover with floating controls on mobile, cover beside the text from tablet up; a
-// read-only rating line (the latest *rated* bake — Stage A's recipe_rating/
-// deriveRecipeRating, never editable here); sticky section tabs that mark the section
-// in view; Scale with no visible heading; Bakes (up to 3 entries) replaces the old
-// Latest Bake card. Log bake and Start baking: a mobile action bar, or Start baking in
-// the Header and Log bake heading Bakes from tablet up. Log bake just links to the
-// existing entry form for now (/recipes/:id/log?new=1) — the Log sheet overlay is its
-// own later stage. Mark as baked, its Undo, and the Rating prompt are gone: nothing is
-// saved until a bake is logged, where rating is given directly.
+// /recipes/:recipeId (Recipe), BONES-recipes-detail.md 1.7.0 (personality round): the
+// Header becomes the Hero with a record card (recipe, from, kind, rating, baked,
+// yield): desktop (1280px+, with a cover) gets a split hero — the bake photo staged
+// like a framed print on the left, with its photo switch, and the record card (with
+// both actions) centred on an azulejo field on the right; mobile and tablet keep the
+// full-bleed/inset cover (or, with no cover, a 200px azulejo field) with the card
+// overlapping its bottom edge by 32px, and the actions move to a sticky action bar.
+// Scale is now choice radios on the Ingredients heading's own line. The latest bake's
+// "What changed" note, when there is one, opens Steps as a quoted line.
 
 const SECTIONS = ["ingredients", "steps", "bakes"] as const;
 type SectionId = (typeof SECTIONS)[number];
@@ -115,6 +113,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
   const logHref = `/recipes/${recipe.id}/log`;
   const hasCover = Boolean(recipe.cover);
   const bakesLabel = recipe.bakeLog.length > 0 ? `Bakes ${recipe.bakeLog.length}` : "Bakes";
+  const latestNote = recipe.bakeLog[0]?.whatChanged;
 
   const tabOptions: SectionTabOption[] = tabletUp
     ? [
@@ -128,75 +127,64 @@ export function RecipeView({ initial }: { initial: Recipe }) {
       ];
   const tabCurrent = tabletUp && current !== "bakes" ? "#ingredients-heading" : `#${current}-heading`;
 
-  const startBakingLabel = (
-    <>
-      Start baking{scale !== 1 && <span className="tabular-nums"> · {formatScale(scale)}</span>}
-    </>
-  );
-
   return (
     <>
-      {/* Header (SKELETON section 1) */}
-      {hasCover ? (
-        <>
-          {/* data-replaces-header (globals.css): on mobile the cover IS the header — no
-              logo row or tile band above it, starting flush under the status bar. main's
-              own top padding is zeroed by that same rule, so nothing but this div decides
-              the top offset here (none: it starts at true y=0). */}
-          <div data-replaces-header className="-mx-(--gutter) tablet:hidden">
-            <CoverPicture src={recipe.cover} recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
-          </div>
-          <div className="mt-base tablet:mt-0 tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:grid-cols-12">
-            <div className="hidden tablet:block tablet:col-span-5 desktop:col-span-8">
-              <Picture src={recipe.cover} aspectRatio="4 / 3" rounded="lg" className="max-h-[56vh] w-full" />
+      {/* Hero (SKELETON section 1). Both tiers render in the DOM at once, CSS-gated
+          by breakpoint (not a JS media query) — a useMediaQuery branch here would
+          flash the wrong hero on first paint, since it always reads false on the
+          server. hasCover is plain data, known at render time either way. */}
+      <div className="desktop:hidden">
+        {/* data-replaces-header (globals.css): on mobile the cover (or, with no
+            cover, the azulejo field) IS the header — no logo row or tile band
+            above it, starting flush under the status bar. main's own top padding
+            is zeroed by that same rule, so nothing but this div decides the top
+            offset here (none: it starts at true y=0). */}
+        {hasCover ? (
+          <>
+            <div data-replaces-header className="-mx-(--gutter) tablet:hidden">
+              <CoverPicture src={recipe.cover} recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
             </div>
-            <div className="tablet:col-span-3 desktop:col-span-4">
-              <div className="hidden items-center gap-xs tablet:flex">
-                <BackLink href="/recipes">Library</BackLink>
-                <div className="ml-auto flex items-center gap-xs">
-                  <FavoriteToggle pressed={recipe.favorite} onChange={actions.setFavorite} />
-                  <IconButton label="Share" aria-haspopup="dialog" onClick={() => setShareOpen(true)}>
-                    <Share aria-hidden="true" strokeWidth={1.8} />
-                  </IconButton>
-                  <Link href={`/recipes/${recipe.id}/edit`} aria-label="Edit" className={iconButtonClass}>
-                    <Pencil aria-hidden="true" strokeWidth={1.8} />
-                  </Link>
-                </div>
-              </div>
-              <RecipeHeaderText recipe={recipe} scale={scale} className="mt-sm tablet:mt-base" />
-              {/* A trailing `hidden` can't reliably beat Button's own unconditional
-                  inline-flex at the same specificity (established this round) — hide the
-                  wrapper, not the button. */}
-              <div className="mt-base hidden tablet:block">
-                <ButtonLink href={bakeHref} variant="primary" className="w-full">
-                  {startBakingLabel}
-                </ButtonLink>
-              </div>
+            <div className="hidden tablet:block">
+              <Picture src={recipe.cover} aspectRatio="4 / 3" rounded="lg" className="max-h-[56vh] w-full">
+                <HeroControls recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
+              </Picture>
             </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-center gap-xs">
-            <BackLink href="/recipes">Library</BackLink>
-            <div className="ml-auto flex items-center gap-xs">
-              <FavoriteToggle pressed={recipe.favorite} onChange={actions.setFavorite} />
-              <IconButton label="Share" aria-haspopup="dialog" onClick={() => setShareOpen(true)}>
-                <Share aria-hidden="true" strokeWidth={1.8} />
-              </IconButton>
-              <Link href={`/recipes/${recipe.id}/edit`} aria-label="Edit" className={iconButtonClass}>
-                <Pencil aria-hidden="true" strokeWidth={1.8} />
-              </Link>
-              <div className="hidden tablet:block">
-                <ButtonLink href={bakeHref} variant="primary">
-                  {startBakingLabel}
-                </ButtonLink>
-              </div>
+          </>
+        ) : (
+          <>
+            <div data-replaces-header className="-mx-(--gutter) tablet:hidden">
+              <HeroField recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
             </div>
-          </div>
-          <RecipeHeaderText recipe={recipe} scale={scale} className="mt-sm" />
-        </>
-      )}
+            <div className="hidden tablet:block">
+              <HeroField recipeId={recipe.id} favorite={recipe.favorite} onFavoriteChange={actions.setFavorite} onShare={() => setShareOpen(true)} />
+            </div>
+          </>
+        )}
+        <RecordCard recipe={recipe} scale={scale} bakeHref={bakeHref} logHref={logHref} className="relative z-10 mx-(--gutter) -mt-xl tablet:mx-0" />
+      </div>
+      <div className="hidden desktop:block">
+        {hasCover ? (
+          <SplitHero
+            recipe={recipe}
+            scale={scale}
+            favorite={recipe.favorite}
+            onFavoriteChange={actions.setFavorite}
+            onShare={() => setShareOpen(true)}
+            bakeHref={bakeHref}
+            logHref={logHref}
+          />
+        ) : (
+          <NoCoverHero
+            recipe={recipe}
+            scale={scale}
+            favorite={recipe.favorite}
+            onFavoriteChange={actions.setFavorite}
+            onShare={() => setShareOpen(true)}
+            bakeHref={bakeHref}
+            logHref={logHref}
+          />
+        )}
+      </div>
 
       <SectionTabs options={tabOptions} current={tabCurrent} className="sticky top-0 z-20 -mx-(--gutter) mt-lg px-(--gutter) desktop:mt-xl" />
 
@@ -205,7 +193,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
           tone="warning"
           className="mt-base"
           action={
-            <ButtonLink href={`/recipes/${recipe.id}/edit`} variant="text" className="-my-md -ml-sm underline">
+            <ButtonLink href={`/recipes/${recipe.id}/edit`} variant="text" className="-my-md -ml-sm">
               {estimates === 1 ? "Confirm it" : "Confirm them"}
             </ButtonLink>
           }
@@ -214,17 +202,14 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         </Notice>
       )}
 
-      <div className="mt-base tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:grid-cols-12">
-        {/* Left column: Scale (no visible heading) + Ingredients, sticky beside Steps from tablet up */}
+      <div className="mt-2xl tablet:grid tablet:items-start tablet:grid-cols-8 tablet:gap-x-(--gutter) desktop:mt-section-lg desktop:grid-cols-12">
+        {/* Left column: Ingredients, with Scale on its heading line, sticky beside Steps from tablet up */}
         <div className="tablet:sticky tablet:top-touch-min tablet:col-span-4 desktop:col-span-4">
-          <section aria-labelledby="scale-heading">
-            <SectionHeading id="scale-heading" className="sr-only">
-              Scale
-            </SectionHeading>
-            <ScaleControl scale={scale} onChange={setScale} />
-          </section>
-          <section aria-labelledby="ingredients-heading" className="mt-lg desktop:mt-xl">
-            <SectionHeading id="ingredients-heading">Ingredients</SectionHeading>
+          <section aria-labelledby="ingredients-heading">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-base gap-y-sm">
+              <SectionHeading id="ingredients-heading">Ingredients</SectionHeading>
+              <ScaleControl scale={scale} onChange={setScale} />
+            </div>
             <IngredientList groups={recipe.ingredientGroups} ingredients={recipe.ingredients} scale={scale} />
           </section>
         </div>
@@ -233,18 +218,19 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         <div className="tablet:col-span-4 desktop:col-span-8">
           <section aria-labelledby="steps-heading" className="mt-lg tablet:mt-0">
             <SectionHeading id="steps-heading">Steps</SectionHeading>
+            {latestNote && (
+              <Link
+                href={`${logHref}?edit=${encodeURIComponent(recipe.bakeLog[0].id)}`}
+                className="-mx-xs mt-sm flex min-h-touch-min items-center rounded-sm px-xs type-voice text-muted hover:underline focus-visible:outline-offset-2"
+              >
+                Last time: {latestNote}
+              </Link>
+            )}
             <StepList groups={recipe.stepGroups} steps={recipe.steps} />
           </section>
 
           <section aria-labelledby="bakes-heading" className="mt-lg desktop:mt-xl">
-            <div className="flex items-center justify-between gap-base">
-              <SectionHeading id="bakes-heading">Bakes</SectionHeading>
-              <div className="hidden tablet:block">
-                <ButtonLink href={`${logHref}?new=1`} variant="secondary">
-                  Log bake
-                </ButtonLink>
-              </div>
-            </div>
+            <SectionHeading id="bakes-heading">Bakes</SectionHeading>
             {recipe.bakeLog.length === 0 ? (
               <p className="mt-sm type-body-md text-muted">Not baked yet</p>
             ) : (
@@ -265,74 +251,23 @@ export function RecipeView({ initial }: { initial: Recipe }) {
         </div>
       </div>
 
-      {/* Action bar (mobile only): Log bake is in the Bakes heading and Start baking is
-          in the Header from tablet up (both rendered above, hidden here instead). */}
+      {/* Action bar (mobile and tablet): both actions live in the record card on desktop instead. */}
       <div
         data-action-bar
-        className="z-20 flex max-tablet:pin-bottom gap-sm bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:hidden"
+        data-action-bar-tablet
+        className="z-20 flex pin-bottom gap-sm bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar desktop:hidden"
       >
         <ButtonLink href={`${logHref}?new=1`} variant="secondary">
           Log bake
         </ButtonLink>
         <ButtonLink href={bakeHref} variant="primary" className="flex-1">
-          {startBakingLabel}
+          Start baking{scale !== 1 && <span className="tabular-nums"> · {formatScale(scale)}</span>}
         </ButtonLink>
       </div>
 
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} shareLink={recipe.shareLink} onCreate={actions.createShareLink} onRevoke={actions.revokeShareLink} />
     </>
   );
-}
-
-/** Category, H1, the one credit line, and the read-only rating line. Used beside or below the cover, and in the no-cover back row. */
-function RecipeHeaderText({ recipe, scale, className }: { recipe: Recipe; scale: number; className?: string }) {
-  const latest = recipe.bakeLog[0] ?? null;
-  return (
-    <div className={className}>
-      <p className="type-label text-primary">{categoryLabel(recipe.category)}</p>
-      <h1 className="mt-xs type-display-md text-ink desktop:type-display-lg">{recipe.title}</h1>
-      <p className="mt-xs type-body-sm text-muted">
-        <Dotted
-          parts={[
-            recipe.source && `@${recipe.source.creatorHandle}`,
-            recipe.source && (
-              <ExternalLink key="reel" href={recipe.source.reelUrl} className={tallHitArea}>
-                Watch reel
-              </ExternalLink>
-            ),
-            formatYield(recipe.yield, scale),
-            recipe.totalTimeMinutes > 0 && <span className="whitespace-nowrap">{formatDuration(recipe.totalTimeMinutes)}</span>,
-          ]}
-        />
-      </p>
-      {/* Read-only: the latest rated bake (Stage A), never editable here — a bake's
-          rating is given in the Log sheet. Tapping it jumps to Bakes. */}
-      <a href="#bakes-heading" className={cx("mt-xs inline-flex min-h-touch-min items-center rounded-sm type-body-sm text-muted focus-visible:outline-offset-2", tallHitArea)}>
-        {recipe.rating !== null && (
-          <>
-            <span className="sr-only">Rated {recipe.rating} out of 5, </span>
-            <span className="mr-xs inline-flex gap-[1px]">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <StarGlyph key={n} filled={n <= recipe.rating!} className="size-[15px]" />
-              ))}
-            </span>
-          </>
-        )}
-        {latest ? `Baked ${formatShortDate(latest.date)}` : "Not baked yet"}
-      </a>
-    </div>
-  );
-}
-
-/** Joins the given parts (falsy ones dropped) with a decorative " · ", SKIN's inline-meta rule. */
-function Dotted({ parts }: { parts: (ReactNode | null | undefined | false)[] }) {
-  const items = parts.filter((p): p is ReactNode => Boolean(p));
-  return items.map((item, i) => (
-    <Fragment key={i}>
-      {i > 0 && <span aria-hidden="true"> · </span>}
-      {item}
-    </Fragment>
-  ));
 }
 
 /** One Bakes-section row: a 64px photo only when the bake has one (no photo → no square,

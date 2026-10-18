@@ -1,39 +1,41 @@
+import { AzulejoFill } from "@/components/ui/AzulejoFill";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { cx } from "@/components/ui/cx";
 
-// BONES Loading: placeholders in final proportions (a cover area, title block, section
-// tabs, scale row, 8 ingredient rows, 4 steps); action bar shown disabled. BONES says
-// the cover placeholder shows "only if the recipe is known to have a cover" — loading.tsx
-// is a pure Suspense fallback with no data yet (no recipeId-specific knowledge is
-// possible before the page component resolves), so this always reserves the cover's
-// space: a brief, self-correcting over-reservation for a cover-less recipe beats a
-// layout jump when one does load in.
+// BONES Loading: a grout cover area (always reserved — loading.tsx is a pure
+// Suspense fallback with no data yet, so a cover-less recipe briefly over-reserves
+// rather than jumping once it loads in) with the record card's outline and 5 row
+// placeholders over its edge; on desktop the split hero with a grout frame on the
+// left and the azulejo field (real, not a placeholder — it's not data-dependent)
+// on the right, the record card's skeleton centred on it; 8 ingredient rows, 4
+// steps; action bar shown disabled.
 
 export function RecipeSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite">
       <p className="sr-only">Loading recipe</p>
-      {/* Skeleton's own rounded-sm is close enough here — a same-specificity rounded-*
-          override via className isn't a reliable win (established elsewhere this round). */}
-      <Skeleton className="-mx-(--gutter) -mt-lg aspect-[4/3] w-[calc(100%+2*var(--gutter))] tablet:mx-0 tablet:mt-0 tablet:aspect-auto tablet:h-[280px] tablet:w-full" />
-      <div className="mt-base">
-        <Skeleton className="h-md w-2xl" />
-        <Skeleton className="mt-sm h-[34px] w-4/5 desktop:h-[44px]" />
-        <Skeleton className="mt-base h-base w-3/4" />
-        <Skeleton className="mt-sm h-base w-2/5" />
-        {/* The wrapper is hidden, not the button itself: a trailing `hidden` can't
-            reliably beat Button's own unconditional inline-flex (established this round). */}
-        <div className="mt-base hidden tablet:block">
-          <Button variant="primary" disabled>
-            Start baking
-          </Button>
+      <div className="desktop:hidden">
+        {/* Skeleton's own rounded-sm is close enough here — a same-specificity rounded-*
+            override via className isn't a reliable win (established elsewhere this round). */}
+        <Skeleton className="-mx-(--gutter) -mt-lg aspect-[4/3] w-[calc(100%+2*var(--gutter))] tablet:mx-0 tablet:mt-0 tablet:aspect-auto tablet:h-[200px]" />
+        <RecordCardSkeleton className="relative z-10 mx-(--gutter) -mt-xl tablet:mx-0" />
+      </div>
+      <div className="hidden h-[min(calc(100svh_-_64px),760px)] desktop:grid desktop:grid-cols-2 desktop:divide-x desktop:divide-outline">
+        <div className="p-xl">
+          <Skeleton className="mx-auto h-full max-w-[72%] rounded-tile" />
+        </div>
+        <div className="relative flex items-center justify-center">
+          <AzulejoFill className="absolute inset-0" />
+          <RecordCardSkeleton actions className="relative z-10 w-full max-w-[min(400px,80%)]" />
         </div>
       </div>
       <Skeleton className="mt-lg h-touch-min w-full desktop:mt-xl" />
       <RecipeBodySkeleton />
       <div
         data-action-bar
-        className="z-20 flex max-tablet:pin-bottom gap-sm bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar tablet:hidden"
+        data-action-bar-tablet
+        className="z-20 flex pin-bottom gap-sm bg-canvas px-(--gutter) pt-md pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom))] shadow-bar desktop:hidden"
       >
         <Button variant="secondary" disabled>
           Log bake
@@ -42,6 +44,30 @@ export function RecipeSkeleton() {
           Start baking
         </Button>
       </div>
+    </div>
+  );
+}
+
+/** The record-card's own loading placeholder: its outline and 5 row placeholders (recipe, from, kind, rating, baked). */
+function RecordCardSkeleton({ actions = false, className }: { actions?: boolean; className?: string }) {
+  return (
+    <div className={cx("rounded-tile border border-outline bg-canvas p-base", className)}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <div key={i} className="flex items-center justify-between gap-base border-b border-outline py-sm">
+          <Skeleton className="h-sm w-2xl" />
+          <Skeleton className={i === 0 ? "h-base w-4xl" : "h-sm w-3xl"} />
+        </div>
+      ))}
+      {actions && (
+        <div className="mt-base flex gap-sm">
+          <Button variant="primary" disabled className="flex-1">
+            Start baking
+          </Button>
+          <Button variant="secondary" disabled className="flex-1">
+            Log bake
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Segmented } from "@/components/ui/Segmented";
+import { ChoiceRadio } from "@/components/ui/ChoiceRadio";
 import { TextField } from "@/components/ui/TextField";
 import { SCALE_MAX, SCALE_MIN, SCALE_PRESETS, formatScale } from "@/lib/format";
 
-// BONES Scale: presets ½×, 1×, 1.5×, 2×, and Custom; Custom reveals a number
-// field (0.25× to 10×). SKIN segmented.
+// BONES Scale: presets ½×, 1×, 1.5×, 2×, and Custom, as choice radios in a fieldset
+// named "Scale"; Custom reveals a number field in the same row (0.25× to 10×).
 
 const isPreset = (n: number) => (SCALE_PRESETS as readonly number[]).includes(n);
 
@@ -48,19 +48,20 @@ export function ScaleControl({ scale, onChange }: { scale: number; onChange: (sc
   }
 
   return (
-    <div className="mt-sm flex flex-col gap-base">
-      <Segmented
-        label="Batch size"
-        value={customOpen ? "custom" : String(scale)}
-        onChange={choose}
-        options={[
-          ...SCALE_PRESETS.map((p) => ({ value: String(p), label: formatScale(p), ariaLabel: p === 0.5 ? "Half" : undefined })),
-          { value: "custom", label: "Custom" },
-        ]}
-      />
+    <ChoiceRadio
+      legend="Scale"
+      name="scale"
+      value={customOpen ? "custom" : String(scale)}
+      onChange={choose}
+      options={SCALE_PRESETS.map((p) => ({ value: String(p), label: formatScale(p), ariaLabel: p === 0.5 ? "Half" : undefined })).concat({
+        value: "custom",
+        label: "Custom",
+        ariaLabel: undefined,
+      })}
+    >
       {customOpen && (
         <form
-          className="flex items-end gap-sm"
+          className="flex items-end"
           onSubmit={(e) => {
             e.preventDefault();
             commit();
@@ -82,6 +83,6 @@ export function ScaleControl({ scale, onChange }: { scale: number; onChange: (sc
           />
         </form>
       )}
-    </div>
+    </ChoiceRadio>
   );
 }

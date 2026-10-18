@@ -75,11 +75,13 @@ function withPhoto(entry: Omit<BakeLogEntry, "photo">): BakeLogEntry {
   return { ...entry, photo: entry.photoPath };
 }
 
-/** Mirrors recipe_rating() (supabase/migrations/0005_bake_photos_ratings.sql) and the
- * recipe's cover (its chosen bake's photo, else the reel thumbnail) on every read. */
+/** Mirrors recipe_rating() (supabase/migrations/0005_bake_photos_ratings.sql), the
+ * recipe's cover (its chosen bake's photo, else the reel thumbnail), and each bake's
+ * own resolved photo (lib/backend/supabase's getRecipe does the equivalent with
+ * signBakePhoto) on every read. */
 function withDisplay(r: Recipe): Recipe {
   const coverBake = r.coverBakeId ? r.bakeLog.find((e) => e.id === r.coverBakeId) : undefined;
-  return { ...r, rating: deriveRecipeRating(r), cover: coverBake?.photoPath ?? r.cover };
+  return { ...r, rating: deriveRecipeRating(r), cover: coverBake?.photoPath ?? r.cover, bakeLog: r.bakeLog.map(withPhoto) };
 }
 
 // STUB import service: reel ids starting with Cprivate, Cdeleted, or Cnorecipe fail

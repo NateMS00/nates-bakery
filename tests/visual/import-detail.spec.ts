@@ -267,8 +267,11 @@ test("Save blocked, then saved as a recipe", async ({ page }) => {
   await (mobile() ? save(page) : page.getByRole("button", { name: "Save recipe" }).last()).click();
   await page.waitForURL(/\/recipes\/chocolate-tahini-babka-/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Chocolate tahini babka");
-  await expect(page.getByText("Makes 2 loaves")).toBeVisible();
-  await expect(page.getByText("@braided.bea")).toBeVisible();
+  // The record card renders twice (mobile/tablet's stacked Hero, desktop's split hero);
+  // scoped to the one actually on screen, same reasoning as recipe.spec.ts's visiblePictures.
+  const card = page.locator('[data-testid="record-card"]:visible');
+  await expect(card.getByText("2 loaves")).toBeVisible();
+  await expect(card.getByText("@braided.bea")).toBeVisible();
   // It left Drafts and joined the Library (Drafts is a view tab now, not shown by default).
   await page.goto("/recipes");
   await expect(page.locator("#recipes-heading ~ ul > li").first()).toContainText("Chocolate tahini babka");
@@ -453,7 +456,10 @@ test("new recipe: blocked, then saved", async ({ page }) => {
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.waitForURL(/\/recipes\/kouign-amann-/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kouign-amann");
-  await expect(page.getByText("@Cprivate9").or(page.getByText("Watch reel"))).toBeVisible();
+  // Scoped to the visible record card: it renders twice (mobile/tablet's stacked Hero,
+  // desktop's split hero), and the hidden copy would otherwise double-match too.
+  const kouignCard = page.locator('[data-testid="record-card"]:visible');
+  await expect(kouignCard.getByText("@Cprivate9").or(kouignCard.getByText("Watch reel"))).toBeVisible();
 });
 
 test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) => {
@@ -473,10 +479,11 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.waitForURL(/\/recipes\/pasteis-de-nata$/);
   await expect(page.getByText("1 amount is an estimate.")).toHaveCount(0);
-  // The header's rating line: both the section tab and a Bakes-section row link to the
-  // same #bakes-heading anchor, and the matching bake's own row can coincidentally carry
-  // the same "Rated 4" text too — the combination of href and text is unique to it.
-  await expect(page.locator('a[href="#bakes-heading"]').filter({ hasText: /Rated 4 out of 5/ })).toBeVisible(); // rating kept (read-only on the Recipe page)
+  // The record card's rating row: a Bakes-section row can coincidentally carry the same
+  // "Rated 4" text too, so the row's own "jump to Bakes" suffix picks it out uniquely.
+  // getByRole, not a CSS locator: the record card renders twice (mobile/tablet's stacked
+  // Hero, desktop's split hero), and only getByRole is scoped to the one on screen.
+  await expect(page.getByRole("link", { name: /Rated 4 out of 5, jump to Bakes/ })).toBeVisible(); // rating kept (read-only on the Recipe page)
 
   await ready(page, "/recipes/pasteis-de-nata/edit");
   await page.getByRole("button", { name: "Delete recipe" }).click();

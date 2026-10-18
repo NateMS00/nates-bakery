@@ -31,13 +31,24 @@ export function formatGrams(grams: number): string {
   return String(Math.round(grams));
 }
 
-/** "Makes 12 tarts", "Makes about 16 tarts", "Makes 1 loaf" (SKELETON 1.3.1). */
-export function formatYield(y: RecipeYield, scale: number): string {
+function yieldParts(y: RecipeYield, scale: number) {
   const exact = y.quantity * scale;
   const rounded = Math.max(1, Math.round(exact));
   const approximate = Math.abs(rounded - exact) > 1e-9;
   const unit = rounded === 1 ? y.unit : y.unitPlural;
+  return { rounded, unit, approximate };
+}
+
+/** "Makes 12 tarts", "Makes about 16 tarts", "Makes 1 loaf" (SKELETON 1.3.1). */
+export function formatYield(y: RecipeYield, scale: number): string {
+  const { rounded, unit, approximate } = yieldParts(y, scale);
   return `Makes ${approximate ? "about " : ""}${rounded} ${unit}`;
+}
+
+/** "12 tarts", "about 16 tarts" — the record-card yield row, whose "yield" label already says "Makes". */
+export function formatYieldCompact(y: RecipeYield, scale: number): string {
+  const { rounded, unit, approximate } = yieldParts(y, scale);
+  return `${approximate ? "about " : ""}${rounded} ${unit}`;
 }
 
 /** "3 h 30 min", "45 min", "2 h". */
@@ -47,6 +58,15 @@ export function formatDuration(minutes: number): string {
   if (h === 0) return `${m} min`;
   if (m === 0) return `${h} h`;
   return `${h} h ${m} min`;
+}
+
+/** "3 h 40", "45 min", "2 h" — the record-card yield row's compact time (no "min" once "h" already marks it as a duration). */
+export function formatDurationCompact(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m}`;
 }
 
 /** "Sat 26 Sep", with the year when it isn't the current one. */

@@ -175,10 +175,10 @@ test("swipe left and right changes steps on touch screens", async ({ page }) => 
 test("the bake-clock: Start, −/+ 1 minute, Pause/Resume, and the matching text chip", async ({ page }) => {
   await open(page, NATA);
   // Before starting, −/+ adjust the planned duration.
-  await page.getByRole("button", { name: "Add 1 minute" }).click();
+  await page.getByRole("button", { name: "Add one minute" }).click();
   await expect(page.getByText("16:00")).toBeVisible();
-  await page.getByRole("button", { name: "Subtract 1 minute" }).click();
-  await page.getByRole("button", { name: "Subtract 1 minute" }).click();
+  await page.getByRole("button", { name: "Remove one minute" }).click();
+  await page.getByRole("button", { name: "Remove one minute" }).click();
   await expect(page.getByText("14:00")).toBeVisible();
 
   await start(page).click();
@@ -190,7 +190,7 @@ test("the bake-clock: Start, −/+ 1 minute, Pause/Resume, and the matching text
   await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeFocused();
 
   // −/+ now adjust the running timer itself.
-  await page.getByRole("button", { name: "Add 1 minute" }).click();
+  await page.getByRole("button", { name: "Add one minute" }).click();
   await expect(page.getByText(/^1[45]:\d\d$/)).toBeVisible();
 
   await page.getByRole("button", { name: "Pause", exact: true }).click();
@@ -267,7 +267,8 @@ test("timer finished: the banner, Go to step, and dismiss", async ({ page }) => 
   await next(page).click(); // leave step 1 so the finish shows as the banner, not the clock's own done state
   await page.clock.fastForward("15:01");
   const banner = page.getByRole("alert").filter({ hasText: "is done" });
-  await expect(banner).toContainText("Mix the flour, salt and · step 1 is done");
+  await expect(banner).toContainText("Step 1 is done");
+  await expect(banner).toContainText("Mix the flour, salt…");
   const box = await banner.boundingBox();
   expect(box!.y).toBe(0);
   await shot(page, "05-timer-finished");

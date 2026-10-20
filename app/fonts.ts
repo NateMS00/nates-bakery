@@ -23,6 +23,20 @@ export const frauncesItalic = localFont({
   fallback: ["Iowan Old Style", "Georgia", "serif"],
 });
 
+// SKIN bake-step-number: a static instance (wght 900, opsz 144, SOFT 100, WONK 1),
+// digits only, with fontTools' instancer --remove-overlaps. The variable font's own
+// overlapping contours draw stray inner strokes with -webkit-text-stroke (visible in
+// "2" and "5"); a static, overlap-free outline doesn't have that problem.
+export const frauncesBakeNumber = localFont({
+  src: "./fonts/Fraunces-Black-BakeNumber.woff2",
+  weight: "900",
+  style: "normal",
+  display: "swap",
+  preload: false,
+  variable: "--font-fraunces-bake-number",
+  fallback: ["Iowan Old Style", "Georgia", "serif"],
+});
+
 export const atkinsonNext = localFont({
   src: "./fonts/AtkinsonHyperlegibleNext.woff2",
   weight: "400 700",
@@ -40,6 +54,6 @@ export const atkinsonMono = localFont({
   fallback: ["SF Mono", "ui-monospace", "monospace"],
 });
 
-export const fontVariables = [fraunces, frauncesItalic, atkinsonNext, atkinsonMono]
+export const fontVariables = [fraunces, frauncesItalic, frauncesBakeNumber, atkinsonNext, atkinsonMono]
   .map((font) => font.variable)
   .join(" ");

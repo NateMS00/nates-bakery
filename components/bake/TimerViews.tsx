@@ -164,7 +164,10 @@ export function TimerBanner({
             key={t.id}
             className="flex flex-wrap items-center justify-between gap-x-base gap-y-sm border-b-4 border-ochre bg-primary px-(--gutter) py-base text-on-primary shadow-float first:pt-[calc(var(--spacing-base)+env(safe-area-inset-top))]"
           >
-            <p className="type-heading">{info ? `${info.name} · step ${info.stepNumber} is done` : `${t.label} is done`}</p>
+            <div>
+              <p className="type-heading">{info ? `Step ${info.stepNumber} is done` : `${t.label} is done`}</p>
+              {info && <p className="type-body-sm">{info.name}</p>}
+            </div>
             <div className="flex gap-sm">
               {info && (
                 <Button variant="secondary" onClick={() => onGoToStep(info, t.id)} className={onStage}>

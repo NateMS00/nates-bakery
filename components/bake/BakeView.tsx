@@ -64,12 +64,18 @@ const CARD_DISMISSED = "backery.timerAlertsCard.dismissed";
 
 /** The step's first words, up to about 24 characters, cut at a word (BONES: until the
  * editor offers a step name field). Used by the step stack and the timer-alert banner. */
+// Small words a cut name shouldn't dangle on ("Whisk the egg, milk and" reads as
+// unfinished); dropping them still leaves something readable ("Whisk the egg, milk…").
+const SMALL_WORDS = new Set(["and", "or", "the", "a", "for", "with", "of", "to", "into", "at"]);
+
 function shortStepName(text: string, limit = 24): string {
   const t = text.trim();
   if (t.length <= limit) return t;
   const cut = t.slice(0, limit);
   const lastSpace = cut.lastIndexOf(" ");
-  return (lastSpace > 8 ? cut.slice(0, lastSpace) : cut).trim();
+  const words = (lastSpace > 8 ? cut.slice(0, lastSpace) : cut).trim().split(" ");
+  while (words.length > 1 && SMALL_WORDS.has(words[words.length - 1].toLowerCase())) words.pop();
+  return `${words.join(" ")}…`;
 }
 
 export function BakeView({ recipe }: { recipe: Recipe }) {
@@ -112,11 +118,16 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
     if (stepParam(stepNumber) !== rawStep || !scaleValid) writeUrl(stepNumber);
   }, [stepNumber, rawStep, scaleValid, writeUrl, stepParam]);
 
-  // Moving to another step moves focus to its heading, so screen readers read it.
+  // Moving to another step scrolls back to the top (so the step stack stays visible
+  // under the sticky header and pills, instead of scrolling away beneath them), then
+  // moves focus to the heading without scrolling again, so screen readers read it.
   const heading = useRef<HTMLHeadingElement>(null);
   const moved = useRef(false);
   useEffect(() => {
-    if (moved.current) heading.current?.focus();
+    if (moved.current) {
+      window.scrollTo(0, 0);
+      heading.current?.focus({ preventScroll: true });
+    }
     moved.current = false;
   }, [stepNumber]);
   function goTo(n: number) {
@@ -313,10 +324,10 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                     tone="warning"
                     action={
                       <Button
-                        variant="text"
+                        variant="stage-text"
                         onClick={() => setDismissed(new Set([...dismissed, "estimates"]))}
                         aria-label="Dismiss estimates notice"
-                        className="-my-md -ml-sm text-ochre! enabled:active:text-ochre-active!"
+                        className="-my-md -ml-sm"
                       >
                         Dismiss
                       </Button>
@@ -331,17 +342,11 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                     tone="info"
                     action={
                       <span className="-my-md flex">
-                        <Button
-                          ref={setUp}
-                          variant="text"
-                          aria-haspopup="dialog"
-                          onClick={() => setSheetOpen(true)}
-                          className="-ml-sm text-ochre! enabled:active:text-ochre-active!"
-                        >
+                        <Button ref={setUp} variant="stage-text" aria-haspopup="dialog" onClick={() => setSheetOpen(true)} className="-ml-sm">
                           Set up
                         </Button>
                         <Button
-                          variant="text"
+                          variant="stage-text"
                           aria-label="Dismiss timer alerts notice"
                           onClick={() => {
                             setCardDismissed(true);
@@ -351,7 +356,6 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                               /* no storage: hidden until reload */
                             }
                           }}
-                          className="text-ochre! enabled:active:text-ochre-active!"
                         >
                           Dismiss
                         </Button>
@@ -413,8 +417,8 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                     </ul>
                     {forThisStep.length > FOR_THIS_STEP_LIMIT && (
                       <Button
-                        variant="text"
-                        className="-ml-sm text-ochre! enabled:active:text-ochre-active!"
+                        variant="stage-text"
+                        className="-ml-sm"
                         onClick={() => {
                           setAllOpenChoice(true);
                           requestAnimationFrame(() => {

@@ -1,9 +1,7 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { IconButton } from "@/components/ui/IconButton";
 import { cx } from "@/components/ui/cx";
 import { formatRemaining, remainingMs, type Timer } from "./useTimers";
 
@@ -89,14 +87,15 @@ export function BakeClock({
         </div>
       </div>
       <div className="mt-lg flex items-center gap-lg">
-        <IconButton
-          label="Subtract 1 minute"
+        <Button
+          type="button"
+          variant="stage-secondary"
+          aria-label="Remove one minute"
           onClick={() => (timer ? onAdjust(-60_000) : setPlannedMinutes((m) => Math.max(1, m - 1)))}
           disabled={done}
-          className="rounded-full border border-on-stage text-on-stage! hover:bg-on-stage/10! active:bg-on-stage/15! disabled:border-stage-track! disabled:text-stage-track! disabled:hover:bg-transparent!"
         >
-          <Minus aria-hidden="true" strokeWidth={2} />
-        </IconButton>
+          −1
+        </Button>
         {!done && (
           <Button
             id={startId}
@@ -108,14 +107,15 @@ export function BakeClock({
             {running ? "Pause" : paused ? "Resume" : "Start"}
           </Button>
         )}
-        <IconButton
-          label="Add 1 minute"
+        <Button
+          type="button"
+          variant="stage-secondary"
+          aria-label="Add one minute"
           onClick={() => (timer ? onAdjust(60_000) : setPlannedMinutes((m) => m + 1))}
           disabled={done}
-          className="rounded-full border border-on-stage text-on-stage! hover:bg-on-stage/10! active:bg-on-stage/15! disabled:border-stage-track! disabled:text-stage-track! disabled:hover:bg-transparent!"
         >
-          <Plus aria-hidden="true" strokeWidth={2} />
-        </IconButton>
+          +1
+        </Button>
       </div>
     </div>
   );

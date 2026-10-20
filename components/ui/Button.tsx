@@ -5,7 +5,7 @@ import { cx } from "./cx";
 // SKIN button-primary, button-secondary, button-destructive, button-text,
 // each with its hover, active, focus, and disabled states.
 
-export type ButtonVariant = "primary" | "secondary" | "destructive" | "text" | "stage-secondary";
+export type ButtonVariant = "primary" | "secondary" | "destructive" | "text" | "stage-secondary" | "stage-text";
 
 const base =
   "inline-flex min-h-touch-min items-center justify-center gap-sm text-center transition-[background-color,color,border-color,transform] duration-(--motion-fast) ease-skin disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&_svg]:size-icon-sm [&_svg]:shrink-0";
@@ -33,6 +33,10 @@ const variants: Record<ButtonVariant, string> = {
   // reads as a shout and as a separate button rather than a continuation of the line.
   text:
     "type-body-md font-bold rounded-sm px-sm text-primary underline-offset-3 enabled:hover:underline enabled:active:text-primary-active enabled:active:underline focus-visible:outline-offset-2 disabled:text-disabled disabled:no-underline",
+  // SKIN bake-stage: "text actions on the stage ... are cream, bold and underlined,
+  // never ochre" — ochre stays the one loud thing (Start, Next step, chips, pills).
+  "stage-text":
+    "type-body-md font-bold rounded-sm px-sm text-on-stage underline underline-offset-3 focus-visible:outline-offset-2 disabled:text-stage-track disabled:no-underline",
 };
 
 export function buttonClass(variant: ButtonVariant, className?: string) {

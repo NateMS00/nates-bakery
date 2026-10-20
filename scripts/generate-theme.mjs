@@ -28,6 +28,14 @@ const FACES = {
   "Atkinson Hyperlegible Mono": { normal: "--font-atkinson-mono" },
 };
 
+// One typography role, one exception: bake-number is stroked (-webkit-text-stroke)
+// for SKIN's outlined bake-step-number, which draws stray inner lines on the
+// variable font's overlapping contours. It gets its own static, overlap-removed
+// instance (app/fonts.ts, frauncesBakeNumber) instead of the shared Fraunces variable.
+const TYPOGRAPHY_FONT_VARIABLE_OVERRIDE = {
+  "bake-number": "--font-fraunces-bake-number",
+};
+
 const ref = (value) =>
   String(value).replace(/\{(\w+)\.([\w-]+)\}/g, (_, group, name) => {
     const prefix = { colors: "color", spacing: "spacing", rounded: "radius", sizing: "spacing" }[group];
@@ -104,8 +112,12 @@ out();
 for (const [name, role] of Object.entries(t.typography)) {
   const italic = role.fontStyle === "italic";
   const mono = /Mono/.test(role.fontFamily);
+  const familyOverride = TYPOGRAPHY_FONT_VARIABLE_OVERRIDE[name];
+  const fontFamily = familyOverride
+    ? [`var(${familyOverride})`, ...role.fontFamily.split(",").slice(1).map((s) => s.trim())].join(", ")
+    : family(role.fontFamily, italic);
   out(`@utility type-${name} {`);
-  out(`  font-family: ${family(role.fontFamily, italic)};`);
+  out(`  font-family: ${fontFamily};`);
   out(`  font-size: ${px(role.fontSize)};`);
   out(`  font-weight: ${role.fontWeight};`);
   out(`  line-height: ${role.lineHeight};`);

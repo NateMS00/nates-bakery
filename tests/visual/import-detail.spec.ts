@@ -8,7 +8,7 @@ import { capture, expectDestructiveConfirmation, expectFitsContent, expectFocusR
 const BABKA = "/import/d-babka";
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "import-detail", name, fullPage);
 const mobile = () => Boolean(test.info().project.use.isMobile);
-const check = (page: Page) => page.locator("#check-heading").locator("xpath=..");
+const check = (page: Page) => page.locator('section[aria-labelledby="check-heading"]');
 const amount = (page: Page, name: string) => page.getByRole("textbox", { name: `${name}, grams` });
 // The save-blocked summary (Next's route announcer is also role="alert").
 // Desktop has two Save recipe buttons (header and left column); this is the first visible one.
@@ -28,18 +28,34 @@ test("first viewport, full page, and page checks", async ({ page }) => {
   await expectPageTop(page);
   await expectTouchTargets(page);
 
-  // Needs Your Check: summary and order (Missing, Estimated, Converted).
-  await expect(check(page)).toContainText("2 missing · 3 estimated · 2 converted");
+  // Needs Your Check: the count, and row order (Missing, then Estimated, then Converted).
+  await expect(check(page).getByRole("heading", { name: "Check 7 amounts" })).toBeVisible();
+  await expect(check(page).getByText("Tap a row to fix it.")).toBeVisible();
   const items = check(page).getByRole("link");
   await expect(items.first()).toContainText("Unsalted butter, soft");
   await expect(items.first()).toContainText("— g");
-  // At most 5 on mobile, then Show all (7); all on desktop.
+  // At most 5 on mobile, then Show 2 more; all 7 on desktop.
   await expect(items.filter({ visible: true })).toHaveCount(mobile() ? 5 : 7);
   if (mobile()) {
-    await page.getByRole("button", { name: "Show all (7)" }).click();
+    await page.getByRole("button", { name: "Show 2 more" }).click();
     await expect(items.filter({ visible: true })).toHaveCount(7);
   }
-  await expect(check(page).getByRole("link", { name: /Whole milk/ })).toContainText("120 g from ½ cup");
+  await expect(check(page).getByRole("link", { name: /Whole milk/ })).toContainText("from ½ cup");
+  await expect(check(page).getByRole("link", { name: /Whole milk/ })).toContainText("120 g");
+  // Converted rows don't carry an "Estimated" tag; Estimated ones do.
+  await expect(check(page).getByRole("link", { name: /Whole milk/ }).getByText("Estimated")).toHaveCount(0);
+  await expect(check(page).getByRole("link", { name: /Caster sugar/ }).getByText("Estimated")).toBeVisible();
+  // Confirming one doesn't jump the list: it stays in place with a filled check.
+  const sugarCheck = check(page).getByRole("checkbox", { name: /Confirm Caster sugar/ });
+  await sugarCheck.click();
+  await expect(sugarCheck).toHaveAttribute("aria-checked", "true");
+  await expect(check(page).getByRole("heading", { name: "Check 6 amounts" })).toBeVisible();
+  await expect(check(page).getByRole("link", { name: /Caster sugar/ })).toBeVisible();
+  // These look right confirms every remaining Estimated/Converted row, not Missing.
+  await page.getByRole("button", { name: "These look right" }).click();
+  await expect(check(page).getByRole("heading", { name: "Check 2 amounts" })).toBeVisible();
+  await expect(check(page).getByRole("checkbox")).toHaveCount(5); // all 5 stay visible, all confirmed
+  await expect(check(page).getByRole("checkbox", { name: /^Confirm/ }).first()).toHaveAttribute("aria-checked", "true");
   // Draft status, the mobile Save bar's status line, and the Suggested category.
   await expect(page.getByText("Draft saved")).toBeVisible();
   // The Save bar counts everything blocking the save, like the error summary.
@@ -65,17 +81,42 @@ test("Source shows the real reel thumbnail once copied; a draft without one keep
   await expect(page.getByTestId("reel-thumbnail")).toHaveAttribute("data-status", "error");
 });
 
+test("Source as record rows: reel row, caption preview, play badge, and the countdown numeral", async ({ page }) => {
+  await ready(page, BABKA);
+  const card = page.getByTestId("source-card");
+  // "Source" itself is a visually hidden H2; the card carries the content.
+  await expect(page.getByRole("heading", { name: "Source", level: 2 })).toHaveCSS("position", "absolute"); // sr-only
+  // reel row: handle + Watch reel, both opening the same reel.
+  await expect(card.getByText("@braided.bea")).toBeVisible();
+  await expect(card.getByRole("link", { name: "Watch reel" })).toHaveAttribute("href", /instagram\.com\/reel\/Cbabka22/);
+  // The whole thumbnail, including its play badge, is one link naming the creator.
+  const watchReel = card.getByRole("link", { name: "Watch @braided.bea's reel" });
+  await expect(watchReel).toHaveAttribute("href", /instagram\.com\/reel\/Cbabka22/);
+  await expect(watchReel.getByTestId("reel-thumbnail")).toBeVisible();
+  // caption row: first 2 lines, clamped (no language row — this draft isn't translated).
+  await expect(card.getByText("The babka that broke my feed")).toBeVisible();
+  await expect(page.getByText("Spanish, translated")).toHaveCount(0);
+
+  // The countdown numeral: decorative, counts down, and a solid check at zero.
+  const numeral = page.getByText("07", { exact: true });
+  await expect(numeral).toHaveAttribute("aria-hidden", "true");
+  await check(page).getByRole("checkbox", { name: /Confirm Caster sugar/ }).click();
+  await expect(page.getByText("06", { exact: true })).toBeVisible();
+  await expect(numeral).toHaveCount(0);
+});
+
 test("original caption: Read more expands in place, Show less collapses", async ({ page }) => {
   await ready(page, BABKA);
-  await expect(page.getByText("Original caption")).toBeVisible();
+  await expect(page.getByText("Original caption")).toHaveCount(0);
   const toggle = page.getByRole("button", { name: "Read more" });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await toggle.click();
+  await expect(page.getByText("Original caption")).toBeVisible();
   const less = page.getByRole("button", { name: "Show less" });
   await expect(less).toHaveAttribute("aria-expanded", "true");
   // Expanding doesn't move focus. (In WebKit the click doesn't focus the button to begin with.)
   if (!phoneWebKit()) await expect(less).toBeFocused();
-  await expect(page.getByText("broke my feed")).toBeVisible();
+  await expect(page.locator("#caption-d-babka").getByText("broke my feed")).toBeVisible();
   await page.locator("#source-heading").scrollIntoViewIfNeeded();
   await shot(page, "03-transcript-expanded");
   await less.click();
@@ -84,12 +125,17 @@ test("original caption: Read more expands in place, Show less collapses", async 
 
 test("original caption: Translated from label, and a cut-off notice", async ({ page }) => {
   await ready(page, "/import/d-tiramisu");
+  // The source-card's own "language" row, visible without expanding anything.
+  await expect(page.getByText("Spanish, translated")).toBeVisible();
+  await page.getByRole("button", { name: "Read more" }).click();
   await expect(page.getByText("Original caption · Translated from Spanish")).toBeVisible();
   await expect(page.getByText("Instagram cut this caption off.")).toHaveCount(0);
 
   await ready(page, "/import/d-triple-chocolate-tart");
-  await expect(page.getByText("Original caption · Translated from French")).toBeVisible();
+  await expect(page.getByText("French, translated")).toBeVisible();
   await expect(page.getByText("Instagram cut this caption off. Check the reel for the rest.")).toBeVisible();
+  await page.getByRole("button", { name: "Read more" }).click();
+  await expect(page.getByText("Original caption · Translated from French")).toBeVisible();
   await shot(page, "04-cut-off-notice");
 });
 
@@ -185,12 +231,19 @@ test("an ingredient group with Missing, Estimated, and Converted rows", async ({
   await ready(page, BABKA);
   const dough = page.getByRole("group", { name: "Dough" }).first();
   await expect(dough.getByText("! Missing")).toHaveCount(2);
-  await expect(dough.getByText("~ Estimated")).toHaveCount(1);
-  await expect(dough.getByText("= Converted")).toHaveCount(1);
-  await expect(dough.getByText("was ½ cup")).toBeVisible();
   await expect(dough.getByRole("switch", { name: /To taste/ })).toHaveCount(2);
+  // BONES-import-detail 1.5.0: no Confirm button or marker chip in the editor row
+  // any more (confirming moved to Needs Your Check); a flagged row keeps one muted
+  // "from X" line instead, with the marker glyph folded into it.
+  await expect(dough.getByText("= Converted", { exact: true })).toHaveCount(0);
+  await expect(dough.getByText("~ Estimated", { exact: true })).toHaveCount(0);
+  await expect(dough.getByRole("button", { name: /^Confirm/ })).toHaveCount(0);
+  await expect(dough.getByText("from ½ cup")).toBeVisible();
   // Placeholders on empty fields; Missing amounts show "0".
   await expect(amount(page, "Fine salt")).toHaveAttribute("placeholder", "—");
+  // The amount box (grams), or whatever replaces it (To taste's toggle, on a row
+  // with nothing else), shares one right edge down the whole group, whether the row
+  // is clean, flagged with a muted "from X" line below it, or Missing.
   const boxes = await dough.locator("li").evaluateAll((rows) =>
     rows.map((li) => {
       const amountBox = li.querySelector("input[inputmode=decimal]")?.parentElement ?? li.querySelector("span.justify-end");
@@ -204,15 +257,16 @@ test("an ingredient group with Missing, Estimated, and Converted rows", async ({
   // (Yeast and eggs: short names. "Strong white bread flour" wraps inside its field on mobile.)
   const clean = boxes.filter((_, i) => [3, 4].includes(i));
   for (const b of clean) expect(b.li).toBeLessThan(80);
-  // Desktop: Confirm and To taste sit at the right edge of the status area, lined up.
+  // Desktop: To taste is the only control left in the status column (Missing rows
+  // only, now that Confirm is gone), still lined up at its right edge.
   if (!mobile()) {
     const rights = await dough.locator("li").evaluateAll((rows) =>
       rows
-        .map((li) => li.querySelector<HTMLElement>("button[role=switch], button.border-primary:not([aria-haspopup])"))
+        .map((li) => li.querySelector<HTMLElement>("button[role=switch]"))
         .filter(Boolean)
         .map((b) => Math.round(b!.getBoundingClientRect().right)),
     );
-    expect(rights.length).toBe(4);
+    expect(rights.length).toBe(2);
     expect(new Set(rights).size).toBe(1);
   }
   // Long names wrap instead of truncating, however many lines they need.
@@ -232,15 +286,25 @@ test("check items jump to their field and leave when resolved", async ({ page })
   const butter = amount(page, "Unsalted butter, soft");
   await expect(butter).toBeFocused();
   await butter.fill("90");
-  await expect(check(page)).toContainText("1 missing · 3 estimated · 2 converted");
-  await expect(check(page).getByRole("status")).toHaveText("Unsalted butter, soft checked. 6 left to check.");
-  // Confirm removes the marker without changing the value.
-  await page.getByRole("button", { name: "Confirm Caster sugar" }).click();
-  await expect(check(page)).toContainText("1 missing · 2 estimated · 2 converted");
+  // A resolved Missing row leaves right away.
+  await expect(check(page).getByRole("heading", { name: "Check 6 amounts" })).toBeVisible();
+  await expect(check(page).getByRole("link", { name: /Unsalted butter/ })).toHaveCount(0);
+  await expect(check(page).getByRole("status")).toHaveText("Unsalted butter, soft checked. 6 left.");
+
+  // Confirming a check-row keeps it in place (filled check) without changing the
+  // value, and no longer counts toward the heading.
+  const sugarCheck = check(page).getByRole("checkbox", { name: /Confirm Caster sugar/ });
+  await sugarCheck.click();
+  await expect(check(page).getByRole("heading", { name: "Check 5 amounts" })).toBeVisible();
+  await expect(check(page).getByRole("link", { name: /Caster sugar/ })).toBeVisible();
+  await expect(sugarCheck).toHaveAttribute("aria-checked", "true");
   await expect(amount(page, "Caster sugar")).toHaveValue("100");
-  // To taste resolves a Missing amount.
+  await expect(check(page).getByRole("status")).toHaveText("Caster sugar confirmed. 5 left.");
+
+  // To taste resolves a Missing amount, and it leaves too.
   await page.getByRole("switch", { name: "To taste, Fine salt" }).click();
-  await expect(check(page)).toContainText("2 estimated · 2 converted");
+  await expect(check(page).getByRole("heading", { name: "Check 4 amounts" })).toBeVisible();
+  await expect(check(page).getByRole("link", { name: /Fine salt/ })).toHaveCount(0);
   if (mobile()) await expect(page.getByText("Ready to save")).toBeVisible();
 });
 
@@ -468,8 +532,10 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
   await expect(page.getByRole("link", { name: "Pastéis de nata" })).toHaveAttribute("href", "/recipes/pasteis-de-nata");
   await expect(page.getByText("Suggested")).toHaveCount(0);
 
-  // Leaving with unsaved changes asks first.
-  await page.getByRole("button", { name: "Confirm Egg yolks" }).click();
+  // Leaving with unsaved changes asks first. Confirming an estimate (no Needs Your
+  // Check panel here, outside Review Import) is done the same way as changing it:
+  // re-entering the amount clears the estimated status.
+  await amount(page, "Egg yolks").fill("109");
   await page.getByRole("link", { name: "Pastéis de nata" }).click();
   const leave = page.getByRole("dialog", { name: "Leave without saving?" });
   await expect(leave).toBeVisible();

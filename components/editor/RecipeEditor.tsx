@@ -4,7 +4,7 @@ import { Plus, Timer } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/Button";
 import { InlineConfirmation } from "@/components/ui/InlineConfirmation";
-import { ConvertedLabel, EstimatedMarker, MissingMarker, SuggestedMarker } from "@/components/ui/Marker";
+import { MissingMarker, SuggestedMarker } from "@/components/ui/Marker";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Select } from "@/components/ui/Select";
 import { TextField } from "@/components/ui/TextField";
@@ -361,7 +361,10 @@ function IngredientRow({
   const errorId = `${amountFieldId(ingredient.id)}-error`;
   const flagged = !ingredient.toTaste && !missing && ingredient.status !== "confirmed";
 
-  const hasStatus = missing || flagged || ingredient.toTaste;
+  // Confirming an Estimated/Converted row happens in Needs Your Check now, not here
+  // (BONES-import-detail 1.5.0), so the status area only ever holds Missing's own
+  // tag and To taste; a flagged row's marker moves to the muted line below instead.
+  const hasStatus = missing || ingredient.toTaste;
 
   // Mobile and tablet: name, amount, menu on one line; a second line only when there's
   // something to act on. Desktop (1280 up): fixed columns so the grams line up down
@@ -398,13 +401,6 @@ function IngredientRow({
         {hasStatus && (
           <div className="col-span-3 row-start-2 flex flex-wrap items-center gap-xs desktop:col-span-1 desktop:col-start-3 desktop:row-start-1 desktop:min-h-control-height desktop:justify-between desktop:gap-sm">
             {missing && <MissingMarker />}
-            {flagged && ingredient.status === "estimated" && <EstimatedMarker />}
-            {flagged && ingredient.status === "converted" && <ConvertedLabel />}
-            {flagged && (
-              <Button variant="secondary" onClick={() => set({ status: "confirmed" })} className="px-md desktop:px-base">
-                Confirm<span className="sr-only"> {name}</span>
-              </Button>
-            )}
             {(missing || ingredient.toTaste) && (
               <Toggle label="To taste" spoken={`To taste, ${name}`} checked={ingredient.toTaste} onChange={(toTaste) => set({ toTaste, amount: toTaste ? "" : ingredient.amount })} />
             )}
@@ -435,9 +431,11 @@ function IngredientRow({
           Enter an amount, or mark it to taste
         </p>
       )}
-      {flagged && ingredient.status === "converted" && ingredient.original && (
+      {flagged && ingredient.original && (
         <p id={`${ingredient.id}-original`} className="mt-xs type-caption text-muted">
-          was {ingredient.original}
+          <span aria-hidden="true">{ingredient.status === "estimated" ? "~" : "="}</span>{" "}
+          <span className="sr-only">{ingredient.status === "estimated" ? "Estimated, " : "Converted, "}</span>
+          from {ingredient.original}
         </p>
       )}
       {ingredient.note && (

@@ -161,6 +161,7 @@ export function ReviewImport({ draft }: { draft: Draft }) {
           <SourcePanel draft={draft} expanded={captionOpen} onExpandedChange={setCaptionOpen} />
           <NeedsYourCheck
             state={state}
+            setState={setState}
             problems={attempted ? problems : null}
             summaryRef={summaryRef}
             incomplete={retrying ? { kind: "retrying", onTryAgain: retry } : recipeStatus === "failed" ? { kind: "failed", onRetry: retry } : undefined}

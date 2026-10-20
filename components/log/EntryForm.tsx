@@ -273,13 +273,15 @@ export function EntryForm({
       (result.errors.date ? dateRef : scaleRef).current?.focus();
       return;
     }
+    // A settled upload failure blocks Save outright (BONES-recipes-log.md): the
+    // photo slot's own Retry and "Save without photo" are the only ways past it,
+    // so a bad connection never silently drops the photo.
+    if (photoStatus === "error") return;
     setBusy(true);
     setFailed(false);
-    // Save pressed while the photo's still uploading (BONES-recipes-log.md): wait
-    // for it rather than saving ahead of it. A failure here blocks the save, the
-    // same as any other error — the photo slot's own Retry already covers "saved
-    // without the photo, try again from here" without a second, saved-but-still-
-    // broken state for the rest of the form to account for.
+    // Save pressed while the photo's still uploading: wait for it rather than
+    // saving ahead of it. A failure arriving during that wait blocks the save the
+    // same way — photoStatus flips to "error" and Retry/"Save without photo" take over.
     if (photoStatus === "uploading" && uploadRef.current) {
       setWaitingOnPhoto(true);
       const path = await uploadRef.current;
@@ -290,6 +292,26 @@ export function EntryForm({
       }
       result.fields.photoPath = path;
     }
+    const ok = await onSave(result.fields);
+    setBusy(false);
+    if (!ok) setFailed(true);
+  }
+
+  /** The photo slot's own escape hatch from a failed upload: drop the photo and
+   * save the rest of the entry right away, instead of making a bad connection
+   * block logging the bake at all. */
+  async function saveWithoutPhoto() {
+    if (busy) return;
+    const result = validate(values);
+    setErrors(result.errors);
+    if (!result.fields) {
+      (result.errors.date ? dateRef : scaleRef).current?.focus();
+      return;
+    }
+    result.fields.photoPath = null;
+    removePhoto();
+    setBusy(true);
+    setFailed(false);
     const ok = await onSave(result.fields);
     setBusy(false);
     if (!ok) setFailed(true);
@@ -408,6 +430,7 @@ export function EntryForm({
           onReplace={pickPhoto}
           onRemove={removePhoto}
           onRetry={retryPhoto}
+          onSaveWithoutPhoto={saveWithoutPhoto}
           useAsCover={values.useAsCover}
           onUseAsCoverChange={(next) => setValues((v) => ({ ...v, useAsCover: next }))}
         />

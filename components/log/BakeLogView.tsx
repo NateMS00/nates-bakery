@@ -204,7 +204,7 @@ export function BakeLogView({ initial }: { initial: Recipe }) {
     <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">
       {/* Page header */}
       <div className="flex flex-col items-start">
-        <BackLink href={`/recipes/${recipe.id}`} className="max-w-full">
+        <BackLink href={`/recipes/${recipe.id}`} variant="title" className="max-w-full">
           <span className="truncate">{recipe.title}</span>
         </BackLink>
         {entries.length === 0 ? (
@@ -385,10 +385,17 @@ function Entry({
 }) {
   const date = formatBakeDate(entry.date);
   const hasNotes = Boolean(entry.whatChanged || entry.howItTurnedOut);
+  // Whichever row ends up last gives up its rule: the photo's own edge closes the
+  // first dl's last row when there's a photo, and nothing follows the second dl
+  // (or the no-notes line) before the card's bottom edge.
+  const ratingIsLast = entry.rating !== null;
+  const scaleIsLast = !ratingIsLast && entry.scale !== 1;
+  const bakedIsLast = !ratingIsLast && !scaleIsLast;
+  const turnedOutIsLast = Boolean(entry.howItTurnedOut) && !entry.whatChanged;
   return (
     <div data-testid="bake-entry" className={cx("rounded-tile border border-outline bg-canvas p-base text-ink", highlighted && "animate-[entry-new_2400ms_var(--ease-skin)]")}>
       <dl>
-        <RecordRow label="baked">
+        <RecordRow label="baked" noRule={Boolean(entry.photo) && bakedIsLast}>
           <div className="flex items-center gap-sm">
             <h2 id={headingId(entry.id)} tabIndex={-1} className="type-body-md font-bold text-ink">
               {date}
@@ -404,12 +411,12 @@ function Entry({
           </div>
         </RecordRow>
         {entry.scale !== 1 && (
-          <RecordRow label="scale">
+          <RecordRow label="scale" noRule={Boolean(entry.photo) && scaleIsLast}>
             <span className="type-body-md tabular-nums">{formatScale(entry.scale)}</span>
           </RecordRow>
         )}
         {entry.rating !== null && (
-          <RecordRow label="rating">
+          <RecordRow label="rating" noRule={Boolean(entry.photo) && ratingIsLast}>
             <span className="inline-flex items-center gap-[1px]">
               <span className="sr-only">Rated {entry.rating} out of 5</span>
               {[1, 2, 3, 4, 5].map((n) => (
@@ -429,18 +436,18 @@ function Entry({
       {hasNotes ? (
         <dl>
           {entry.howItTurnedOut && (
-            <RecordRow label="how it turned out" stacked>
+            <RecordRow label="how it turned out" stacked noRule={turnedOutIsLast}>
               <p className="whitespace-pre-line type-voice">{entry.howItTurnedOut}</p>
             </RecordRow>
           )}
           {entry.whatChanged && (
-            <RecordRow label="what changed" stacked>
+            <RecordRow label="what changed" stacked noRule>
               <p className="whitespace-pre-line type-voice">{entry.whatChanged}</p>
             </RecordRow>
           )}
         </dl>
       ) : (
-        <p className="flex flex-wrap items-center gap-x-sm border-b border-outline py-sm type-body-md text-muted">
+        <p className="flex flex-wrap items-center gap-x-sm py-sm type-body-md text-muted">
           No notes <span aria-hidden="true">·</span>
           <ButtonLink
             href={editHref}

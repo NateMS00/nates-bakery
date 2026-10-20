@@ -66,7 +66,7 @@ export function RecordCard({
         <RecordRow label="baked">
           <span className="type-body-md">{bakedLabel}</span>
         </RecordRow>
-        <RecordRow label="yield">
+        <RecordRow label="yield" noRule={!actions}>
           <span className="type-body-md">
             {formatYieldCompact(recipe.yield, scale)}
             {durationLabel && <span className="text-muted"> · {durationLabel}</span>}

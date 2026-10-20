@@ -412,7 +412,7 @@ test("photo slot: add, upload states, replace, remove; 'Use as recipe cover' on 
   await expect(page.getByRole("listitem").first().getByText("Cover")).toBeVisible();
 });
 
-test("photo slot: 'Use as recipe cover' off once another bake is the cover; a failed upload offers Retry; Save waits on one still uploading", async ({ page, context }) => {
+test("photo slot: 'Use as recipe cover' off once another bake is the cover; a failed upload offers Retry, blocks Save, and keeps Replace/Remove; Save waits on one still uploading", async ({ page, context }) => {
   // Pastéis de nata already has a chosen cover (a different bake), so a new
   // bake's photo defaults to NOT replacing it.
   await ready(page, `${NATA}?new=1`);
@@ -421,14 +421,26 @@ test("photo slot: 'Use as recipe cover' off once another bake is the cover; a fa
   await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
   await expect(dialog.getByRole("switch", { name: "Use as recipe cover" })).toHaveAttribute("aria-checked", "false");
 
-  // A failed upload: the slot shows the error and Retry, the entry's own save isn't blocked by it.
+  // A failed upload: the slot shows the error with Retry and "Save without photo",
+  // Replace/Remove stay put beside it, and focus moves to Retry.
   await context.addCookies([{ name: "backery_stub_fail_saves", value: "1", url: "http://localhost:3100" }]);
   await dialog.getByRole("button", { name: "Replace" }).click();
   await pickPhoto(dialog, "photo2.png");
-  const failedNotice = dialog.getByText("Photo didn't upload. Try again");
+  const failedNotice = page.getByRole("alert").filter({ hasText: "Photo didn't upload." });
   await expect(failedNotice).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Retry" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Save without photo" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Replace" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Remove" })).toBeVisible();
   await page.waitForTimeout(350);
   await shot(page, "15-photo-upload-failed");
+
+  // Save pressed on a settled (not actively retrying) failure: still blocked,
+  // nothing saved, the same notice stays up.
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  await expect(failedNotice).toBeVisible();
+  await expect(dialog).toBeVisible();
 
   // Save pressed while a (now failing) upload is still in flight: Save itself
   // waits on it, then blocks rather than saving a bake it can't attach the photo to.
@@ -447,6 +459,21 @@ test("photo slot: 'Use as recipe cover' off once another bake is the cover; a fa
   await expect(dialog).toBeHidden();
   // Not the cover (the toggle was off): the existing cover bake keeps its chip alone.
   await expect(page.getByText("Cover")).toHaveCount(1);
+});
+
+test("photo slot: 'Save without photo' logs the bake right away after a failed upload", async ({ page, context }) => {
+  await ready(page, `${NATA}?new=1`);
+  const dialog = form(page);
+  await context.addCookies([{ name: "backery_stub_fail_saves", value: "1", url: "http://localhost:3100" }]);
+  await pickPhoto(dialog);
+  await expect(page.getByRole("alert")).toBeVisible();
+
+  await dialog.getByRole("button", { name: "Save without photo" }).click();
+  await expect(dialog).toBeHidden();
+  // The new entry (today's date) sorts first, with no photo and no Cover chip.
+  const newest = page.getByRole("listitem").first();
+  await expect(newest.locator('[data-testid="picture"]')).toHaveCount(0);
+  await expect(newest.getByText("Cover")).toHaveCount(0);
 });
 
 test("photo slot: editing the bake that's already the cover preloads its photo with the toggle on", async ({ page }) => {

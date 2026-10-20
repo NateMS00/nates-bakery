@@ -4,7 +4,7 @@
 > **Primary Action**: Save recipe → `/recipes/:recipeId`
 > **Primary Device**: mobile, because imports start from Instagram's share menu on the iPhone and the review happens right after, on the same phone
 > **Shell**: BONES-shell.md, App variant
-> **Version**: 1.6.0 · **Updated**: 2026-10-16
+> **Version**: 1.6.1 · **Updated**: 2026-10-19
 
 This file also defines the **Recipe Editor** section used by `/recipes/new` and `/recipes/:recipeId/edit`. Their BONES files reference it instead of redrawing it.
 
@@ -146,6 +146,7 @@ MOBILE
 - **Layout**: desktop right column (8 cols), a single form column; mobile full width. Three subsections in order: Details, Ingredients, Steps
 - **Content**: see the subsections below
 - **Behavior**: every change autosaves to the draft (on `/import/:draftId`) or marks the page as having unsaved changes (on New and Edit)
+- **On Edit** (`/recipes/:recipeId/edit`): when any amount is still Estimated, Converted-and-unconfirmed or Missing, the same Needs Your Check panel appears in the same place as on Review Import (desktop left column, sticky; mobile above the editor), without the Source section, with its countdown numeral, check rows and "These look right". Arriving from the Recipe page's "Confirm them" link scrolls to the panel and moves focus to its heading. With nothing left to check, the panel isn't shown. **On New** (`/recipes/new`) there is no panel: amounts typed by hand are confirmed as typed
 
 #### Details
 - **Layout**: desktop two fields per row where they're short (Category beside Yield, Total time beside Source link), Title full width; mobile one field per row
@@ -309,6 +310,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.6.1 (2026-10-19): From the Stage 4c build: with the editor's Confirm buttons gone, Edit shows the Needs Your Check panel whenever something is left to check (the Recipe page's "Confirm them" link lands on it); New never shows it.
 - 1.6.0 (2026-10-16): Personality round: "Review *import.*" title; the source card as record rows (reel, caption, language); an outlined countdown numeral beside "Check 6 amounts".
 - 1.5.0 (2026-10-15): Visual upgrade round: Source as a card (reel frame with play badge, handle, 2-line caption preview); Needs Your Check becomes a checklist ("Check 6 amounts") with a check per Estimated and Converted row and "These look right" for all; editor rows lose the marker chip and Confirm button, keeping one muted "from 3 cups" line until confirmed (SKELETON 1.5.0).
 - 1.4.4 (2026-10-15): Retry (Couldn't finish) stays on this page and polls instead of navigating to the Library — the iPhone never opened the Shortcut on Retry, a same-tick navigation racing the shortcuts:// hand-off by most likely cause. New Retrying state.

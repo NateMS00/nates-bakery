@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "components/import/NeedsYourCheck.tsx"
+        ],
+        "createdAt": "2026-10-20T03:30:29.995Z",
+        "reason": "pre-existing pattern: unchanged from prior ErrorSummary (only mt-sm->mb-sm changed for new layout position); same border-l-4 accent Notice.tsx and other app notices already use consistently as the established error treatment"
+      }
+    ]
+  }
+}

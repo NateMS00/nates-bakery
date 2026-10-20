@@ -39,3 +39,7 @@ next-env.d.ts
 /test-results-unit/
 /test-logs/
 !.env.example
+
+# impeccable: config.json (the suppression list) is shared; the hook cache is a
+# local, session-keyed, absolute-path-keyed scratch file.
+/.impeccable/hook.cache.json

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ErrorSummary } from "@/components/import/NeedsYourCheck";
+import { ErrorSummary, NeedsYourCheck } from "@/components/import/NeedsYourCheck";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -10,7 +10,7 @@ import { Notice } from "@/components/ui/Notice";
 import { cx } from "@/components/ui/cx";
 import { useKeyboardOpen } from "@/components/ui/useKeyboardOpen";
 import { createRecipe, deleteRecipe, updateRecipe } from "@/lib/data/actions";
-import { blockers, saveStatus, type EditorState } from "@/lib/data/editor";
+import { blockers, checkItems, saveStatus, type EditorState } from "@/lib/data/editor";
 import { RecipeEditor } from "./RecipeEditor";
 
 // /recipes/new and /recipes/:recipeId/edit: the Recipe editor template (SKELETON).
@@ -47,6 +47,10 @@ export function RecipeFormPage({
   const errors = useMemo(() => new Set(attempted ? problems.map((p) => p.fieldId) : []), [attempted, problems]);
   const barStatus = saveStatus(problems.length);
   const backHref = mode === "edit" ? `/recipes/${recipeId}` : "/recipes";
+  // BONES-import-detail 1.6.1: Edit shows the same Needs Your Check panel as Review
+  // Import (no Source) whenever something's left to check; New never does, since
+  // amounts typed by hand are confirmed as typed. Hidden again once nothing's left.
+  const showCheck = mode === "edit" && checkItems(state).length > 0;
 
   // SKELETON: unsaved changes on leave → confirmation. Covers in-app links and
   // closing or reloading the tab.
@@ -125,21 +129,33 @@ export function RecipeFormPage({
       </div>
       {saveFailed && <div className="mt-base max-tablet:hidden">{saveFailed}</div>}
 
-      <div className="mt-lg desktop:mt-xl desktop:max-w-[calc(var(--col)*8+var(--gutter)*7)]">
-        {attempted && problems.length > 0 && (
-          <div className="mb-lg">
-            <ErrorSummary ref={summaryRef} problems={problems} />
+      <div
+        className={cx(
+          "mt-lg desktop:mt-xl",
+          showCheck ? "tablet:grid tablet:grid-cols-8 tablet:items-start tablet:gap-x-(--gutter) desktop:grid-cols-12" : "desktop:max-w-[calc(var(--col)*8+var(--gutter)*7)]",
+        )}
+      >
+        {showCheck && (
+          <div className="flex flex-col gap-lg tablet:sticky tablet:top-base tablet:col-span-3 desktop:col-span-4">
+            <NeedsYourCheck state={state} setState={setState} problems={attempted ? problems : null} summaryRef={summaryRef} />
           </div>
         )}
-        <RecipeEditor state={state} setState={setState} errors={errors} />
+        <div className={cx(showCheck && "mt-lg tablet:col-span-5 tablet:mt-0 desktop:col-span-8")}>
+          {!showCheck && attempted && problems.length > 0 && (
+            <div className="mb-lg">
+              <ErrorSummary ref={summaryRef} problems={problems} />
+            </div>
+          )}
+          <RecipeEditor state={state} setState={setState} errors={errors} />
 
-        {mode === "edit" && (
-          <div className="mt-2xl border-t border-hairline pt-base">
-            <Button ref={deleteButton} variant="text" aria-haspopup="dialog" onClick={() => setDeleteOpen(true)} className="-ml-sm">
-              Delete recipe
-            </Button>
-          </div>
-        )}
+          {mode === "edit" && (
+            <div className="mt-2xl border-t border-hairline pt-base">
+              <Button ref={deleteButton} variant="text" aria-haspopup="dialog" onClick={() => setDeleteOpen(true)} className="-ml-sm">
+                Delete recipe
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {mode === "edit" && (

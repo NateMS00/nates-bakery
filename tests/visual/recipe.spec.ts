@@ -44,8 +44,10 @@ test("default: pastel de nata (Has estimates)", async ({ page }) => {
   // mobile cover wrapper regardless of viewport (display:none on tablet+, not absent) —
   // not a layout bug, just incompatible with that check's assumption.
 
-  // Has estimates notice, between the section tabs and Scale.
+  // Has estimates notice, between the section tabs and Scale. Confirm it lands on
+  // Edit's Needs Your Check panel (BONES-import-detail 1.6.1).
   await expect(page.getByText("1 amount is an estimate.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Confirm it" })).toHaveAttribute("href", "/recipes/pasteis-de-nata/edit#check-heading");
 
   await expectTouchTargets(page);
 });

@@ -119,10 +119,17 @@ export function NeedsYourCheck({
     previousMissingIds.current = nowMissingIds;
   });
 
+  // Arriving from the Recipe page's "Confirm them" link (#check-heading): move focus
+  // here once, same tab order position it'd take if it already had focus on load.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (window.location.hash === "#check-heading") heading.current?.focus();
+  }, []);
+
   if (incomplete?.kind === "retrying") {
     return (
       <section aria-labelledby="check-heading">
-        <h2 id="check-heading" className="type-heading text-ink">
+        <h2 id="check-heading" ref={heading} tabIndex={-1} className="scroll-mt-lg type-heading text-ink outline-none">
           Check amounts
         </h2>
         <div className="mt-sm">
@@ -147,7 +154,7 @@ export function NeedsYourCheck({
   if (incomplete?.kind === "failed") {
     return (
       <section aria-labelledby="check-heading">
-        <h2 id="check-heading" className="type-heading text-ink">
+        <h2 id="check-heading" ref={heading} tabIndex={-1} className="scroll-mt-lg type-heading text-ink outline-none">
           Check amounts
         </h2>
         <Notice tone="error" className="mt-sm" action={<Button variant="text" onClick={incomplete.onRetry} className="-my-md -ml-sm">Retry</Button>}>
@@ -163,7 +170,7 @@ export function NeedsYourCheck({
       {items.length === 0 ? (
         <div className="flex items-center gap-base">
           <CountNumeral count={0} />
-          <h2 id="check-heading" className="type-heading text-ink">
+          <h2 id="check-heading" ref={heading} tabIndex={-1} className="scroll-mt-lg type-heading text-ink outline-none">
             Everything checked
           </h2>
         </div>
@@ -172,7 +179,7 @@ export function NeedsYourCheck({
           <div className="flex items-center gap-base">
             <CountNumeral count={openCount} />
             <div>
-              <h2 id="check-heading" className="type-heading text-ink">
+              <h2 id="check-heading" ref={heading} tabIndex={-1} className="scroll-mt-lg type-heading text-ink outline-none">
                 {openCount === 0 ? "Everything checked" : `Check ${openCount} ${openCount === 1 ? "amount" : "amounts"}`}
               </h2>
               <p className="mt-xs type-body-sm text-muted">Tap a row to fix it.</p>

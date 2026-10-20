@@ -526,21 +526,33 @@ test("new recipe: blocked, then saved", async ({ page }) => {
   await expect(kouignCard.getByText("@Cprivate9").or(kouignCard.getByText("Watch reel"))).toBeVisible();
 });
 
-test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) => {
+test("edit recipe: Needs Your Check panel, confirm an estimate, leave guard, delete", async ({ page }) => {
   await ready(page, "/recipes/pasteis-de-nata/edit");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Edit recipe");
   await expect(page.getByRole("link", { name: "Pastéis de nata" })).toHaveAttribute("href", "/recipes/pasteis-de-nata");
   await expect(page.getByText("Suggested")).toHaveCount(0);
 
-  // Leaving with unsaved changes asks first. Confirming an estimate (no Needs Your
-  // Check panel here, outside Review Import) is done the same way as changing it:
-  // re-entering the amount clears the estimated status.
-  await amount(page, "Egg yolks").fill("109");
+  // BONES-import-detail 1.6.1: Edit shows the same Needs Your Check panel as Review
+  // Import, without Source, whenever something's unconfirmed; no editor Confirm
+  // button any more, so this is the only way to confirm an amount here.
+  await expect(check(page).getByRole("heading", { name: "Check 2 amounts" })).toBeVisible();
+  await expect(check(page).getByTestId("source-card")).toHaveCount(0);
+  const yolksCheck = check(page).getByRole("checkbox", { name: /Confirm Egg yolks/ });
+
+  // Leaving with unsaved changes asks first.
+  await yolksCheck.click();
+  await expect(check(page).getByRole("heading", { name: "Check 1 amount" })).toBeVisible();
   await page.getByRole("link", { name: "Pastéis de nata" }).click();
   const leave = page.getByRole("dialog", { name: "Leave without saving?" });
   await expect(leave).toBeVisible();
   await expectDestructiveConfirmation(page, "Leave without saving?", "Leave", "Keep editing");
   await leave.getByRole("button", { name: "Keep editing" }).click();
+
+  // Confirming the last one hides the panel (unlike Review Import, which still
+  // shows "Everything checked"): nothing's left to check.
+  await check(page).getByRole("checkbox", { name: /Confirm Caster sugar/ }).click();
+  await expect(page.getByRole("heading", { name: /Check \d+ amount/ })).toHaveCount(0);
+  await expect(page.getByText("Everything checked")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.waitForURL(/\/recipes\/pasteis-de-nata$/);
@@ -559,4 +571,18 @@ test("edit recipe: confirm an estimate, leave guard, delete", async ({ page }) =
   await page.getByRole("dialog", { name: "Delete this recipe?" }).getByRole("button", { name: "Delete recipe" }).click();
   await page.waitForURL(/\/recipes$/);
   await expect(page.locator("#recipes-heading ~ p[aria-live]")).toHaveText("33 recipes");
+});
+
+test("edit recipe: arriving from Confirm it scrolls to and focuses the panel", async ({ page }) => {
+  await page.goto("/recipes/pasteis-de-nata/edit#check-heading");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  await expect(check(page).getByRole("heading", { name: "Check 2 amounts" })).toBeFocused();
+});
+
+test("new recipe never shows Needs Your Check", async ({ page }) => {
+  // Amounts typed by hand are confirmed as typed (BONES-import-detail 1.6.1), so
+  // there's nothing for New to ever check — no panel, in any state.
+  await ready(page, "/recipes/new");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("New recipe");
+  await expect(page.getByRole("heading", { name: /Check \d+ amount/ })).toHaveCount(0);
 });

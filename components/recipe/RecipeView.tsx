@@ -193,7 +193,7 @@ export function RecipeView({ initial }: { initial: Recipe }) {
           tone="warning"
           className="mt-base"
           action={
-            <ButtonLink href={`/recipes/${recipe.id}/edit`} variant="text" className="-my-md -ml-sm">
+            <ButtonLink href={`/recipes/${recipe.id}/edit#check-heading`} variant="text" className="-my-md -ml-sm">
               {estimates === 1 ? "Confirm it" : "Confirm them"}
             </ButtonLink>
           }

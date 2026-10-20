@@ -91,6 +91,32 @@ export function formatKeyDate(isoTimestamp: string, today: Date = new Date()): s
   return `${d.getUTCDate()} ${month}${d.getUTCFullYear() === today.getFullYear() ? "" : ` ${d.getUTCFullYear()}`}`;
 }
 
+/** "15" and "Thu", split out for `bake-tile`'s picture-chip, which stacks them. */
+export function formatTileDate(isoDate: string): { day: string; weekday: string } {
+  const [y, mo, d] = isoDate.split("-").map(Number);
+  const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  return { day: String(d), weekday };
+}
+
+/** "October", with the year when it isn't the current one — the Bakes diary's month chapter headings. */
+export function formatMonthHeading(year: number, month: number, today: Date = new Date()): string {
+  const name = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ][month];
+  return year === today.getFullYear() ? name : `${name} ${year}`;
+}
+
 export function todayIso(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");

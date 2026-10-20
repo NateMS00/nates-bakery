@@ -25,6 +25,18 @@ export function bakeCount(n: number): string {
   return n === 1 ? "1 bake" : `${n} bakes`;
 }
 
+/**
+ * "2nd bake", "3rd bake"… — a bake-tile's meta line (BONES-bakes.md): null for the
+ * first bake of a recipe, since "1st bake" has nothing to say that the recipe's
+ * own first appearance in the diary doesn't already.
+ */
+export function bakeOrdinalLabel(ordinal: number): string | null {
+  if (ordinal < 2) return null;
+  const mod100 = ordinal % 100;
+  const suffix = mod100 >= 11 && mod100 <= 13 ? "th" : ["th", "st", "nd", "rd"][ordinal % 10] ?? "th";
+  return `${ordinal}${suffix} bake`;
+}
+
 export type Milestone = { kind: "first" } | { kind: "best" } | { kind: "nth"; n: number };
 
 /**

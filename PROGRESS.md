@@ -84,6 +84,16 @@ Verified end to end from Nathan's iPhone (2026-10-15): Instagram → Share → N
 
 `scripts/generate-icons.mjs` (`npm run icons`) rasterizes SKIN's `app-icon` and `favicon` components from `design-reference/icons/` into `public/`: `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, a 1024 master, `favicon.svg`, and a 32px `favicon.ico` (hand-built PNG-in-ICO; `sharp` has no native ICO encoder). Strips each source SVG's C2PA provenance block first. Wired into `app/layout.tsx`'s `metadata.icons` and `app/manifest.ts`'s `icons` (192 and 512, purpose `any` only — no maskable icon yet, BACKLOG). The wordmark's sharp cut (`SOFT 0`/`opsz 144`) was tried and reverted — its hairlines broke up at 1x — but the app icon's N is large enough to keep it; favicon follows the wordmark back to soft. Checked on Nathan's iPhone Home Screen (2026-10-15): looks right.
 
+## Bakes diary, personality round Stage 4d (2026-10-19)
+
+`/bakes` (BONES-bakes.md 1.1.0): every recipe's bakes in one reading page, newest first, grouped into month chapters (Fraunces `display-md`/`display-lg` H2s over an ink rule). A bake with a photo renders as a `bake-tile` (already built, reused from the dev Showcase); a bake without one breaks the grid with a new full-width `bake-row` (`components/ui/BakeRow.tsx`): a 52px `azulejo-fill` square, the recipe and date, a note preview, and stars — one line from tablet up, two on mobile. 40 bakes, then Show more. Page header: "Your *bakes.*" and "N bakes this year · M recipes", scoped to the current calendar year.
+
+- `lib/data/bakeDiary.ts`: pure diary logic (flatten-and-sort, month grouping, the tiles/rows split, the year summary) — kept apart from `lib/data/bakes.ts`'s `getBakeDiary()` (which calls the backend) so the client component (`components/bakes/BakesView.tsx`) never pulls `next/headers` into its bundle, the same split `lib/data/bakeLog.ts` already keeps from `lib/data/recipes.ts`.
+- `lib/data/bakeLog.ts`: added `bakeOrdinalLabel` ("2nd bake", "3rd bake"…; null for a recipe's first bake). `lib/format.ts`: added `formatTileDate` (splits a date into `bake-tile`'s separate day/weekday strings) and `formatMonthHeading`.
+- `app/(app)/bakes/page.tsx` + `loading.tsx`, `components/bakes/BakesSkeleton.tsx`. Navigation was already wired (`BottomNav`, `AppHeader`, `AccountMenu`); only the route itself was missing.
+- Real bug caught by the fixtures (Country sourdough's latest bake is rated but has no note): `BakeRow`'s mobile layout only showed its stars when there was also a note to anchor them to — fixed so the stars row shows whenever there's a note, a rating, or both.
+- `tests/visual/bakes.spec.ts`: diary (header, month chapters, tile/row mix, an unrated first bake showing its scale instead of an ordinal), Show more (loads older bakes, moves focus to the first new one), empty, loading, touch targets, focus rings.
+
 ## Next
 
 Priority order (Nathan, 2026-10-13; reel import done 2026-10-15, app icon done 2026-10-15):

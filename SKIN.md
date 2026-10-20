@@ -906,6 +906,35 @@ components:
     backgroundColor: "{colors.surface-sunken}"
     textColor: "{colors.muted}"
     cursor: "default"
+  bake-row:
+    backgroundColor: "{colors.surface-card}"
+    borderColor: "{colors.outline}"
+    borderWidth: "{sizing.outline}"
+    rounded: "{rounded.tile}"
+    padding: "{spacing.sm}"
+    gap: "{spacing.md}"
+    leadSize: "72px"
+    leadSizeLarge: "88px"
+    leadRounded: "{rounded.md}"
+    dateDayTypography: "{typography.heading}"
+    dateDayWeight: 700
+    dateWeekdayTypography: "{typography.label-mono}"
+    titleTypography: "{typography.tile-title}"
+    metaTypography: "{typography.caption}"
+    metaColor: "{colors.muted}"
+    noteTypography: "{typography.voice}"
+    noteColor: "{colors.body}"
+    minHeight: "{sizing.touch-min}"
+  bake-row-hover:
+    titleDecoration: "underline"
+  bake-row-active:
+    transform: "scale(0.99)"
+  bake-row-focus:
+    outline: "3px solid {colors.focus-ring}"
+    outlineOffset: "3px"
+    rounded: "{rounded.tile}"
+  bake-row-disabled:
+    textColor: "{colors.disabled}"
   bake-tile:
     backgroundColor: "{colors.surface-card}"
     textColor: "{colors.ink}"
@@ -1028,24 +1057,27 @@ components:
     backgroundColor: "{colors.info-wash}"
     textColor: "{colors.ink}"
     accentColor: "{colors.primary}"
-    borderLeft: "4px solid {colors.primary}"
-    rounded: "{rounded.md}"
+    border: "1px solid {colors.primary}"
+    icon: "info"
+    rounded: "{rounded.tile}"
     padding: "{spacing.md} {spacing.base}"
     typography: "{typography.body-sm}"
   notice-warning:
     backgroundColor: "{colors.warning-wash}"
     textColor: "{colors.ink}"
     accentColor: "{colors.warning}"
-    borderLeft: "4px solid {colors.warning}"
-    rounded: "{rounded.md}"
+    border: "1px solid {colors.warning}"
+    icon: "alert-triangle"
+    rounded: "{rounded.tile}"
     padding: "{spacing.md} {spacing.base}"
     typography: "{typography.body-sm}"
   notice-error:
     backgroundColor: "{colors.error-wash}"
     textColor: "{colors.ink}"
     accentColor: "{colors.error}"
-    borderLeft: "4px solid {colors.error}"
-    rounded: "{rounded.md}"
+    border: "1px solid {colors.error}"
+    icon: "alert-circle"
+    rounded: "{rounded.tile}"
     padding: "{spacing.md} {spacing.base}"
     typography: "{typography.body-sm}"
   inline-confirmation:
@@ -1684,7 +1716,7 @@ This system is border-first: cards, tiles and list items use a 1px `{colors.outl
 
 **`menu`** + **`menu-item`** — Anchored dropdowns (account menu, row menus on desktop): a glazed card with `{elevation.float}`; items are 48px rows of ink `body-md`. `menu-item-destructive` (Delete) uses `{colors.error}` text. Item states: hover grout fill; active cobalt wash and text; focus 3px inset ring; disabled grey. On mobile, row menus (editor rows, bake log entries) render their items inside a `sheet`; the account menu stays an anchored dropdown on every device, because three items don't justify a sheet.
 
-**`notice-info`**, **`notice-warning`**, **`notice-error`** — One-line banners inside the page (has-estimates, timer alerts card, save failed, import failed): a wash background with a 4px left accent in the semantic colour, ink `body-sm` text, and an optional `button-text` action at the end. Warning is for estimates; info for timer alerts and "Everything checked"; error for failures and the save-blocked summary.
+**`notice-info`**, **`notice-warning`**, **`notice-error`** — One-line banners inside the page (has-estimates, timer alerts card, save failed, import failed): a wash background framed by a full 1px border in the semantic colour at `{rounded.tile}` (since October 2026; the old 4px left accent was the one one-sided edge left in a system of full outlines), a small leading icon in that colour (info, warning triangle, error circle) so the kind never depends on colour alone, ink `body-sm` text, and an optional `button-text` action at the end. On the stage, notices use the stage's own colours: a slightly lighter navy fill, a 1px `{colors.on-stage-muted}` border and cream text. Warning is for estimates; info for timer alerts and "Everything checked"; error for failures and the save-blocked summary.
 
 **`inline-confirmation`** — Short success lines that appear in place: "Marked as baked today · Undo", "Link copied". Olive wash with an olive check icon; announced politely to screen readers; disappears after 10 seconds or on the next action.
 
@@ -1726,7 +1758,9 @@ This system is border-first: cards, tiles and list items use a 1px `{colors.outl
 
 **`picture-chip`** — A small solid label on a photo's corner, glazed-card fill with an ink outline, ink bold caption, pill-shaped: the date on a `bake-tile` ("15 / Thu"). Same rule as above: solid, never translucent.
 
-**`bake-tile`** — A bake in the Bakes diary: the bake's photo, square, with a `picture-chip` date in its top-left corner, then the recipe title in bold `body-sm` and one meta line: that bake's stars in cobalt, then "2nd bake" or the scale when it isn't 1×. One link to the bake. A bake without a photo is not drawn as a tile with an empty frame; it becomes a full-width `card` row (small tile-panel square, title and date, a one-line note preview, stars), so the grid never fills with placeholders.
+**`bake-row`** — A bake in the Bakes diary (since October 2026 every bake is a row): an ink-framed card row with a square lead (72px, 88px from tablet up) that is the bake photo when there is one, otherwise a date block (the day number in Fraunces 700 over the weekday in `label-mono`), then the recipe title in `tile-title`, a muted meta line (the date when the lead is a photo, cobalt stars, "2nd bake" or the scale) and, when there is a note, one line of it in the `voice` italic. One link to the bake; lead decorative. No azulejo squares: in a long diary the motif would turn into wallpaper.
+
+**`bake-tile`** — Retired from the Bakes diary in October 2026 (BONES-bakes 1.2.0); kept only if a future photo grid needs it.
 
 **`check-row`** — One converted or estimated amount to check on Review Import: a round check control (empty `{colors.border}` ring, or olive filled check when confirmed), the ingredient name with "from 3 cups" in muted caption under it, the grams on the right in `amount`, and a chevron. Two targets with separate names: the check control confirms ("Confirm flour, 360 g") and the rest of the row jumps to the field in the editor. The confirmed state is never colour alone: the icon changes shape and screen readers hear "Confirmed" or "Not checked". A Missing amount uses the same row with the `marker-missing` tag in place of the check control, since it can't be confirmed until it has a number.
 

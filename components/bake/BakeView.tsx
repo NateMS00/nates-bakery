@@ -269,7 +269,11 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
   return (
     <>
       <SkipLink />
-      <div className="bake-stage min-h-dvh bg-stage text-on-stage">
+      {/* [overflow-anchor:none]: a notice (estimates, timer alerts) can appear above
+          the step stack without warning (e.g. the first timer starting), and Chrome's
+          scroll anchoring would otherwise nudge the page down to compensate, hiding
+          the stack under the sticky header. */}
+      <div className="bake-stage min-h-dvh bg-stage text-on-stage [overflow-anchor:none]">
         {/* Focus header (BONES-shell Focus variant): sticky on phones (with the pills
             and progress, so running timers and position stay in view); static on desktop. */}
         <header className="sticky top-0 z-20 bg-stage pt-[env(safe-area-inset-top)] tablet:static tablet:pt-0">
@@ -515,7 +519,9 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
                   if (active) setFinishOpen(true);
                   else finish();
                 }}
-                className={cx("min-h-touch-bake!", stepNumber > 1 ? "col-span-2" : "col-span-3")}
+                // Its variant flips with the clock's state (see BakeClock's Start/
+                // Pause/Resume button for why the color transition is off here).
+                className={cx("min-h-touch-bake! transition-none!", stepNumber > 1 ? "col-span-2" : "col-span-3")}
               >
                 Finish and log
               </Button>
@@ -523,7 +529,7 @@ export function BakeView({ recipe }: { recipe: Recipe }) {
               <Button
                 variant={nextStepIsPrimary ? "primary" : "stage-secondary"}
                 onClick={() => goTo(stepNumber + 1)}
-                className={cx("min-h-touch-bake!", stepNumber > 1 ? "col-span-2" : "col-span-3")}
+                className={cx("min-h-touch-bake! transition-none!", stepNumber > 1 ? "col-span-2" : "col-span-3")}
               >
                 {tipsAvailable && stepNumber === total ? "Next: Tips" : "Next step"}
               </Button>

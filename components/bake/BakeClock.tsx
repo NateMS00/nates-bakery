@@ -102,7 +102,11 @@ export function BakeClock({
             type="button"
             variant={running ? "stage-secondary" : "primary"}
             onClick={running ? onPause : paused ? onResume : () => onStart(plannedMinutes)}
-            className="min-w-[132px]"
+            // This button's variant itself flips (ochre fill ↔ cream outline) as the
+            // clock's state changes, not just its hover/active state; transitioning
+            // color/background/border here crossfades through a muddy, low-contrast
+            // mid-tone, so this one swap is instant instead.
+            className="min-w-[132px] transition-none!"
           >
             {running ? "Pause" : paused ? "Resume" : "Start"}
           </Button>

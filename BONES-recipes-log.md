@@ -6,7 +6,7 @@
 > **Shell**: BONES-shell.md, App variant (no tab bar)
 
 This file also defines the **Log sheet**, the one form for logging or editing a bake, opened from this page, from the Recipe page (Log bake), from Bake Mode's Finish, and from the Bakes diary.
-> **Version**: 1.4.0 · **Updated**: 2026-10-16
+> **Version**: 1.4.1 · **Updated**: 2026-10-17
 
 ---
 
@@ -64,7 +64,7 @@ MOBILE
 
 ### Entries (SKELETON section 1)
 - **Layout**: one SKIN `record-card` per entry, stacked with a medium gap, on both devices; the entry menu sits at the end of the card's first row
-- **Content**: record rows with `label-mono` labels: `baked` the date ("Sat 26 Sep", the entry heading), `scale` (row hidden at 1×), `rating` that bake's cobalt stars (row hidden when unrated); then the bake photo when there is one, full width of the card at 4:3 with an ink rule above and below, and a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed" as labeled rows whose text is set in the voice italic, as quoted words; the bake photo when there is one, full width of the column at 4:3, with a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
+- **Content**: record rows with `label-mono` labels: `baked` the date ("Sat 26 Sep", the entry heading), `scale` (row hidden at 1×), `rating` that bake's cobalt stars (row hidden when unrated); then the bake photo when there is one, full width of the card at 4:3, directly after the last row with no rule between them (the photo's edge closes the row), and a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed" as labeled rows whose text is set in the voice italic, as quoted words; the bake photo when there is one, full width of the column at 4:3, with a "Cover" `picture-chip` on it when it is the recipe's cover; then "How it turned out" and "What changed", each with its label and full text (no truncation on this page; notes are expected to stay under about 100 words); when both are empty, one line "No notes" with an "Add notes" link that opens that entry's form directly (`?edit=<entryId>`); entry menu: Edit, Delete. 20 entries, then Show more loads the next 20 below
 - **Behavior**: a newly saved entry appears at the top and briefly draws attention with a cobalt wash that fades over about 2.4 s (no animation under reduced motion), and focus moves to its heading, after the After-save moment (section 3) has closed
 
 ```text
@@ -129,7 +129,7 @@ MOBILE
 | Delete confirmation | Delete in an entry menu | Mobile: bottom sheet, about a third of the viewport; desktop: centered modal, 4 cols wide. "Delete this bake?"; when it's the only entry, a second line: "The recipe will show as Not baked yet."; when its photo is the cover: "Its photo is the recipe's cover; the reel picture comes back."; Delete (destructive) first, Cancel last, following the Destructive confirmations rule (BONES-shell). Focus starts on Cancel |
 | After save: milestone | Save of a **new** bake that is a milestone: the recipe's first bake; a rating higher than every earlier bake of this recipe (a first-ever rating doesn't count, it would make every first rating a "best"); or every 5th bake (5, 10, 15…). One per save, in that priority: first, then best, then 5th | The sheet closes and SKIN `celebration` takes the whole screen (deep cobalt in both themes, announced as a dialog). Center: Nathan's celebration illustration (a tile panel until it exists), then a `display-title`: "First bake, *in the book.*" / "Your best *one yet.*" / "Bake no. 5 *in the book.*"; one line under it with the recipe, the stars and the date ("Pão de Deus · ★★★★★ · today"); one cream pill, "Done". Focus starts on the title. Done, Esc or a tap outside the content closes it and returns to where the sheet was opened (from Bake Mode's Finish: the Recipe page). Under reduced motion it simply appears |
 | After save: everyday | Save of a new bake that isn't a milestone | The sheet closes and SKIN `celebration-toast` appears at the bottom, above the action bar: "Bake saved · Undo", 6 seconds, announced politely. Undo deletes the entry just created (and its photo) and announces "Bake removed". Edits to an existing bake show no toast; the sheet just closes |
-| Photo uploading | Save pressed while the photo is still uploading | Save shows a busy state with "Uploading photo…"; the entry is saved when the upload ends. If the upload fails, the entry saves without the photo and the sheet stays open with "Photo didn't upload. Try again" and a Retry |
+| Photo uploading | Save pressed while the photo is still uploading | Save shows a busy state with "Uploading photo…"; the entry is saved when the upload ends. If the upload fails, nothing is saved: the sheet stays open with everything typed, and under the photo "Photo didn't upload." with Retry and "Save without photo" (a `button-text`), so a bad connection never blocks logging and never silently drops the photo. Focus moves to Retry and the message is announced |
 
 ---
 
@@ -157,6 +157,7 @@ MOBILE
 
 ## CHANGE LOG
 
+- 1.4.1 (2026-10-17): From the Stage 4a review: a failed upload on Save blocks the save (keeping the typed notes) and offers Retry or "Save without photo"; no doubled rule above an entry's photo.
 - 1.4.0 (2026-10-16): Personality round: "Bake *log.*" title; each entry as a record card (baked, scale, rating, photo, notes in the voice italic); empty state with illustration.
 - 1.3.0 (2026-10-16): Personality round: after saving a new bake, a full-screen celebration for milestones (first bake, best rating, every 5th) or a "Bake saved · Undo" toast otherwise; the entry highlight follows once that closes. Visuals follow SKIN October 2026 (cobalt stars, ochre Save, ink outlines).
 - 1.2.0 (2026-10-15): Visual upgrade round: the entry form becomes the Log sheet (shared by Recipe, Bake Mode, Bakes): Baked on and scale as compact controls, stars per bake, How it turned out before What changed, one photo with "Use as recipe cover", Save only (close X cancels); entries show their stars and photo; the Rating prompt is removed (SKELETON 1.5.0).

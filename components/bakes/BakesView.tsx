@@ -3,20 +3,20 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { BakeRow } from "@/components/ui/BakeRow";
-import { BakeTile } from "@/components/ui/BakeTile";
 import { DisplayTitle } from "@/components/ui/DisplayTitle";
 import { TextLink } from "@/components/ui/TextLink";
 import { TilePanel } from "@/components/ui/Tile";
 import { diarySummary, groupDiaryByMonth, type DiaryEntry } from "@/lib/data/bakeDiary";
-import { bakeCount, bakeOrdinalLabel } from "@/lib/data/bakeLog";
-import { formatMonthHeading, formatScale, formatShortDate, formatTileDate } from "@/lib/format";
+import { bakeCount, bakeOrdinalLabel, bakeOrdinalWord } from "@/lib/data/bakeLog";
+import { formatBakeDate, formatFullBakeDate, formatMonthHeading, formatScale, formatTileDate } from "@/lib/format";
 
-// /bakes (Bakes diary), BONES-bakes.md 1.1.0. A reading page: no primary action,
-// since logging a bake happens from a recipe (BONES Assumptions). Months stacked
-// newest first, each a Fraunces chapter title over an ink rule; within a month,
-// bakes with a photo form a bake-tile grid, a bake without one breaks it with a
-// full-width bake-row, and the grid resumes after (BONES: tiles and rows keep date
-// order between them). 40 bakes, then Show more loads older ones below.
+// /bakes (Bakes diary), BONES-bakes.md 1.2.0. A reading page: no primary action,
+// since logging a bake happens from a recipe (BONES Assumptions). One reading
+// column (8 of 12 cols on desktop, same as the Bake log). Months stacked newest
+// first, each a Fraunces chapter title over an ink rule; within a month, every
+// bake is one bake-row — a photo or a date block as its lead square, no grid, no
+// azulejo squares (BONES 1.2.0: the earlier photo-grid-plus-rows mix left lonely
+// tiles, since most bakes have no photo). 40 bakes, then Show more.
 
 const PAGE = 40;
 
@@ -40,7 +40,7 @@ export function BakesView({ diary }: { diary: DiaryEntry[] }) {
   const months = groupDiaryByMonth(diary.slice(0, shown));
 
   return (
-    <div>
+    <div className="mx-auto w-full desktop:w-[calc(var(--col)*8+var(--gutter)*7)]">
       <div className="flex flex-col items-start">
         <DisplayTitle lead="Your" accent="bakes." />
         <p className="mt-xs type-body-sm text-muted">
@@ -57,40 +57,31 @@ export function BakesView({ diary }: { diary: DiaryEntry[] }) {
               </h2>
               <p className="type-label-mono text-muted">{bakeCount(group.entries.length)}</p>
             </div>
-            <div className="mt-base flex flex-col gap-base">
-              {group.blocks.map((block, i) =>
-                block.kind === "row" ? (
-                  <div key={block.item.entry.id} data-entry={block.item.entry.id}>
+            <ul role="list" className="mt-base flex flex-col gap-sm">
+              {group.entries.map((diaryEntry) => {
+                const { day, weekday } = formatTileDate(diaryEntry.entry.date);
+                const bakeLabel = bakeOrdinalLabel(diaryEntry.ordinal) ?? (diaryEntry.entry.scale !== 1 ? formatScale(diaryEntry.entry.scale) : null);
+                const bakeLabelSpoken =
+                  bakeOrdinalWord(diaryEntry.ordinal) ?? (diaryEntry.entry.scale !== 1 ? `scaled ${formatScale(diaryEntry.entry.scale)}` : null);
+                return (
+                  <li key={diaryEntry.entry.id} data-entry={diaryEntry.entry.id}>
                     <BakeRow
-                      href={`/recipes/${block.item.recipeId}/log?edit=${encodeURIComponent(block.item.entry.id)}`}
-                      recipeTitle={block.item.recipeTitle}
-                      date={formatShortDate(block.item.entry.date)}
-                      note={block.item.entry.howItTurnedOut || block.item.entry.whatChanged || null}
-                      rating={block.item.entry.rating}
+                      href={`/recipes/${diaryEntry.recipeId}/log?edit=${encodeURIComponent(diaryEntry.entry.id)}`}
+                      picture={diaryEntry.entry.photo ?? null}
+                      day={day}
+                      weekday={weekday}
+                      title={diaryEntry.recipeTitle}
+                      date={formatBakeDate(diaryEntry.entry.date)}
+                      fullDate={formatFullBakeDate(diaryEntry.entry.date)}
+                      rating={diaryEntry.entry.rating}
+                      bakeLabel={bakeLabel}
+                      bakeLabelSpoken={bakeLabelSpoken}
+                      note={diaryEntry.entry.howItTurnedOut || diaryEntry.entry.whatChanged || null}
                     />
-                  </div>
-                ) : (
-                  <ul key={i} role="list" className="grid grid-cols-2 gap-x-md gap-y-base tablet:grid-cols-3 desktop:grid-cols-4">
-                    {block.items.map((diaryEntry) => {
-                      const { day, weekday } = formatTileDate(diaryEntry.entry.date);
-                      return (
-                        <li key={diaryEntry.entry.id} data-entry={diaryEntry.entry.id}>
-                          <BakeTile
-                            href={`/recipes/${diaryEntry.recipeId}/log?edit=${encodeURIComponent(diaryEntry.entry.id)}`}
-                            picture={diaryEntry.entry.photo ?? null}
-                            day={day}
-                            weekday={weekday}
-                            title={diaryEntry.recipeTitle}
-                            rating={diaryEntry.entry.rating}
-                            bakeLabel={bakeOrdinalLabel(diaryEntry.ordinal) ?? (diaryEntry.entry.scale !== 1 ? formatScale(diaryEntry.entry.scale) : null)}
-                          />
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ),
-              )}
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
         ))}
       </div>

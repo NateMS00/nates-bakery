@@ -37,6 +37,25 @@ export function bakeOrdinalLabel(ordinal: number): string | null {
   return `${ordinal}${suffix} bake`;
 }
 
+const ONES = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"];
+const TEENS = ["tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth"];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+const TENS_ORDINAL = ["", "", "twentieth", "thirtieth", "fortieth", "fiftieth", "sixtieth", "seventieth", "eightieth", "ninetieth"];
+
+/** "second", "third"… up to 99 — a bake-row's accessible name ("…, third bake"), spelled out rather than "3rd". */
+function ordinalWord(n: number): string {
+  if (n < 10) return ONES[n];
+  if (n < 20) return TEENS[n - 10];
+  const tens = Math.floor(n / 10);
+  const ones = n % 10;
+  return ones === 0 ? TENS_ORDINAL[tens] : `${TENS[tens]}-${ONES[ones]}`;
+}
+
+/** "second bake", "third bake"… — null for a recipe's first bake, same rule as `bakeOrdinalLabel`. */
+export function bakeOrdinalWord(ordinal: number): string | null {
+  return ordinal < 2 ? null : `${ordinalWord(ordinal)} bake`;
+}
+
 export type Milestone = { kind: "first" } | { kind: "best" } | { kind: "nth"; n: number };
 
 /**

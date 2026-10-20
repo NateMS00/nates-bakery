@@ -91,30 +91,39 @@ export function formatKeyDate(isoTimestamp: string, today: Date = new Date()): s
   return `${d.getUTCDate()} ${month}${d.getUTCFullYear() === today.getFullYear() ? "" : ` ${d.getUTCFullYear()}`}`;
 }
 
-/** "15" and "Thu", split out for `bake-tile`'s picture-chip, which stacks them. */
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** "15" and "Thu" — a bake-row's date-block lead (its day and weekday, stacked). */
 export function formatTileDate(isoDate: string): { day: string; weekday: string } {
   const [y, mo, d] = isoDate.split("-").map(Number);
   const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
   return { day: String(d), weekday };
 }
 
+/** "Saturday 26 September", with the year when it isn't the current one — a bake-row's accessible name. */
+export function formatFullBakeDate(isoDate: string, today: Date = new Date()): string {
+  const [y, mo, d] = isoDate.split("-").map(Number);
+  const weekday = WEEKDAY_NAMES[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  return `${weekday} ${d} ${MONTH_NAMES[mo - 1]}${y === today.getFullYear() ? "" : ` ${y}`}`;
+}
+
 /** "October", with the year when it isn't the current one — the Bakes diary's month chapter headings. */
 export function formatMonthHeading(year: number, month: number, today: Date = new Date()): string {
-  const name = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ][month];
-  return year === today.getFullYear() ? name : `${name} ${year}`;
+  return year === today.getFullYear() ? MONTH_NAMES[month] : `${MONTH_NAMES[month]} ${year}`;
 }
 
 export function todayIso(): string {

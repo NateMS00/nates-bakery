@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronRight } from "lucide-react";
+import { AlertCircle, Check, ChevronRight } from "lucide-react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { EstimatedMarker, MissingMarker } from "@/components/ui/Marker";
@@ -283,26 +283,35 @@ function CheckRow({
 /** BONES Save blocked: each problem as a link to its field. Takes focus when shown. */
 export const ErrorSummary = forwardRef<HTMLDivElement, { problems: Problem[] }>(function ErrorSummary({ problems }, ref) {
   return (
-    <div ref={ref} tabIndex={-1} role="alert" aria-labelledby="save-blocked-heading" className="mb-sm scroll-mt-lg rounded-md border-l-4 border-error bg-error-wash px-base py-md text-ink focus-visible:outline-offset-2">
-      <p id="save-blocked-heading" className="type-body-md font-bold">
-        {saveStatus(problems.length)} before saving
-      </p>
-      <ul role="list" className="mt-xs">
-        {problems.map((p) => (
-          <li key={p.fieldId}>
-            <a
-              href={`#${p.fieldId}`}
-              onClick={(e) => {
-                e.preventDefault();
-                jumpTo(p.fieldId);
-              }}
-              className="inline-flex min-h-touch-min items-center rounded-sm type-body-sm text-primary underline decoration-1 underline-offset-3 hover:decoration-2 focus-visible:outline-offset-2"
-            >
-              {p.message}
-            </a>
-          </li>
-        ))}
-      </ul>
+    <div
+      ref={ref}
+      tabIndex={-1}
+      role="alert"
+      aria-labelledby="save-blocked-heading"
+      className="mb-sm flex scroll-mt-lg gap-sm rounded-tile border border-error bg-error-wash px-base py-md text-ink focus-visible:outline-offset-2"
+    >
+      <AlertCircle aria-hidden="true" className="size-icon-sm mt-[2px] shrink-0 text-error" />
+      <div className="flex-1">
+        <p id="save-blocked-heading" className="type-body-md font-bold">
+          {saveStatus(problems.length)} before saving
+        </p>
+        <ul role="list" className="mt-xs">
+          {problems.map((p) => (
+            <li key={p.fieldId}>
+              <a
+                href={`#${p.fieldId}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  jumpTo(p.fieldId);
+                }}
+                className="inline-flex min-h-touch-min items-center rounded-sm type-body-sm text-primary underline decoration-1 underline-offset-3 hover:decoration-2 focus-visible:outline-offset-2"
+              >
+                {p.message}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 });

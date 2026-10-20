@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { capture, expectFocusRings, expectPageBasics, expectTouchTargets, phoneWebKit, ready } from "./helpers";
 
-// /bakes (Bakes diary), BONES-bakes.md 1.1.0. A reading page: months newest first as
-// Fraunces chapter headings, bakes with a photo as a bake-tile grid, bakes without one
-// as full-width bake-rows (an azulejo square stands in for the photo), 40 at a time.
+// /bakes (Bakes diary), BONES-bakes.md 1.2.0. A reading page: months newest first as
+// Fraunces chapter headings; within a month, every bake is one bake-row (a photo or a
+// date block as its lead square) — no photo grid, no azulejo squares. 40 at a time.
 
 const shot = (page: Page, name: string, fullPage = false) => capture(page, "bakes", name, fullPage);
 
@@ -12,7 +12,7 @@ test.beforeEach(async ({ context }, info) => {
   for (const port of [3100, 3101, 3102]) await context.addCookies([{ name: "backery_fixture_ns", value, url: `http://localhost:${port}` }]);
 });
 
-test("diary: header, month chapters, tile/row mix, and page checks", async ({ page }) => {
+test("diary: header, month chapters, rows, and page checks", async ({ page }) => {
   await ready(page, "/bakes");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your bakes.");
   await expect(page.getByText(/^\d+ bakes? this year · \d+ recipes?$/)).toBeVisible();
@@ -22,19 +22,18 @@ test("diary: header, month chapters, tile/row mix, and page checks", async ({ pa
   await expect(months.first()).toHaveText("September");
   await expect(page.getByText("15 bakes").first()).toBeVisible();
 
-  // A bake with a photo is a tile link to its Log sheet entry; its accessible name
-  // reads the whole bake.
-  const tile = page.getByRole("link", { name: "Pastéis de nata, Sat 26, rated 4 out of 5, 3rd bake" });
-  await expect(tile).toHaveAttribute("href", "/recipes/pasteis-de-nata/log?edit=nata-b3");
+  // A bake with a photo: the lead is the photo, the meta line leads with the date.
+  // Its accessible name spells out the weekday, month, star count and bake number.
+  const photoRow = page.getByRole("link", { name: "Pastéis de nata, Saturday 26 September, 4 stars, third bake" });
+  await expect(photoRow).toHaveAttribute("href", "/recipes/pasteis-de-nata/log?edit=nata-b3");
 
-  // A bake without a photo is a full-width row with the recipe, date, note preview and stars.
-  const row = page.getByRole("link", { name: /Croissants with a cultured butter.*20 Sep.*honeycomb so far.*rated 5 out of 5/ });
+  // A bake without a photo: the lead is its date block, title and note preview and stars.
+  const row = page.getByRole("link", { name: /Croissants with a cultured butter.*September.*5 stars/ });
   await expect(row).toHaveAttribute("href", "/recipes/cultured-butter-croissants/log?edit=cr-b2");
-  // A bake with neither a note nor a rating still reads sensibly, and still shows
-  // its (absent) stars row without a note to anchor it.
-  await expect(page.getByRole("link", { name: /Country sourdough, 13 Sep, not rated$/ })).toBeVisible();
+  // A bake with neither a note nor a rating still reads sensibly.
+  await expect(page.getByRole("link", { name: /Country sourdough, \w+day 13 September, not rated/ })).toBeVisible();
   // A rated bake with no note: stars still show, not swallowed by the note's slot.
-  await expect(page.getByRole("link", { name: /Country sourdough, 27 Sep, rated 5 out of 5/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Country sourdough, \w+day 27 September, 5 stars/ })).toBeVisible();
 
   await expectPageBasics(page);
   await expectTouchTargets(page);
@@ -43,9 +42,9 @@ test("diary: header, month chapters, tile/row mix, and page checks", async ({ pa
 
 test("diary: a scaled, unrated first bake shows the scale, not a bake number", async ({ page }) => {
   await ready(page, "/bakes");
-  // nata-b1 (30 Aug, ½×, unrated): the recipe's first bake, so no "1st bake" — the
-  // scale fills the meta line instead (BONES: "or the scale when it isn't 1×").
-  await expect(page.getByRole("link", { name: "Pastéis de nata, Sun 30, not rated, ½×" })).toBeVisible();
+  // nata-b1 (30 Aug, ½×, unrated): the recipe's first bake, so no "second bake" — the
+  // scale fills in instead (BONES: "or the scale when it isn't 1×").
+  await expect(page.getByRole("link", { name: "Pastéis de nata, Sunday 30 August, not rated, scaled ½×" })).toBeVisible();
 });
 
 test("diary: show more loads older bakes and moves focus to the first new one", async ({ page }) => {
@@ -69,15 +68,15 @@ test("empty: illustration, copy, and Go to Library", async ({ page }) => {
   await shot(page, "02-empty", true);
 });
 
-test("loading: header and 4 placeholder tiles", async ({ page }) => {
+test("loading: header and 5 placeholder rows", async ({ page }) => {
   await page.goto("http://localhost:3101/bakes", { waitUntil: "commit" });
   await page.getByText("Loading bakes").waitFor({ state: "attached" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your bakes.");
-  await expect(page.locator("main li")).toHaveCount(4);
+  await expect(page.locator("main li")).toHaveCount(5);
   if (!phoneWebKit()) await shot(page, "03-loading");
 });
 
-test("focus rings on the first tiles and rows", async ({ page }) => {
+test("focus rings on the first rows", async ({ page }) => {
   await ready(page, "/bakes");
   await expectFocusRings(page, 3);
 });

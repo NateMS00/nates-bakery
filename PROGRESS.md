@@ -94,6 +94,10 @@ Verified end to end from Nathan's iPhone (2026-10-15): Instagram → Share → N
 - Real bug caught by the fixtures (Country sourdough's latest bake is rated but has no note): `BakeRow`'s mobile layout only showed its stars when there was also a note to anchor them to — fixed so the stars row shows whenever there's a note, a rating, or both.
 - `tests/visual/bakes.spec.ts`: diary (header, month chapters, tile/row mix, an unrated first bake showing its scale instead of an ordinal), Show more (loads older bakes, moves focus to the first new one), empty, loading, touch targets, focus rings.
 
+**Revised to all-rows, BONES-bakes 1.2.0 (2026-10-20, Nathan, after reviewing the above):** the photo-grid-plus-rows mix left lonely tiles and a wall of azulejo squares, since most bakes have no photo yet. Every bake is now one SKIN `bake-row` (rewritten `components/ui/BakeRow.tsx`): a 72px (88px tablet+) lead square that's the photo when there is one, else a date block (day in Fraunces 700 over the weekday in `label-mono`); no azulejo squares, no grid. `bake-tile` is retired from this page (kept, unused, for a possible future photo grid; still used by the dev Showcase). `lib/data/bakeDiary.ts` simplified back to flat per-month entry lists. `lib/format.ts` added `formatFullBakeDate` ("Saturday 26 September", the row's spoken date); `lib/data/bakeLog.ts` added `bakeOrdinalWord` ("third bake", spelled out for the same accessible name). Loading now shows 5 placeholder rows.
+
+**Notices drop the side-tab accent (SKIN, same revision):** `notice-info/warning/error` move from a 4px left border to a full 1px border at `rounded.tile` with a small leading icon (`components/ui/Notice.tsx`), plus a stage variant for Bake Mode. `NeedsYourCheck.tsx`'s `ErrorSummary` ("Save blocked") gets the same treatment — it was the pattern Impeccable's side-tab hook flagged and a suppression had papered over; the suppression is now removed from `.impeccable/config.json` since the pattern itself is gone.
+
 ## Next
 
 Priority order (Nathan, 2026-10-13; reel import done 2026-10-15, app icon done 2026-10-15):

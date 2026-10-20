@@ -3,137 +3,181 @@
 import { Pause, Play, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { IconButton } from "@/components/ui/IconButton";
-import { SectionHeading } from "@/components/ui/SectionHeading";
-import { cx } from "@/components/ui/cx";
 import { formatRemaining, remainingMs, type Timer } from "./useTimers";
 
-// Timers (SKELETON section 2): a panel in the right column from tablet up, and on
-// mobile a compact strip pinned above Step nav (2 rows, then "+n more" expands it
-// upward). SKIN timer-row, and timer-row-done once it reaches zero.
+// Timers (BONES-recipes-bake.md section "Timers"): a running timer you've left its
+// step lives as a SKIN timer-pill — under the header on phones, at the top of the
+// right column from tablet up (same component, different spot). At most 2 show,
+// soonest first, then "+n" opens a sheet with every timer. A finished timer isn't a
+// pill any more: it becomes the timer-alert banner until dismissed.
 
-/**
- * Soonest to finish first (finished ones, at 00:00, on top), so the timers about to go
- * off are always visible and long ones (a 12 h proof) sink under "+n more".
- */
+/** Soonest to finish first, so the timers about to go off are always visible. */
 export function byRemaining(timers: Timer[], now: number): Timer[] {
   return [...timers].sort((a, b) => remainingMs(a, now) - remainingMs(b, now) || a.id.localeCompare(b.id));
 }
 
 type Actions = { onPause: (id: string) => void; onResume: (id: string) => void; onClear: (id: string) => void };
 
-function Controls({ timer, onPause, onResume, onClear }: { timer: Timer } & Actions) {
-  const done = Boolean(timer.finishedAt);
-  const paused = !done && timer.endsAt === null;
+function MiniRing({ fraction }: { fraction: number }) {
+  const r = 13;
+  const c = 2 * Math.PI * r;
   return (
-    <div className="flex shrink-0 items-center">
-      {!done &&
-        (paused ? (
-          <IconButton label={`Resume timer, ${timer.label}`} onClick={() => onResume(timer.id)}>
-            <Play aria-hidden="true" strokeWidth={1.8} />
-          </IconButton>
-        ) : (
-          <IconButton label={`Pause timer, ${timer.label}`} onClick={() => onPause(timer.id)}>
-            <Pause aria-hidden="true" strokeWidth={1.8} />
-          </IconButton>
-        ))}
-      <IconButton label={`${done ? "Dismiss" : "Clear"} timer, ${timer.label}`} onClick={() => onClear(timer.id)}>
-        <X aria-hidden="true" strokeWidth={1.8} />
-      </IconButton>
+    <svg viewBox="0 0 32 32" aria-hidden="true" className="size-[32px] shrink-0 -rotate-90">
+      <circle cx="16" cy="16" r={r} fill="none" stroke="var(--color-on-ochre)" strokeOpacity="0.3" strokeWidth="3" />
+      <circle
+        cx="16"
+        cy="16"
+        r={r}
+        fill="none"
+        stroke="var(--color-on-ochre)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - fraction)}
+      />
+    </svg>
+  );
+}
+
+const pillIconButton = "rounded-full text-on-ochre! hover:bg-on-ochre/10! active:bg-on-ochre/15! focus-visible:outline-offset-1";
+
+function Pill({
+  timer,
+  now,
+  onPause,
+  onResume,
+  onOpenSheet,
+}: { timer: Timer; now: number; onOpenSheet: () => void } & Pick<Actions, "onPause" | "onResume">) {
+  const paused = timer.endsAt === null;
+  const fraction = timer.durationMs > 0 ? Math.max(0, Math.min(1, remainingMs(timer, now) / timer.durationMs)) : 0;
+  return (
+    <div className="flex min-h-touch-min items-center gap-sm rounded-full bg-ochre py-xs pr-xs pl-sm text-on-ochre">
+      {/* The pill itself opens the full Timers list (Clear lives there), so even a
+          single timer — with no "+n" overflow button — has a way to cancel it. */}
+      <button
+        type="button"
+        onClick={onOpenSheet}
+        aria-label={`Timer details, ${timer.label}`}
+        className="flex min-w-0 flex-1 items-center gap-sm rounded-full text-left focus-visible:outline-3 focus-visible:outline-offset-2"
+      >
+        <MiniRing fraction={fraction} />
+        <span className="min-w-0 flex-1 truncate type-body-sm">
+          {timer.label}
+          {paused && <span className="ml-xs type-caption">Paused</span>}
+        </span>
+        <span className="shrink-0 type-amount tabular-nums">{formatRemaining(remainingMs(timer, now))}</span>
+      </button>
+      {paused ? (
+        <IconButton label={`Resume timer, ${timer.label}`} onClick={() => onResume(timer.id)} className={pillIconButton}>
+          <Play aria-hidden="true" strokeWidth={1.8} />
+        </IconButton>
+      ) : (
+        <IconButton label={`Pause timer, ${timer.label}`} onClick={() => onPause(timer.id)} className={pillIconButton}>
+          <Pause aria-hidden="true" strokeWidth={1.8} />
+        </IconButton>
+      )}
     </div>
   );
 }
 
-function Time({ timer, now, compact = false }: { timer: Timer; now: number; compact?: boolean }) {
-  const done = Boolean(timer.finishedAt);
-  const paused = !done && timer.endsAt === null;
-  return (
-    // SKIN timer-row: the timer size (34px), or timeSizeCompact (28px) in the mobile strip.
-    <span className={cx("type-timer", compact && "text-[28px]", done ? "text-warning" : "text-ink")}>
-      {formatRemaining(remainingMs(timer, now))}
-      {paused && <span className="ml-sm type-caption text-muted">Paused</span>}
-    </span>
-  );
-}
+const MAX_PILLS = 2;
 
-/** Tablet and desktop: the right-column Timers section. */
-export function TimersPanel({ timers, now, ...actions }: { timers: Timer[]; now: number } & Actions) {
-  if (!timers.length) return null;
+/** The timer-pill list: active (not finished) timers, soonest first, "+n" opens every one. */
+export function TimerPills({ timers, now, ...actions }: { timers: Timer[]; now: number } & Actions) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const active = timers.filter((t) => !t.finishedAt);
+  if (active.length === 0) return null;
+  const sorted = byRemaining(active, now);
+  const shown = sorted.slice(0, MAX_PILLS);
+  const hidden = sorted.length - shown.length;
   return (
-    <section aria-labelledby="timers-heading">
-      <SectionHeading id="timers-heading">Timers</SectionHeading>
-      <ul role="list" className="mt-sm flex flex-col gap-sm">
-        {byRemaining(timers, now).map((t) => (
-          <li
-            key={t.id}
-            className={cx("rounded-lg border px-base py-md", t.finishedAt ? "border-warning bg-warning-wash" : "border-hairline bg-surface-card")}
-          >
-            <p className="type-caption text-muted">{t.label}</p>
-            <div className="mt-xs flex items-center justify-between gap-sm">
-              <Time timer={t} now={now} />
-              <Controls timer={t} {...actions} />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-const STRIP_ROWS = 2;
-
-/** Mobile: the strip pinned just above Step nav, so running timers stay visible on every step. */
-export function TimerStrip({ timers, now, ...actions }: { timers: Timer[]; now: number } & Actions) {
-  const [expanded, setExpanded] = useState(false);
-  if (!timers.length) return null;
-  const sorted = byRemaining(timers, now);
-  const shown = expanded ? sorted : sorted.slice(0, STRIP_ROWS);
-  return (
-    <section aria-label="Timers" className="border-b border-hairline px-(--gutter)">
-      <ul role="list">
-        {shown.map((t) => (
-          // Two short lines: the label (one truncated line), then the time with Pause and Clear.
-          <li key={t.id} className={cx("-mx-sm rounded-md px-sm pt-xs", t.finishedAt !== null && "bg-warning-wash")}>
-            <p className="truncate type-caption text-muted">{t.label}</p>
-            <div className="-mr-sm flex items-center justify-between gap-sm">
-              <Time timer={t} now={now} compact />
-              <Controls timer={t} {...actions} />
-            </div>
-          </li>
-        ))}
-      </ul>
-      {timers.length > STRIP_ROWS && (
-        <Button variant="text" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)} className="-ml-sm">
-          {expanded ? "Show fewer" : `+${timers.length - STRIP_ROWS} more`}
+    <div className="flex flex-col gap-sm">
+      {shown.map((t) => (
+        <Pill key={t.id} timer={t} now={now} onPause={actions.onPause} onResume={actions.onResume} onOpenSheet={() => setSheetOpen(true)} />
+      ))}
+      {hidden > 0 && (
+        <Button variant="stage-secondary" onClick={() => setSheetOpen(true)} className="self-start">
+          +{hidden}
         </Button>
       )}
-    </section>
+      <Dialog open={sheetOpen} onClose={() => setSheetOpen(false)} title="Timers" modalColumns={4}>
+        <ul role="list" className="flex flex-col gap-sm">
+          {sorted.map((t) => {
+            const paused = t.endsAt === null;
+            return (
+              <li key={t.id} className="flex items-center gap-sm rounded-lg border border-hairline bg-surface-card px-base py-md">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate type-caption text-muted">{t.label}</p>
+                  <p className="type-amount-lg tabular-nums text-ink">{formatRemaining(remainingMs(t, now))}</p>
+                </div>
+                {paused ? (
+                  <IconButton label={`Resume timer, ${t.label}`} onClick={() => actions.onResume(t.id)}>
+                    <Play aria-hidden="true" strokeWidth={1.8} />
+                  </IconButton>
+                ) : (
+                  <IconButton label={`Pause timer, ${t.label}`} onClick={() => actions.onPause(t.id)}>
+                    <Pause aria-hidden="true" strokeWidth={1.8} />
+                  </IconButton>
+                )}
+                <IconButton label={`Clear timer, ${t.label}`} onClick={() => actions.onClear(t.id)}>
+                  <X aria-hidden="true" strokeWidth={1.8} />
+                </IconButton>
+              </li>
+            );
+          })}
+        </ul>
+      </Dialog>
+    </div>
   );
+}
+
+export interface FinishedTimerInfo {
+  stepNumber: number;
+  name: string;
 }
 
 /**
  * SKIN timer-alert: the finished-timer banner across the top of the viewport, above
  * everything, until dismissed; several stack, newest first. Announced immediately.
  */
-export function TimerBanner({ timers, onDismiss }: { timers: Timer[]; onDismiss: (id: string) => void }) {
+export function TimerBanner({
+  timers,
+  describe,
+  onDismiss,
+  onGoToStep,
+}: {
+  timers: Timer[];
+  describe: (t: Timer) => FinishedTimerInfo | null;
+  onDismiss: (id: string) => void;
+  onGoToStep: (info: FinishedTimerInfo, timerId: string) => void;
+}) {
   const done = timers.filter((t) => t.finishedAt).sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
+  const onStage = "border-on-primary! bg-transparent! text-on-primary! hover:bg-primary-active! active:bg-primary-active!";
   return (
     <div role="alert" aria-live="assertive" className="fixed inset-x-0 top-0 z-50 flex flex-col">
-      {done.map((t) => (
-        <div
-          key={t.id}
-          className="flex flex-wrap items-center justify-between gap-x-base gap-y-sm border-b-4 border-ochre bg-primary px-(--gutter) py-base text-on-primary shadow-float first:pt-[calc(var(--spacing-base)+env(safe-area-inset-top))]"
-        >
-          <p className="type-heading">{t.label} timer is done</p>
-          <Button
-            variant="secondary"
-            onClick={() => onDismiss(t.id)}
-            className="border-on-primary! bg-transparent! text-on-primary! hover:bg-primary-active! active:bg-primary-active!"
+      {done.map((t) => {
+        const info = describe(t);
+        return (
+          <div
+            key={t.id}
+            className="flex flex-wrap items-center justify-between gap-x-base gap-y-sm border-b-4 border-ochre bg-primary px-(--gutter) py-base text-on-primary shadow-float first:pt-[calc(var(--spacing-base)+env(safe-area-inset-top))]"
           >
-            Dismiss
-          </Button>
-        </div>
-      ))}
+            <p className="type-heading">{info ? `${info.name} · step ${info.stepNumber} is done` : `${t.label} is done`}</p>
+            <div className="flex gap-sm">
+              {info && (
+                <Button variant="secondary" onClick={() => onGoToStep(info, t.id)} className={onStage}>
+                  Go to step
+                </Button>
+              )}
+              <Button variant="secondary" onClick={() => onDismiss(t.id)} className={onStage}>
+                Dismiss
+              </Button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

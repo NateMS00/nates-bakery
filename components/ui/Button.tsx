@@ -5,7 +5,7 @@ import { cx } from "./cx";
 // SKIN button-primary, button-secondary, button-destructive, button-text,
 // each with its hover, active, focus, and disabled states.
 
-export type ButtonVariant = "primary" | "secondary" | "destructive" | "text";
+export type ButtonVariant = "primary" | "secondary" | "destructive" | "text" | "stage-secondary";
 
 const base =
   "inline-flex min-h-touch-min items-center justify-center gap-sm text-center transition-[background-color,color,border-color,transform] duration-(--motion-fast) ease-skin disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&_svg]:size-icon-sm [&_svg]:shrink-0";
@@ -22,6 +22,10 @@ const variants: Record<ButtonVariant, string> = {
   // An outlined ink pill, no fill: every other action.
   secondary:
     "type-button rounded-full border border-outline bg-transparent px-lg text-ink enabled:hover:bg-surface-sunken enabled:active:translate-y-px enabled:active:bg-surface-sunken focus-visible:outline-offset-3 disabled:border-hairline disabled:bg-surface-disabled disabled:text-disabled disabled:translate-y-0",
+  // SKIN bake-stage: "secondary buttons on the stage are cream outlined pills" —
+  // on-stage is cream in both themes, so this variant doesn't need a dark-mode pair.
+  "stage-secondary":
+    "type-button rounded-full border border-on-stage bg-transparent px-lg text-on-stage enabled:hover:bg-on-stage/10 enabled:active:translate-y-px enabled:active:bg-on-stage/15 focus-visible:outline-offset-3 disabled:border-stage-track disabled:text-stage-track disabled:translate-y-0",
   destructive:
     "type-button rounded-full bg-error px-lg text-on-primary enabled:hover:underline enabled:active:translate-y-px focus-visible:outline-offset-3 disabled:bg-surface-disabled disabled:text-disabled disabled:no-underline",
   // Sentence case in the reading face, not uppercase mono: it often sits inside or right

@@ -84,21 +84,33 @@ export function useTimers(recipeId: string) {
   }, [recipeId, timers]);
 
   // Tick while anything runs; finish timers that reach zero (the chime plays once,
-  // outside the state update).
+  // outside the state update). The bake-clock doesn't announce every second: it
+  // speaks once when a running timer crosses 1 minute left, and once when it ends.
   const latest = useRef(timers);
   useEffect(() => {
     latest.current = timers;
   }, [timers]);
+  const warned = useRef<Set<string>>(new Set());
   const running = timers.some((t) => t.endsAt !== null && !t.finishedAt);
   useEffect(() => {
     if (!running) return;
     const tick = () => {
       const at = Date.now();
       setNow(at);
-      const done = new Set(latest.current.filter((t) => t.endsAt !== null && !t.finishedAt && t.endsAt <= at).map((t) => t.id));
-      if (!done.size) return;
+      for (const t of latest.current) {
+        if (t.endsAt === null || t.finishedAt) continue;
+        if (t.endsAt - at <= 60_000 && !warned.current.has(t.id)) {
+          warned.current.add(t.id);
+          setAnnouncement(`${t.label}, 1 minute left.`);
+        }
+      }
+      const done = latest.current.filter((t) => t.endsAt !== null && !t.finishedAt && t.endsAt <= at);
+      if (!done.length) return;
       playChime();
-      setTimers((list) => list.map((t) => (done.has(t.id) && !t.finishedAt ? { ...t, finishedAt: at, endsAt: null, remainingMs: 0 } : t)));
+      navigator.vibrate?.(200);
+      const finishedLabel = done[0].label;
+      setAnnouncement(`${finishedLabel} is done.`);
+      setTimers((list) => list.map((t) => (done.some((d) => d.id === t.id) ? { ...t, finishedAt: at, endsAt: null, remainingMs: 0 } : t)));
     };
     tick();
     const id = window.setInterval(tick, 250);
@@ -139,5 +151,17 @@ export function useTimers(recipeId: string) {
     write(recipeId, []);
   }, [recipeId]);
 
-  return { timers, now, start, pause, resume, clear, clearAll, announcement };
+  /** The bake-clock's −1/+1 min, on a running or paused timer; never below 0. */
+  const adjust = useCallback((id: string, deltaMs: number) => {
+    const at = Date.now();
+    setTimers((list) =>
+      list.map((t) => {
+        if (t.id !== id || t.finishedAt) return t;
+        if (t.endsAt !== null) return { ...t, endsAt: Math.max(at, t.endsAt + deltaMs) };
+        return { ...t, remainingMs: Math.max(0, (t.remainingMs ?? t.durationMs) + deltaMs) };
+      }),
+    );
+  }, []);
+
+  return { timers, now, start, pause, resume, clear, clearAll, adjust, announcement };
 }

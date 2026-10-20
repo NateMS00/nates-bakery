@@ -75,7 +75,10 @@ export async function expectTouchTargets(page: Page) {
       const h = box.height + extra;
       // Inline text links inside a sentence are exempt (WCAG 2.5.8 inline exception).
       const inline = el.tagName === "A" && getComputedStyle(el).display === "inline";
-      if (!inline && (h < 47.5 || box.width < 24)) out.push(`${el.tagName} "${el.textContent?.trim() || el.getAttribute("aria-label")}" ${Math.round(box.width)}×${Math.round(h)}`);
+      // A documented exception (e.g. Bake Mode's 44px step-strip, SKIN sizing.step-strip)
+      // opts into a lower floor via data-touch-min, still meeting WCAG 2.5.5's 44px.
+      const floor = Number(el.dataset.touchMin) || 48;
+      if (!inline && (h < floor - 0.5 || box.width < 24)) out.push(`${el.tagName} "${el.textContent?.trim() || el.getAttribute("aria-label")}" ${Math.round(box.width)}×${Math.round(h)}`);
     }
     return out;
   });

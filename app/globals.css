@@ -26,6 +26,11 @@
     outline: 3px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
+  /* SKIN bake-stage: the normal blue focus ring is too dark on the dark stage,
+     so every focusable element inside it gets the ochre ring instead. */
+  .bake-stage :focus-visible {
+    outline-color: var(--color-ochre);
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -208,4 +213,11 @@ dialog :is(input, textarea, select) {
 @keyframes entry-new {
   0%, 45% { background-color: var(--color-primary-wash); border-color: var(--color-primary); }
   100% { background-color: var(--color-canvas); border-color: var(--color-outline); }
+}
+
+/* Bake Mode ({motion.step}): the new step rises from a -3deg tilt and settles.
+   Reduced motion (globally disabled above) leaves an instant swap. */
+@keyframes step-rise {
+  from { opacity: 0; transform: rotate(-3deg) translateY(10px); }
+  to { opacity: 1; transform: rotate(0deg) translateY(0); }
 }
